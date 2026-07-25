@@ -1714,7 +1714,35 @@ function zPerMile(){ const m=+CFG.milesPerMinute; return (m>0)?(0.20*60/m):6; }
    scale already used to slide props, clouds and hazards, just evaluated as
    a running total instead of a per-frame delta, so the backdrop drifts at
    exactly the rate the foreground already does. */
-function terrainShiftPx(){ return latMiles*zPerMile()*W*0.55; }
+/* One full 360° turn pans across this many screen-widths of panorama. Every
+   silhouette samples its seed by ABSOLUTE feature index wrapped modulo
+   (PAN_TURNS x featuresPerScreen), so the wrap of plane.heading from +pi to
+   -pi shifts the index by exactly one whole period and is invisible. */
+const PAN_TURNS=8;
+/* WHICH WAY YOU FACE, not just where you are. This used to read latMiles
+   alone, so every heading drew the same backdrop — and at exactly 180 deg
+   sin(heading) is 0, so latMiles stopped changing too and the horizon froze
+   solid. Rotating on the spot must move the view.
+
+   `turns` is how many screen-widths of panorama a full 360 deg sweeps for
+   this layer — a nearer layer uses more and so parallaxes past a distant
+   one. It MUST be a whole number: a layer panning turns*W over one turn
+   moves exactly turns*n features, which is its own seed period, so the view
+   closes perfectly after 360 deg and the wrap of plane.heading from +pi to
+   -pi is invisible. A fractional parallax (0.55) broke both. */
+function terrainPan(turns){
+  const headingPan=(plane.heading/(2*Math.PI))*turns*W;
+  const lateralPan=latMiles*zPerMile()*W*0.55*(turns/PAN_TURNS);
+  return headingPan+lateralPan;
+}
+function terrainShiftPx(){ return terrainPan(PAN_TURNS); }
+/* deterministic 0..1 from an integer, wrapped to a period so the panorama
+   closes seamlessly after a full turn */
+function terrainSeed(i,period){
+  const k=((i%period)+period)%period;
+  const v=Math.sin(k*127.1+11.7)*43758.5453;
+  return ((v%1)+1)%1;
+}
 let dLatStep=0;          /* this frame's sideways world step, in miles */
 let props=[], clouds=[], skyObjs=[], hazards=[], iceFx=[];
 let animal=null;
@@ -2526,15 +2554,7 @@ function draw(time){
   gg.addColorStop(1,blendColor(groundC,'#FFFFFF',0.18));
   ctx.fillStyle=gg;ctx.fillRect(0,horizon,W,H-horizon);
 
-  {
-    const shiftPx=terrainShiftPx();
-    const tilePhase=((shiftPx%W)+W)%W;
-    ctx.save();
-    ctx.translate(-tilePhase,0); drawTerrain(time);
-    ctx.translate(-W,0);         drawTerrain(time);   /* covers the left seam  */
-    ctx.translate(2*W,0);        drawTerrain(time);   /* covers the right seam */
-    ctx.restore();
-  }
+  drawTerrain(time);
 
   /* pale veil over the whole landscape: the BACKGROUND recedes so every
      dark-outlined object in front of it pops forward */
@@ -2723,74 +2743,110 @@ function wedge(x1,x2,color){
   ctx.moveTo(t1.sx,t1.sy);ctx.lineTo(t2.sx,t2.sy);
   ctx.lineTo(b2.sx,H);ctx.lineTo(b1.sx,H);ctx.closePath();ctx.fill();
 }
-function mountainLayer(color,hMax,n,off){
+/* Peaks are sampled by ABSOLUTE index along the panorama, so panning reveals
+   genuinely different mountains instead of sliding one fixed ridge. */
+function mountainLayer(color,hMax,n,off,shift,turns){
+  const step=W/n, period=turns*n;
+  const i0=Math.floor(shift/step), frac=shift-i0*step;
   ctx.fillStyle=color;
   ctx.beginPath();
-  ctx.moveTo(0,horizon);
-  const step=W/n;
-  for(let i=0;i<=n;i++){
-    const h=(seedA[(i+off)%48]*0.6+0.4)*hMax;
-    ctx.lineTo(i*step-step/2,horizon-h);
-    ctx.lineTo(i*step,horizon);
+  ctx.moveTo(-2*step,horizon);
+  for(let i=-1;i<=n+2;i++){
+    const h=(terrainSeed(i0+i+off,period)*0.6+0.4)*hMax;
+    const x=i*step-frac;
+    ctx.lineTo(x-step/2,horizon-h);
+    ctx.lineTo(x,horizon);
   }
-  ctx.lineTo(W,horizon);ctx.closePath();ctx.fill();
+  ctx.lineTo(W+2*step,horizon);ctx.closePath();ctx.fill();
 }
 function drawTerrain(time){
   const id=zone().id;
-  /* --- horizon silhouettes (far landscape) --- */
+  const shift=terrainShiftPx();
+  /* --- horizon silhouettes (far landscape), panned by heading + position --- */
   if(id==='forest'){
-    mountainLayer('rgba(150,172,205,0.34)',horizon*0.42,6,3);
-    mountainLayer('rgba(110,150,120,0.36)',horizon*0.26,9,11);
+    mountainLayer('rgba(150,172,205,0.34)',horizon*0.42,6,3,terrainPan(4),4);   /* far  */
+    mountainLayer('rgba(110,150,120,0.36)',horizon*0.26,9,11,terrainPan(8),8);  /* near */
   }else if(id==='rural'){
+    /* rolling hills: one hump per index, sampled absolutely */
+    const n=3,step=W/n,period=PAN_TURNS*n;
+    const i0=Math.floor(shift/step),frac=shift-i0*step;
     ctx.fillStyle='rgba(178,200,145,0.32)';
-    ctx.beginPath();ctx.moveTo(0,horizon);
-    ctx.quadraticCurveTo(W*0.25,horizon-34,W*0.5,horizon);
-    ctx.quadraticCurveTo(W*0.75,horizon-46,W,horizon);
-    ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(-2*step,horizon);
+    for(let i=-1;i<=n+2;i++){
+      const hh=26+terrainSeed(i0+i,period)*30;
+      const x=i*step-frac;
+      ctx.quadraticCurveTo(x-step/2,horizon-hh,x,horizon);
+    }
+    ctx.lineTo(W+2*step,horizon);ctx.closePath();ctx.fill();
   }else if(id==='city'){
-    ctx.fillStyle='rgba(140,155,185,0.34)';
-    const n=13,bw=W/n;
-    for(let i=0;i<n;i++){
-      const h=14+seedA[i]*horizon*0.34;
-      ctx.fillRect(i*bw+2,horizon-h,bw*0.78,h);
-      /* tiny windows */
-      if(seedA[i]>0.4){
+    const n=13,bw=W/n,period=PAN_TURNS*n;
+    const i0=Math.floor(shift/bw),frac=shift-i0*bw;
+    for(let i=-1;i<=n+1;i++){
+      const sd=terrainSeed(i0+i,period);
+      const h=14+sd*horizon*0.34;
+      const x=i*bw-frac;
+      ctx.fillStyle='rgba(140,155,185,0.34)';
+      ctx.fillRect(x+2,horizon-h,bw*0.78,h);
+      if(sd>0.4){                                   /* tiny lit windows */
         ctx.fillStyle='rgba(255,240,170,0.5)';
-        ctx.fillRect(i*bw+bw*0.25,horizon-h*0.7,3,3);
-        ctx.fillRect(i*bw+bw*0.5,horizon-h*0.45,3,3);
-        ctx.fillStyle='rgba(140,155,185,0.34)';
+        ctx.fillRect(x+bw*0.25,horizon-h*0.7,3,3);
+        ctx.fillRect(x+bw*0.5,horizon-h*0.45,3,3);
       }
     }
   }else if(id==='lake'){
-    ctx.fillStyle='rgba(90,150,190,0.45)';
-    ctx.beginPath();ctx.ellipse(W*0.78,horizon,W*0.14,12,0,Math.PI,0,true);ctx.fill(); /* island */
-    ctx.fillStyle='rgba(60,120,70,0.5)';
-    ctx.beginPath();ctx.ellipse(W*0.78,horizon-8,W*0.05,14,0,0,Math.PI*2);ctx.fill();
+    /* a far shore with headlands, so a turn over open water still reads */
+    const n=5,step=W/n,period=PAN_TURNS*n;
+    const i0=Math.floor(shift/step),frac=shift-i0*step;
+    ctx.fillStyle='rgba(96,150,175,0.40)';
+    ctx.beginPath();ctx.moveTo(-2*step,horizon);
+    for(let i=-1;i<=n+2;i++){
+      const hh=8+terrainSeed(i0+i,period)*26;
+      const x=i*step-frac;
+      ctx.quadraticCurveTo(x-step/2,horizon-hh,x,horizon-hh*0.35);
+    }
+    ctx.lineTo(W+2*step,horizon);ctx.closePath();ctx.fill();
+    /* wooded islands sitting in front of it */
+    for(let i=-1;i<=n+1;i++){
+      const sd=terrainSeed(i0+i+7,period);
+      if(sd<0.55)continue;
+      const x=i*step-frac+step*0.5;
+      const rw=W*(0.05+sd*0.07);
+      ctx.fillStyle='rgba(70,130,90,0.5)';
+      ctx.beginPath();ctx.ellipse(x,horizon,rw,13,0,Math.PI,0,true);ctx.fill();
+    }
   }
-  /* --- ground features (perspective) --- */
+  /* --- ground features (perspective), sliding with the same pan --- */
+  const gx=shift/(W*0.55);            /* pan expressed in prop-x world units */
+  const wrap=(v,per)=>((v%per)+per)%per;
   if(id==='rural'){
-    for(let k=-3;k<3;k++){
-      wedge(k*0.42,k*0.42+0.42,k%2===0?'rgba(255,244,170,0.13)':'rgba(80,140,60,0.10)');
+    /* striped fields: period 0.84, so wrap the pan into one stripe pair */
+    const o=wrap(gx,0.84);
+    for(let k=-4;k<5;k++){
+      const x=k*0.42-o;
+      wedge(x,x+0.42,k%2===0?'rgba(255,244,170,0.13)':'rgba(80,140,60,0.10)');
     }
   }else if(id==='city'){
-    /* city blocks, off to the sides — no road down the middle */
-    wedge(-1.15,-0.62,'rgba(120,130,150,0.14)');
-    wedge(0.62,1.15,'rgba(120,130,150,0.14)');
+    /* repeating blocks either side of the flight line */
+    const o=wrap(gx,0.9);
+    for(let k=-3;k<4;k++){
+      const x=k*0.9-o;
+      wedge(x,x+0.5,'rgba(120,130,150,0.14)');
+    }
   }else if(id==='lake'){
     ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
     for(let i=0;i<8;i++){
       const zz=((miles*4)+i/8)%1;
-      const p=project((seedA[i]*2-1)*0.9,zz);
+      const p=project((seedA[i]*2-1)*0.9-gx*0.35,zz);
       ctx.beginPath();
       ctx.moveTo(p.sx-34*p.scale,p.sy);
       ctx.quadraticCurveTo(p.sx,p.sy-4*p.scale,p.sx+34*p.scale,p.sy);
       ctx.stroke();
     }
-    wedge(0.35,0.6,'rgba(255,240,180,0.10)');   /* sun glint path */
+    { const o=wrap(gx,1.2); wedge(0.35-o,0.6-o,'rgba(255,240,180,0.10)'); }  /* sun glint */
   }else if(id==='forest'){
     for(let i=0;i<9;i++){
       const zz=((miles*3)+seedA[i+20])%1;
-      const p=project((seedA[i]*2-1)*1.1,zz);
+      const p=project((seedA[i]*2-1)*1.1-gx*0.35,zz);
       if(p.sy<horizon)continue;
       ctx.fillStyle='rgba(40,90,50,0.13)';
       ctx.beginPath();ctx.ellipse(p.sx,p.sy,60*p.scale,16*p.scale,0,0,Math.PI*2);ctx.fill();
