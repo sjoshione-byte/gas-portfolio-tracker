@@ -311,6 +311,12 @@
     background:var(--sun);border:2.5px solid var(--ink);border-radius:999px;
     font-family:'Fredoka';font-weight:600;font-size:11px;padding:1px 9px;white-space:nowrap;
   }
+  .cpturn{
+    position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);
+    background:#FFD6CE;border:2.5px solid var(--ink);border-radius:999px;
+    font-family:'Fredoka';font-weight:600;font-size:10.5px;padding:1px 8px;white-space:nowrap;
+  }
+  .cpturn.good{background:var(--idea)}
   #cpPulse{animation:cppulse 1.6s infinite}
   @keyframes cppulse{
     0%{r:8;opacity:.55}
@@ -859,6 +865,7 @@
     </g>
   </svg>
   <div id="cpMiles">40 mi</div>
+  <div id="cpTurn" class="cpturn good">▲ straight on</div>
 </div>
 
 <div id="dial">
@@ -997,6 +1004,26 @@ const DEFAULT_CONFIG={
   hazardSpeedCap:     2.6,   // ...up to 2.6x the starting speed
   hazardBaseInterval: 20,    // seconds between hazards for a NEW pilot
   hazardMinInterval:   9,    // ...once he is seasoned
+
+  /* ── HOW OFTEN A CHALLENGE COMES ──────────────────────────────────────────
+     A challenge only happens when an animal is caught, so THIS is the dial
+     that decides how often he is asked to think. Roomy for a new pilot,
+     tighter once he has some hours in. */
+  animalBaseInterval: 13,    // seconds between animals for a NEW pilot
+  animalMinInterval:   6,    // ...once he is experienced
+  quietGap:            7,    // min seconds of calm flying between ANY two events
+  zoneSpacing:       6.5,    // world miles per patch of landscape
+  weatherSeconds:     50,    // seconds per weather phase
+  strikeInvuln:      1.1,    // seconds of grace after being hit
+  climbSpeed:       1.05,    // speed while climbing
+  calmPerPractice:     2,    // calm earned by practising
+  calmPerFreezeOne:    1,    // ...by calming one troublemaker
+  calmPerFreezeAll:    3,    // ...by calming the whole sky
+  archeryRounds:       3,    // shots each in the archery game
+  patternRounds:       4,    // rounds to win Copy the Pattern
+  distractChance:   0.55,    // how often something distracting pops up
+  distractEvery:       3,    // ...checked roughly every N seconds
+  spellBlanks:         0,    // missing letters (0 = pick by age)
   donationKarmaPer:   30,
   weatherSeconds:     50,
 
@@ -1054,6 +1081,17 @@ function notYetLine(){return CFG.notYet[Math.floor(Math.random()*CFG.notYet.leng
    dashboard sliders ("How far the calm dial goes", "How fast the plane turns")
    did nothing at all. They are functions now, so a change takes effect at once. */
 function calmMax(){ const n=+CFG.calmMax; return (n>0)?n:10; }
+/* every gap the game leaves between events reads its numbers from CFG, so the
+   settings space really does control the pacing — nothing is hardcoded */
+function cfgNum(k,dflt,min){
+  const n=+CFG[k];
+  if(!isFinite(n))return dflt;
+  return (min!=null&&n<min)?min:n;
+}
+function animalGap(){
+  return gapStatic(cfgNum('animalBaseInterval',13,1),cfgNum('animalMinInterval',6,1))
+         + Math.random()*4;
+}
 function turnRate(){ const n=+CFG.turnRate; return (n>0)?n:0.85; }
 
 /* ═══════════ AGE GROUPS ═══════════
@@ -1184,31 +1222,31 @@ const BANDS = {t:'Ages 3–4', y:'Ages 5–7', m:'Ages 8–10', o:'Ages 11+'};
 let FEELING_SYNS = {
   sad: {
     t:[['😢','Sad'],['😢','Teary'],['🥺','Upset'],['😞','Left out']],
-    y:[['😢','Sad'],['😢','Teary'],['🥺','Upset'],['😞','Left out'],['😔','Hurt'],['💧','Like crying'],['😿','Gloomy'],['🫤','Down']],
+    y:[['😢','Sad'],['😢','Teary'],['🥺','Upset'],['😞','Left out'],['😔','Hurt inside'],['💧','Like crying'],['😿','Very sad'],['🫤','Not happy']],
     m:[['😢','Sad'],['😞','Disappointed'],['💔','Hurt'],['😔','Lonely'],['🫤','Down'],['😿','Miserable'],['🌧️','Heavy-hearted'],['😥','Sorrowful'],['🥀','Blue']],
     o:[['😢','Sad'],['😞','Disappointed'],['💔','Heartbroken'],['😔','Lonely'],['🫥','Despondent'],['🌧️','Melancholy'],['😥','Grieving'],['🥀','Dejected'],['😓','Crestfallen']]
   },
   mad: {
     t:[['😠','Mad'],['😤','Cross'],['😾','Grumpy'],['🙅','Not fair!']],
-    y:[['😠','Mad'],['😤','Cross'],['😾','Grumpy'],['🙅','Not fair!'],['🌋','Boiling'],['😡','Angry'],['💢','Annoyed'],['🔥','Fed up']],
+    y:[['😠','Mad'],['😤','Cross'],['😾','Grumpy'],['🙅','Not fair!'],['🌋','Hot and angry'],['😡','Angry'],['💢','Cross inside'],['🔥','Had enough']],
     m:[['😠','Angry'],['😤','Frustrated'],['😒','Annoyed'],['🌋','Furious'],['💢','Irritated'],['🔥','Fuming'],['😖','Indignant'],['🙅','Treated unfairly']],
     o:[['😠','Angry'],['😤','Frustrated'],['😒','Irritated'],['🌋','Furious'],['🔥','Livid'],['😖','Resentful'],['💢','Exasperated'],['🥴','Incensed']]
   },
   scared: {
     t:[['😨','Scared'],['😟','Worried'],['🫣','Shy'],['🙀','Frightened']],
-    y:[['😨','Scared'],['😟','Worried'],['🫣','Shy'],['🦋','Wobbly tummy'],['🙀','Frightened'],['😰','Nervous'],['🫨','Jumpy'],['😬','Uneasy']],
+    y:[['😨','Scared'],['😟','Worried'],['🫣','Shy'],['🦋','Wobbly tummy'],['🙀','Frightened'],['😰','Nervous'],['🫨','Jumpy'],['😬','A bit scared']],
     m:[['😰','Nervous'],['😟','Worried'],['😨','Afraid'],['🫣','Embarrassed'],['🫨','Startled'],['😬','Uneasy'],['🌪️','Panicky'],['🥶','Frozen with fear']],
     o:[['😰','Anxious'],['😟','Apprehensive'],['😨','Fearful'],['🫣','Self-conscious'],['🌪️','Panicked'],['🕸️','Paralysed'],['😬','Insecure'],['🥶','Dread']]
   },
   tired: {
     t:[['🥱','Sleepy'],['😩','Worn out'],['😐','Bored'],['🔋','No energy left']],
-    y:[['🥱','Sleepy'],['😩','Worn out'],['😐','Bored'],['🔋','Battery empty'],['🫠','Floppy'],['😪','Drowsy'],['🛌','Ready for bed'],['😑','Tired of waiting']],
+    y:[['🥱','Sleepy'],['😩','Worn out'],['😐','Bored'],['🔋','All out of go'],['🫠','Floppy'],['😪','Very sleepy'],['🛌','Ready for bed'],['😑','Tired of waiting']],
     m:[['🥱','Sleepy'],['😩','Exhausted'],['😐','Bored'],['🫠','Wiped out'],['😪','Drained'],['🔋','Running on empty'],['🛌','Worn thin'],['🤯','Overstimulated']],
     o:[['😩','Exhausted'],['🫠','Burned out'],['😐','Listless'],['😪','Depleted'],['🔋','Running on empty'],['🤯','Overloaded'],['🛌','Weary'],['😶‍🌫️','Numb with tiredness']]
   },
   mixed: {
     t:[['😵‍💫','Mixed up'],['🤷','Not sure'],['😬','Funny inside'],['🎢','Up and down']],
-    y:[['😵‍💫','Mixed up'],['🤷','Not sure'],['😬','Funny inside'],['🎢','Up and down'],['⚖️','Two feelings at once'],['🌀','Muddled'],['🫤','Puzzled'],['🎭','Happy and sad']],
+    y:[['😵‍💫','Mixed up'],['🤷','Not sure'],['😬','Funny inside'],['🎢','Up and down'],['⚖️','Two feelings at once'],['🌀','Muddled up'],['🫤','Puzzled'],['🎭','Happy and sad']],
     m:[['😵‍💫','Confused'],['🤷','Uncertain'],['⚖️','Torn two ways'],['🌀','Muddled'],['🎭','Happy and sad together'],['🫤','Conflicted'],['🎢','All over the place'],['🤔','Unsure']],
     o:[['😵‍💫','Conflicted'],['🤷','Ambivalent'],['⚖️','Torn'],['🌀','Turbulent'],['🎭','Bittersweet'],['🫤','Unsettled'],['🎢','In two minds'],['🤔','Uncertain']]
   },
@@ -1224,19 +1262,19 @@ let FEELING_SYNS = {
 let NEED_SYNS = {
   comfort: {
     t:[['🤗','a hug'],['🧸','a cuddle'],['💛','someone kind nearby']],
-    y:[['🤗','a hug'],['🧸','a cuddle'],['💛','a kind friend'],['🫂','someone close by'],['🍪','something cosy'],['🛋️','a soft place to sit']],
+    y:[['🤗','a hug'],['🧸','a cuddle'],['💛','a kind friend'],['🫂','someone to sit close'],['🍪','something cosy'],['🛋️','a soft place to sit']],
     m:[['🤗','comfort'],['🫂','closeness'],['💛','warmth from someone'],['🧸','something familiar'],['🛋️','a soft, safe spot']],
     o:[['🤗','comfort'],['🫂','closeness'],['💛','tenderness'],['🧸','something familiar'],['🕊️','solace']]
   },
   being_heard: {
     t:[['👂','someone to listen'],['🗣️','to be heard'],['👀','someone to notice me']],
-    y:[['👂','someone to listen'],['🗣️','to be heard'],['👀','to be noticed'],['💬','to say how it feels'],['🙋','to be believed']],
+    y:[['👂','someone to listen'],['🗣️','someone to hear me'],['👀','someone to notice me'],['💬','to say how I feel'],['🙋','someone to believe me']],
     m:[['👂','to be heard'],['💬','to be understood'],['🙋','to be taken seriously'],['👀','to be seen'],['🗣️','a chance to explain']],
     o:[['👂','to be heard'],['💬','to be understood'],['🙋','to be taken seriously'],['🪞','to be seen for who I am'],['🗣️','to speak and be listened to']]
   },
   safety: {
     t:[['🛡️','to feel safe'],['🤝','a hand to hold'],['🏠','somewhere safe']],
-    y:[['🛡️','to feel safe'],['🤝','a hand to hold'],['🏠','somewhere safe'],['💡','to know what happens next'],['🫂','to not be alone']],
+    y:[['🛡️','to feel safe'],['🤝','a hand to hold'],['🏠','somewhere safe'],['💡','to know what happens next'],['🫂','not to be on my own']],
     m:[['🛡️','safety'],['🤝','support'],['💡','to know what will happen'],['🫂','not to face it alone'],['🐢','to go one step at a time']],
     o:[['🛡️','safety'],['🤝','support'],['💡','predictability'],['🫂','not to face it alone'],['⚓','stability']]
   },
@@ -1248,19 +1286,19 @@ let NEED_SYNS = {
   },
   fairness: {
     t:[['⚖️','things to be fair'],['🔁','a turn too'],['🤝','everyone to share']],
-    y:[['⚖️','things to be fair'],['🔁','a turn too'],['🤝','sharing'],['📏','the same rules for all'],['🙋','to be included']],
+    y:[['⚖️','things to be fair'],['🔁','my turn too'],['🤝','everyone to share'],['📏','the same rules for all'],['🙋','a fair share']],
     m:[['⚖️','fairness'],['📏','the same rules for everyone'],['🔁','an equal turn'],['🙋','to be included'],['🤝','justice']],
     o:[['⚖️','fairness'],['📏','consistency'],['🙋','inclusion'],['🤝','justice'],['🕊️','equity']]
   },
   autonomy: {
     t:[['🎯','to choose'],['✋','some space'],['🙌','to do it myself']],
-    y:[['🎯','to choose for myself'],['✋','some space'],['🙌','to do it myself'],['🚪','a moment alone'],['🔓','a bit of freedom']],
+    y:[['🎯','to choose for myself'],['✋','a bit of space'],['🙌','to do it myself'],['🚪','a minute on my own'],['🔓','to pick my own way']],
     m:[['🎯','a real choice'],['🙌','independence'],['🚪','space to cool down'],['🔓','freedom to decide'],['🛑','a boundary respected']],
     o:[['🎯','autonomy'],['🙌','independence'],['🔓','self-determination'],['🛑','a boundary respected'],['🚪','space']]
   },
   connection: {
     t:[['🫂','a friend'],['🤝','someone to play with'],['💛','to be loved']],
-    y:[['🫂','a friend'],['🤝','someone to play with'],['💛','to belong'],['🙋','to be included'],['👋','company']],
+    y:[['🫂','a friend'],['🤝','someone to play with'],['💛','to be one of the group'],['🙋','to be asked to join in'],['👋','someone with me']],
     m:[['🫂','connection'],['💛','belonging'],['🙋','to be included'],['👋','company'],['🤝','friendship']],
     o:[['🫂','connection'],['💛','belonging'],['🤝','intimacy'],['👋','companionship'],['🌍','community']]
   },
@@ -1278,7 +1316,7 @@ let NEED_SYNS = {
   },
   encouragement: {
     t:[['💪','someone to cheer for me'],['👏','a well done'],['🌟','to feel proud']],
-    y:[['💪','someone to cheer for me'],['👏','a well done'],['🌟','to feel proud'],['🚀','a bit of brave'],['🙌','someone to believe in me']],
+    y:[['💪','someone to cheer for me'],['👏','a well done'],['🌟','to feel proud'],['🚀','to feel brave'],['🙌','someone to believe in me']],
     m:[['💪','encouragement'],['🌟','recognition'],['🚀','courage'],['🙌','belief in me'],['👏','acknowledgement']],
     o:[['💪','encouragement'],['🌟','recognition'],['🚀','courage'],['🙌','confidence'],['👏','acknowledgement']]
   }
@@ -1551,7 +1589,8 @@ let cargo=null, cargoClock=95, depositAmt=0;
 let offCourseT=0;
 /* ONE THING AT A TIME — see canInterrupt() */
 let lastInterruptAt=-999, flightClock=0;
-const QUIET_GAP=7;                       /* min seconds of calm flying between events */
+/* live from CFG, so the grown-up can widen or tighten the calm gap */
+function quietGap(){ return cfgNum('quietGap',7,0); }
 
 function milesLeft(){return distToDest();}
 function journeyFrac(){return Math.min(1,Math.max(0,1-distToDest()/CFG.missionDistance));}
@@ -1664,6 +1703,10 @@ function distToDest(){ return Math.hypot(CFG.missionDistance - miles, latMiles);
 const input={up:false,down:false,left:false,right:false,boost:false};
 let prevPlaneX=0;
 
+/* how far the scenery moves per world mile. Shared by the forward scroll and
+   the sideways slide, so a mile is a mile whichever way the nose is pointing. */
+function zPerMile(){ const m=+CFG.milesPerMinute; return (m>0)?(0.20*60/m):6; }
+let dLatStep=0;          /* this frame's sideways world step, in miles */
 let props=[], clouds=[], skyObjs=[], hazards=[], iceFx=[];
 let animal=null;
 let zoneIdx=0, zonePending=null, zoneBlendT=0, zoneClock=0, spawnClock=0, animalClock=5, hazClock=12;
@@ -1685,7 +1728,7 @@ const zone=()=>ZONES[zoneIdx];
 /* which zone the CURRENT position belongs to — a stable hash of a coarse
    world grid cell, so the same patch of world always looks the same,
    whichever direction you flew in from */
-const ZONE_SPACING=6.5;   /* world miles per grid cell, each way */
+function zoneSpacing(){ return cfgNum('zoneSpacing',6.5,0.5); }
 /* BUG FIX: the route the child picks before take-off used to be thrown away
    within 2.2 seconds, because the landscape came purely from this hash and at
    miles 0 the hash always gave the same answer. The route now rotates the
@@ -1693,7 +1736,8 @@ const ZONE_SPACING=6.5;   /* world miles per grid cell, each way */
    mountains — and the scenery still changes honestly as he flies. */
 let zoneOffset=0;
 function rawZoneIndex(m,lat){
-  const fx=Math.round(m/ZONE_SPACING), fy=Math.round(lat/ZONE_SPACING);
+  const sp=zoneSpacing();
+  const fx=Math.round(m/sp), fy=Math.round(lat/sp);
   const h=((fx*2654435761)^(fy*2246822519))>>>0;
   return h%ZONES.length;
 }
@@ -1984,9 +2028,14 @@ function readChoices(list){
 }
 
 /* ═══════════ SPAWNING ═══════════ */
-function spawnProp(){
+function spawnProp(behind){
   const z=zone();
-  props.push({em:z.props[Math.floor(Math.random()*z.props.length)],x:(Math.random()<0.5?-1:1)*(0.3+Math.random()*1.2),z:1,size:24+Math.random()*32});
+  props.push({
+    em:z.props[Math.floor(Math.random()*z.props.length)],
+    x:(Math.random()<0.5?-1:1)*(0.3+Math.random()*1.2),
+    z: behind ? -0.06 : 1,        /* behind = entering from under the plane */
+    size:24+Math.random()*32
+  });
 }
 function spawnCloud(){clouds.push({x:Math.random()*W,y:20+Math.random()*140,s:24+Math.random()*30,v:6+Math.random()*10});}
 for(let i=0;i<5;i++)spawnCloud();
@@ -2063,7 +2112,7 @@ function canInterrupt(){
   if(paused)return false;              /* a modal is already open */
   if(overlay.classList.contains('show'))return false;
   if(breath.active)return false;
-  if(flightClock-lastInterruptAt < QUIET_GAP)return false;
+  if(flightClock-lastInterruptAt < quietGap())return false;
   return true;
 }
 function markInterrupt(){ lastInterruptAt=flightClock; }
@@ -2107,14 +2156,22 @@ function update(dt){
   plane.alt=Math.max(6,Math.min(100,plane.alt));
 
   let target=CFG.cruiseSpeed;
-  if(input.up)target=CFG.climbSpeed;
+  if(input.up)target=cfgNum('climbSpeed',1.05,0.1);
   if(input.boost)target=CFG.boostSpeed;
   if(input.down)target*=0.9;
   if(plane.wheels)target*=0.62;
   target*=(0.5+0.5*engines/engineSlots);        /* fewer engines = slower plane */
   if(!preflightOK)target*=CFG.sluggishFactor;   /* skipped the pre-flight check */
   plane.speed=lerp(plane.speed,target,dt*2.5);
-  const zspeed=0.20*plane.speed;
+  /* ── HONEST MOTION ────────────────────────────────────────────────────────
+     The scenery is driven by the heading, not by a stopwatch. Fly forward and
+     it streams towards you; turn side-on and it slides across; turn right
+     around and it streams AWAY, back towards the horizon. One mile is the
+     same distance whichever way the nose points, so zPerMile() is shared by
+     the forward scroll and the sideways slide. */
+  const fwd=Math.cos(plane.heading);            /* +1 ahead … −1 turned around */
+  const lat=Math.sin(plane.heading);            /* +1 right   … −1 left        */
+  const zspeed=0.20*plane.speed*fwd;            /* SIGNED: negative = reversing */
 
   /* ── the miles tick by ──────────────────────────────────────────────── */
   /* pointing the wrong way? the radar says so, gently */
@@ -2132,11 +2189,15 @@ function update(dt){
     /* fly towards the village and the miles fall away. Turn away, and they
        climb again — the world is honest about which way he is pointing.  */
     const mps=(CFG.milesPerMinute/60)*plane.speed*dt;
-    miles   +=mps*Math.cos(plane.heading);          /* forward along the route */
-    latMiles+=mps*Math.sin(plane.heading);          /* drift left / right      */
-    if(miles<0)miles=0;
+    /* BUGFIX: miles used to be clamped at 0, so flying back past the start
+       line quietly froze the journey — the plane kept moving but the world
+       and the radar did not. He may now fly as far behind the start as he
+       likes, and everything follows honestly. */
+    miles   +=mps*fwd;                              /* along the route         */
+    dLatStep =mps*lat;                              /* this frame's sideways step */
+    latMiles+=dLatStep;                             /* left (−) / right (+)    */
     playMinutes+=dt/60;
-    if(playMinutes-lastInterestMin>=CFG.interestEveryMinutes)payInterest();
+    if(playMinutes-lastInterestMin>=cfgNum('interestEveryMinutes',10,0.2))payInterest();
     if(distToDest()<=0.5){missionDone=true;arriveAtVillage();return;}
     updateGps();
   }
@@ -2146,7 +2207,7 @@ function update(dt){
 
   /* weather wheel — every phase passes */
   wxClock+=dt;
-  if(wxClock>CFG.weatherSeconds){
+  if(wxClock>cfgNum('weatherSeconds',50,3)){
     wxClock=0;wxIdx=(wxIdx+1)%WEATHER.length;
     banner(`${WEATHER[wxIdx][0]} ${WEATHER[wxIdx][1]}`,2000);
     updateHUD();
@@ -2194,15 +2255,24 @@ function update(dt){
     }
   }
 
-  spawnClock-=dt;
-  if(spawnClock<=0){spawnProp();spawnClock=0.30/plane.speed;}
-  props.forEach(p=>p.z-=zspeed*dt);
-  props=props.filter(p=>p.z>-0.05);
-  clouds.forEach(c=>{c.x-=c.v*dt*plane.speed;if(c.x<-80){c.x=W+80;c.y=20+Math.random()*140;}});
+  /* new scenery arrives from the horizon when flying forward, and from under
+     the plane when flying backwards — so a U-turn really does reverse the world */
+  spawnClock-=Math.abs(zspeed)*dt;
+  if(spawnClock<=0){ spawnProp(fwd<0); spawnClock=0.30*0.20; }
+  const xSlide=dLatStep*zPerMile();     /* sideways world shift, in prop x units */
+  props.forEach(p=>{ p.z-=zspeed*dt; p.x-=xSlide; });
+  props=props.filter(p=>p.z>-0.08&&p.z<1.12&&p.x>-4.5&&p.x<4.5);
+  /* clouds and kites drift with the wind AND with the sideways motion */
+  const skySlide=xSlide*W*0.55;
+  clouds.forEach(c=>{
+    c.x-=c.v*dt*plane.speed*Math.max(0.15,fwd)+skySlide;
+    if(c.x<-80){c.x=W+80;c.y=20+Math.random()*140;}
+    if(c.x>W+80){c.x=-80;c.y=20+Math.random()*140;}
+  });
   skyClock-=dt;
   if(skyClock<=0){spawnSkyObj();skyClock=7+Math.random()*8;}
-  skyObjs.forEach(s=>s.x-=s.v*dt*plane.speed);
-  skyObjs=skyObjs.filter(s=>s.x>-80);
+  skyObjs.forEach(s=>s.x-=s.v*dt*plane.speed*Math.max(0.15,fwd)+skySlide);
+  skyObjs=skyObjs.filter(s=>s.x>-120&&s.x<W+120);
 
   /* animals — kept apart from hazards */
   if(!animal){
@@ -2213,6 +2283,7 @@ function update(dt){
     }
   }else{
     animal.z-=zspeed*dt*0.85;
+    animal.x-=dLatStep*zPerMile();      /* it stays put on the ground */
     if(animal.z<0.5&&!animal.called){animal.called=true;animalCall(animal.em);}
     if(animal.z<=0.14&&animal.z>0.02&&!animal.missed){
       if(Math.abs(animal.x-plane.x)<0.36&&plane.alt<=26&&plane.wheels&&canInterrupt()){startRescue();return;}
@@ -2230,7 +2301,13 @@ function update(dt){
           : linedUp ? 'So close! One at a time — catch the next one 💛'
           : 'Steer closer next time ⬅️➡️'));
       }
-      if(animal.z<-0.1){animal=null;animalClock=gapStatic(11,5)+Math.random()*4;}
+      if(animal.z<-0.1){animal=null;animalClock=animalGap();}
+    }
+    /* turned around and flew away from it? Let it go, and send another along.
+       Without this the animal receded for ever and no new one could spawn. */
+    if(animal&&animal.z>1.1){
+      if(!animal.missed)toast(`${animal.em} You flew away from ${animal.name}. Another friend will come 💛`);
+      animal=null;animalClock=animalGap();
     }
   }
 
@@ -2251,7 +2328,7 @@ function update(dt){
     else{
       spawnHazard();
       hazClock=interval*(0.9+Math.random()*0.35);
-      animalClock=Math.max(animalClock,gapStatic(10,5));   /* keep them apart */
+      animalClock=Math.max(animalClock,animalGap()*0.75);   /* keep them apart */
       cargoClock=Math.max(cargoClock,gapStatic(18,9));
     }
   }
@@ -2275,7 +2352,9 @@ function update(dt){
 }
 
 function updateHazards(dt){
-  const dxShift=(plane.x-prevPlaneX)*(W*0.5);
+  /* the dodge lane, PLUS the sideways drift of the world itself, so a hazard
+     stays where it is on the ground when the plane slides across it */
+  const dxShift=(plane.x-prevPlaneX)*(W*0.5)+dLatStep*zPerMile()*W*0.55;
   const py=planeScreenY(),pxc=W/2;
   for(const h of hazards){
     /* the creature growls again every few seconds while it hunts you */
@@ -3002,6 +3081,19 @@ function updateGps(){
   const mi=document.getElementById('cpMiles');
   if(mi)mi.textContent=Math.max(0,Math.round(milesLeft()))+' mi';
 
+  /* WHICH WAY TO TURN, in a word — the blip already shows where the nose is
+     pointing, but a six-year-old should not have to work the geometry out. */
+  const relTurn=relBearing();
+  const turn=document.getElementById('cpTurn');
+  if(turn){
+    const a=Math.abs(relTurn);
+    turn.textContent = a<0.35 ? '▲ straight on'
+                     : a>2.2  ? '▼ turn around'
+                     : relTurn>0 ? '▶ turn right'
+                                 : '◀ turn left';
+    turn.className = a<0.35 ? 'cpturn good' : 'cpturn';
+  }
+
   /* the radar disc tints toward the zone he is actually over */
   const disc=document.getElementById('cpDisc');
   if(disc)disc.setAttribute('fill',blendColor('#131E34',zone().skyB,0.22));
@@ -3309,7 +3401,7 @@ function startRescue(){
   const sit=normSit(pool[Math.floor(Math.random()*pool.length)]);
   rescue={em:animal.em,name:animal.name,type,sit,zone:zone().id,word:null,wordEm:'',need:null,needEm:'',req:null,own:null};
   failsThisChallenge=0;
-  animal=null;animalClock=gapStatic(13,6)+Math.random()*4;hazClock=Math.max(hazClock,gapStatic(12,7));
+  animal=null;animalClock=animalGap();hazClock=Math.max(hazClock,gapStatic(12,7));
   animalCall(rescue.em);
   const entry=CHALLENGE_TYPES.find(c=>c.id===type)||CHALLENGE_TYPES[0];
   entry.start();
@@ -3944,18 +4036,52 @@ function saveOwn(){
   rescue.own=t;rescue.req=t;stats.ideas++;
   feelDone(CFG.ideaBonus);
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE ANIMAL'S OWN VOICE
+   ---------------------------------------------------------------------------
+   The "what will help?" options are written ABOUT the animal ("Save them a
+   seat"), because that is how the child reads them. The final sentence is
+   spoken BY the animal, so the same words have to flip to first person, or a
+   six-year-old hears the nonsense "I feel sad. I need a friend. Please be
+   THEIR friend today." Twenty-three of the thirty-three situations read that
+   way before this.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function toFirstPerson(t){
+  return String(t)
+    .replace(/\bthemselves\b/gi,'myself')
+    .replace(/\bthem\b/gi,'me')
+    .replace(/\btheirs\b/gi,'mine')
+    .replace(/\btheir\b/gi,'my')
+    .replace(/\bthey are\b/gi,'I am')
+    .replace(/\bthey feel\b/gi,'I feel')
+    .replace(/\bthey\b/gi,'I')
+    /* "with you" / "your game" are addressed TO the helper — they stay put */
+    .replace(/\bI can feel\b/gi,'I feel');
+}
 function feelDone(bonus){
   suppressAutoRead=false;
   stopSpeak();
   const cls=rescue.own?' class="i"':'';
   /* a six-year-old is band 'y' — short, one idea per sentence, same as 't' */
   const simple=(band==='t'||band==='y');
+  /* his OWN typed idea is already in his own words — leave it exactly as he
+     wrote it. The built-in options get flipped into the animal's voice. */
+  /* Only the FIRST letter is lowered, so the request joins "Please …" neatly
+     without wrecking anything the author capitalised on purpose — a blanket
+     toLowerCase() turned 'Say "I know you can do it"' into '"i know you can",
+     and flattened the second sentence of a two-part request. A trailing full
+     stop is dropped so the template's own one does not double up. */
+  const joinable=t=>{
+    t=String(t).trim().replace(/\.$/,'');
+    return t.charAt(0).toLowerCase()+t.slice(1);
+  };
+  const ask=rescue.own ? rescue.req : toFirstPerson(joinable(rescue.req));
   const sent=simple
-    ?`I feel <b>${esc(rescue.word.toLowerCase())}</b>. I need <b>${esc(rescue.need)}</b>. Please <b${cls}>${esc(rescue.req.toLowerCase())}</b>. Thank you! 💛`
-    :`I feel <b>${esc(rescue.word.toLowerCase())}</b> because I need <b>${esc(rescue.need)}</b>. It helps when you <b${cls}>${esc(rescue.req.toLowerCase())}</b>.`;
+    ?`I feel <b>${esc(rescue.word.toLowerCase())}</b>. I need <b>${esc(rescue.need)}</b>. Please <b${cls}>${esc(ask)}</b>. Thank you! 💛`
+    :`I feel <b>${esc(rescue.word.toLowerCase())}</b> because I need <b>${esc(rescue.need)}</b>. It helps when you <b${cls}>${esc(ask)}</b>.`;
   const spoken=simple
-    ?`I feel ${rescue.word}. I need ${rescue.need}. Please ${rescue.req}. Thank you!`
-    :`I feel ${rescue.word} because I need ${rescue.need}. It helps when you ${rescue.req}.`;
+    ?`I feel ${rescue.word}. I need ${rescue.need}. Please ${ask}. Thank you!`
+    :`I feel ${rescue.word} because I need ${rescue.need}. It helps when you ${ask}.`;
   challengeComplete(`${esc(rescue.name)} feels HEARD! ${esc(rescue.name)} says:`,sent,bonus);
   if(autoRead)setTimeout(()=>speakPlain(spoken),400);
 }
@@ -4154,7 +4280,9 @@ function showSpelling(){
   const custom=CFG.spellWords&&CFG.spellWords[band];
   const list=(custom&&custom.length)?custom:(SPELL_WORDS[band]||SPELL_WORDS.y);
   const [word,em]=list[Math.floor(Math.random()*list.length)];
-  const nBlanks=Math.min(word.length-1,(band==='t'||band==='y')?1:(band==='m'?2:3));
+  /* 0 in the settings means "pick by age"; anything else is an override */
+  const wanted=cfgNum('spellBlanks',0,0)||((band==='t'||band==='y')?1:(band==='m'?2:3));
+  const nBlanks=Math.max(1,Math.min(word.length-1,Math.round(wanted)));
   const idxs=shuffle([...Array(word.length).keys()]).slice(0,nBlanks).sort((a,b)=>a-b);
   const missing=idxs.map(i=>word[i]);
   /* BUG FIX: the chip list used to be de-duplicated with a Set, so a word that
@@ -4629,9 +4757,9 @@ function patPress(i){
   pat.input++;
   if(pat.input>=pat.seq.length){
     pat.busy=true;patKeysEnabled(false);
-    if(pat.round>=4){
+    if(pat.round>=cfgNum('patternRounds',4,1)){
       pat=null;
-      challengeComplete(`🎵 Four rounds! Your ears are brilliant, Captain ${esc(kidName||'Pilot')}. Pip claps his paws! 🦊💛`);
+      challengeComplete(`🎵 ${cfgNum('patternRounds',4,1)} rounds! Your ears are brilliant, Captain ${esc(kidName||'Pilot')}. Pip claps his paws! 🦊💛`);
       return;
     }
     pat.round++; pat.seq.push(Math.floor(Math.random()*4));
@@ -4856,8 +4984,8 @@ function archShoot(){
       arch.round++;
       setTimeout(()=>{
         if(!arch)return;
-        if(arch.round>=3){ archFinish(); return; }
-        archSetTurn('you',`Round ${arch.round+1} of 3 — your turn!`);
+        if(arch.round>=cfgNum('archeryRounds',3,1)){ archFinish(); return; }
+        archSetTurn('you',`Round ${arch.round+1} of ${cfgNum('archeryRounds',3,1)} — your turn!`);
         const b2=document.getElementById('arBtn');
         if(b2){b2.disabled=false;b2.className='cta';b2.textContent='Shoot! 🏹';}
         archStart();
@@ -5498,9 +5626,9 @@ function scheduleDistraction(){
   if(!focusG||focusG.i>=FOCUS_STEPS.length)return;
   setTimeout(()=>{
     if(!focusG||focusG.i>=FOCUS_STEPS.length)return;
-    if(Math.random()<0.55) popDistraction();
+    if(Math.random()<cfgNum('distractChance',0.55,0)) popDistraction();
     scheduleDistraction();
-  }, 3000+Math.random()*3500);
+  }, cfgNum('distractEvery',3,0.5)*1000+Math.random()*3500);
 }
 const DISTRACTIONS=[['📺','a loud TV'],['🍭','a sweet'],['🎮','a game'],['🔔','the doorbell'],['🐒','a silly monkey'],['📱','a buzzing phone']];
 function popDistraction(){
@@ -6247,13 +6375,13 @@ function flyRoute(){
    another has fierce ones.
    ═══════════════════════════════════════════════════════════════════════════ */
 const DASH_GROUPS=[
-  {id:'journey', em:'🗺️', name:'The journey', fields:[
+  {id:'journey', em:'🗺️', name:'The journey', tab:'Journey', fields:[
     {k:'missionDistance',      t:'Miles to the village',        min:5,  max:200, step:5},
     {k:'milesPerMinute',       t:'Miles flown each minute',     min:0.5,max:10,  step:0.5},
     {k:'interestEveryMinutes', t:'Interest every … minutes',    min:1,  max:30,  step:1},
     {k:'interestPercent',      t:'Interest rate (%)',           min:0,  max:50,  step:1}
   ]},
-  {id:'earn', em:'🏅', name:'Earning', fields:[
+  {id:'earn', em:'🏅', name:'Earning', tab:'Earning', fields:[
     {k:'rescuePoints',    t:'Points for helping an animal', min:1, max:200, step:1},
     {k:'ideaBonus',       t:'Bonus for his own idea',       min:0, max:100, step:1},
     {k:'freezeOnePoints', t:'Calming one troublemaker',     min:0, max:100, step:1},
@@ -6265,7 +6393,7 @@ const DASH_GROUPS=[
     {k:'flareDodgePoints',t:'Diving under a sun flare',     min:0, max:100, step:5},
     {k:'arrivalBonus',    t:'Delivering the medicine',      min:0, max:500, step:10}
   ]},
-  {id:'spend', em:'💰', name:'Spending', fields:[
+  {id:'spend', em:'💰', name:'Spending', tab:'Spending', fields:[
     {k:'engineCostRepair', t:'Mend an engine',       min:10, max:2000, step:10},
     {k:'engineCostNew',    t:'A brand-new engine',   min:10, max:3000, step:10},
     {k:'paintCost',        t:'New tail paint',       min:10, max:1000, step:10},
@@ -6273,14 +6401,17 @@ const DASH_GROUPS=[
     {k:'vaultGoal',        t:'The GOLDEN 707',       min:50, max:5000, step:50},
     {k:'crashRepairCost',  t:'Repair after a crash', min:10, max:2000, step:10}
   ]},
-  {id:'calm', em:'🧊', name:'Calm & shields', fields:[
+  {id:'calm', em:'🧊', name:'Calm & shields', tab:'Calm', fields:[
     {k:'calmMax',          t:'How far the calm dial goes',     min:2, max:30,  step:1},
     {k:'calmPerStrike',    t:'Calm used to soak up one hit',   min:1, max:10,  step:1},
     {k:'calmDecayPerMin',  t:'Calm that fades each minute',    min:0, max:6,   step:0.2},
     {k:'strikesPerEngine', t:'Hits before an engine is lost',  min:1, max:6,   step:1},
-    {k:'kindShieldSeconds',t:'Kindness shield lasts (sec)',    min:3, max:60,  step:1}
+    {k:'kindShieldSeconds',t:'Kindness shield lasts (sec)',    min:3, max:60,  step:1},
+    {k:'calmPerPractice',  t:'Calm earned by practising',      min:0, max:20,  step:1},
+    {k:'calmPerFreezeOne', t:'Calm for calming one',           min:0, max:20,  step:1},
+    {k:'calmPerFreezeAll', t:'Calm for calming the whole sky', min:0, max:20,  step:1}
   ]},
-  {id:'danger', em:'⚡', name:'Danger & pacing', fields:[
+  {id:'danger', em:'⚡', name:'Danger & pacing', tab:'Danger', fields:[
     {k:'hazardBaseInterval', t:'Seconds between hazards (new pilot)', min:5, max:90, step:1},
     {k:'hazardMinInterval',  t:'…once he is experienced',             min:3, max:60, step:1},
     {k:'hazardSpeedPerLevel',t:'Hazards speed up per level',          min:0, max:0.5,step:0.01},
@@ -6288,20 +6419,74 @@ const DASH_GROUPS=[
     {k:'maxHazardsAtOnce',   t:'Most hazards at once',                min:1, max:5,  step:1},
     {k:'hazardHitPenalty',   t:'Points lost on a hit',                min:0, max:100,step:1},
     {k:'cargoEveryMin',      t:'Seconds between surprise gifts',      min:20,max:400,step:10},
-    {k:'turnRate',           t:'How fast the plane turns',            min:0.2,max:2, step:0.05}
+    {k:'turnRate',           t:'How fast the plane turns',            min:0.2,max:2, step:0.05},
+    {k:'strikeInvuln',       t:'Grace after a hit (sec)',             min:0, max:5,  step:0.1}
   ]},
-  {id:'plane', em:'✈️', name:'The plane', fields:[
+  {id:'pace', em:'⏱️', name:'How often challenges come', tab:'Pacing', fields:[
+    {k:'animalBaseInterval', t:'Seconds between animals (new pilot)', min:3, max:120,step:1},
+    {k:'animalMinInterval',  t:'…once he is experienced',             min:2, max:90, step:1},
+    {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
+    {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
+    {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
+    {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
+    {k:'patternRounds',      t:'Rounds to win Copy the Pattern',      min:1, max:10, step:1},
+    {k:'spellBlanks',        t:'Missing letters (0 = by age)',        min:0, max:5,  step:1},
+    {k:'distractChance',     t:'How often a distraction pops up',     min:0, max:1,  step:0.05},
+    {k:'distractEvery',      t:'…checked every N seconds',            min:0.5,max:20,step:0.5}
+  ]},
+  {id:'plane', em:'✈️', name:'The plane', tab:'Plane', fields:[
     {k:'startingEngines', t:'Engines to start with', min:1, max:6,  step:1},
     {k:'maxEngines',      t:'Most engines allowed',  min:1, max:6,  step:1},
     {k:'cruiseSpeed',     t:'Cruise speed',          min:0.3,max:1.5,step:0.05},
     {k:'boostSpeed',      t:'Boost speed',           min:0.8,max:3,  step:0.05},
+    {k:'climbSpeed',      t:'Speed while climbing',  min:0.1,max:3,  step:0.05},
     {k:'sluggishFactor',  t:'Speed if the check is skipped', min:0.4,max:1,step:0.02}
   ]},
-  {id:'learn', em:'📚', name:'Learning', fields:[
+  {id:'learn', em:'📚', name:'Learning', tab:'Learning', fields:[
     {k:'shareAskChance',  t:'How often an animal asks to share', min:0, max:1, step:0.05},
-    {k:'donationKarmaPer',t:'Points shared per 1 karma',         min:5, max:100,step:5}
+    {k:'donationKarmaPer',t:'Points shared per 1 karma',         min:5, max:100,step:5},
+    {k:'sunnyMultiplier', t:'Sunny-weather reward (×)',          min:1, max:5, step:0.1},
+    {k:'rareMultiplier',  t:'Rare-animal reward (×)',            min:1, max:5, step:0.5},
+    {k:'splitRepairs',    t:'Share of points → repairs',         min:0, max:1, step:0.05},
+    {k:'splitFun',        t:'Share of points → fun',             min:0, max:1, step:0.05},
+    {k:'splitSavings',    t:'Share of points → savings',         min:0, max:1, step:0.05}
   ]}
 ];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPLETENESS BY CONSTRUCTION
+   ---------------------------------------------------------------------------
+   The groups above are the nicely-labelled ones. This sweep then collects
+   EVERY other number in CFG and drops it into an "Everything else" tab with a
+   sensible range worked out from its own value — so the settings space always
+   holds every variable that can be tweaked, and any key added to CFG in
+   future turns up automatically instead of being quietly unreachable.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function labelledKeys(){
+  const set=new Set();
+  DASH_GROUPS.forEach(g=>g.fields.forEach(f=>set.add(f.k)));
+  return set;
+}
+function prettify(k){
+  return k.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase()).trim();
+}
+function autoRange(v){
+  if(!isFinite(v))return {min:0,max:10,step:1};
+  const a=Math.abs(v);
+  if(Number.isInteger(v)&&a>=1){
+    const max=Math.max(10,Math.ceil(a*4));
+    return {min:0,max,step:(max>500?10:1)};
+  }
+  if(a<=1) return {min:0,max:(a<=1?2:Math.ceil(a*4)),step:0.05};
+  return {min:0,max:Math.ceil(a*4),step:0.1};
+}
+function extraFields(){
+  const known=labelledKeys();
+  return Object.keys(CFG)
+    .filter(k=>typeof CFG[k]==='number'&&isFinite(CFG[k])&&!known.has(k))
+    .sort()
+    .map(k=>Object.assign({k,t:prettify(k)},autoRange(CFG[k])));
+}
 let dashTab='journey';
 
 /* per-pilot overrides, saved on the device */
@@ -6314,6 +6499,7 @@ function loadDash(){
   }catch(e){ return {}; }
 }
 function saveDash(k,v){
+  /* v may be a number (a slider) or an array of lines (the praise words) */
   let o={};
   try{ o=JSON.parse(localStorage.getItem(dashKey())||'{}'); }catch(e){}
   o[k]=v;
@@ -6328,22 +6514,32 @@ function resetDash(){
 function openDashboard(){
   paused=true;engineUpdate();
   const g=DASH_GROUPS.find(x=>x.id===dashTab)||DASH_GROUPS[0];
+  const nTunable=()=>Object.keys(CFG).filter(k=>typeof CFG[k]==='number'&&isFinite(CFG[k])).length;
   openModal(`
     <div class="dashhead">
       <div class="dashwho">⚙️ <b>${esc(kidName||'Pilot')}</b>&rsquo;s settings</div>
       <div class="dashsub">Changes are saved for this pilot only</div>
     </div>
     <div class="dashtabs">
-      ${DASH_GROUPS.map(x=>`<button class="dtab ${x.id===dashTab?'on':''}" onclick="dashGo('${x.id}')">${x.em}<small>${x.name.split(' ')[0]}</small></button>`).join('')}
+      ${DASH_GROUPS.map(x=>`<button class="dtab ${x.id===dashTab?'on':''}" onclick="dashGo('${x.id}')">${x.em}<small>${x.tab||x.name}</small></button>`).join('')}
+      <button class="dtab ${dashTab==='more'?'on':''}" onclick="dashGo('more')">🔧<small>More</small></button>
       <button class="dtab ${dashTab==='content'?'on':''}" onclick="dashGo('content')">📝<small>Content</small></button>
     </div>
-    <div id="dashbody">${dashTab==='content'?dashContent():dashFields(g)}</div>
+    <div id="dashbody">${
+      dashTab==='content' ? dashContent()
+    : dashTab==='more'    ? dashFields({em:'🔧',name:'Everything else',fields:extraFields()})
+    : dashFields(g)}</div>
+    <div class="tinynote">${nTunable()} settings in here — every number the game uses.</div>
     <button class="cta ghost" onclick="dashReset()">↺ Back to the defaults for this pilot</button>
     <button class="cta" onclick="openSettings()">Done ✅</button>
   `);
 }
 function dashGo(t){ dashTab=t; openDashboard(); }
 function dashFields(g){
+  if(!g.fields.length){
+    return `<div class="dashgrp"><div class="dashgrpname">${g.em} ${g.name}</div>
+      <p class="tinynote">Every setting already has a proper home in the other tabs. 👍</p></div>`;
+  }
   return `
     <div class="dashgrp">
       <div class="dashgrpname">${g.em} ${g.name}</div>
@@ -6392,6 +6588,7 @@ function dashContent(){
         <div class="sopt ${dashSub==='math'?'sel':''}" onclick="dashSubGo('math')">🧮 Maths</div>
         <div class="sopt ${dashSub==='q'?'sel':''}"    onclick="dashSubGo('q')">❓ Question</div>
         <div class="sopt ${dashSub==='bulk'?'sel':''}" onclick="dashSubGo('bulk')">📥 Bulk paste</div>
+        <div class="sopt ${dashSub==='words'?'sel':''}" onclick="dashSubGo('words')">💬 Praise words</div>
       </div>
       <div id="dashsubbody">${dashSubBody()}</div>
       <div class="hintline" style="margin-top:10px">
@@ -6438,6 +6635,18 @@ function dashSubBody(){
       <label class="fieldlbl">Wrong answers (comma separated)</label>
       <input type="text" id="ceMw" maxlength="40" placeholder="16, 18, 27">
       <button class="cta mint" onclick="ceAddMath()">➕ Add maths question</button>`;
+  }
+  if(dashSub==='words'){
+    /* the last two tweakable things that are not numbers: what the game SAYS
+       when he gets it right, and when he does not get it yet */
+    return `
+      <label class="fieldlbl">What to say when he gets it right (one per line)</label>
+      <textarea id="wdPraise" style="min-height:110px">${esc(CFG.praise.join('\n'))}</textarea>
+      <label class="fieldlbl">What to say when he has not got it yet (one per line)</label>
+      <textarea id="wdNotYet" style="min-height:90px">${esc(CFG.notYet.join('\n'))}</textarea>
+      <p class="tinynote" style="text-align:left">Keep them about EFFORT, not about being clever —
+        "You kept going!" rather than "You are so smart."</p>
+      <button class="cta mint" onclick="dashSaveWords()">💬 Save these words</button>`;
   }
   if(dashSub==='q'){
     return `
@@ -6523,6 +6732,18 @@ function ceAddQ(){
   toast(`✅ Added (${customQuestions.length} total)`);
   speakPlain('Question added. The animals will ask it.');
   dashSubGo('q');
+}
+function dashSaveWords(){
+  const grab=id=>((document.getElementById(id)||{}).value||'')
+    .split('\n').map(x=>x.trim()).filter(Boolean);
+  const pr=grab('wdPraise'), ny=grab('wdNotYet');
+  if(!pr.length||!ny.length){toast('Both lists need at least one line ✏️');return;}
+  CFG.praise=pr; CFG.notYet=ny;
+  /* saved per pilot, exactly like every slider */
+  saveDash('praise',pr); saveDash('notYet',ny);
+  toast(`✅ Saved — ${pr.length} praise lines, ${ny.length} not-yet lines`);
+  speakPlain(praise());
+  dashSubGo('words');
 }
 function dashBulk(){
   const raw=(document.getElementById('ceBulk')||{}).value||'';
