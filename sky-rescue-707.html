@@ -1706,6 +1706,15 @@ let prevPlaneX=0;
 /* how far the scenery moves per world mile. Shared by the forward scroll and
    the sideways slide, so a mile is a mile whichever way the nose is pointing. */
 function zPerMile(){ const m=+CFG.milesPerMinute; return (m>0)?(0.20*60/m):6; }
+/* BUG FIX: the terrain silhouette (mountains, buildings, fields, the lake)
+   was painted fresh every frame from ZONE alone, with no dependence on
+   plane.x, latMiles or heading at all — so turning left, turning right, and
+   turning right around were all visually identical, and the only way to
+   tell you were off course was the small radar. This is the SAME lateral
+   scale already used to slide props, clouds and hazards, just evaluated as
+   a running total instead of a per-frame delta, so the backdrop drifts at
+   exactly the rate the foreground already does. */
+function terrainShiftPx(){ return latMiles*zPerMile()*W*0.55; }
 let dLatStep=0;          /* this frame's sideways world step, in miles */
 let props=[], clouds=[], skyObjs=[], hazards=[], iceFx=[];
 let animal=null;
@@ -2517,7 +2526,15 @@ function draw(time){
   gg.addColorStop(1,blendColor(groundC,'#FFFFFF',0.18));
   ctx.fillStyle=gg;ctx.fillRect(0,horizon,W,H-horizon);
 
-  drawTerrain(time);
+  {
+    const shiftPx=terrainShiftPx();
+    const tilePhase=((shiftPx%W)+W)%W;
+    ctx.save();
+    ctx.translate(-tilePhase,0); drawTerrain(time);
+    ctx.translate(-W,0);         drawTerrain(time);   /* covers the left seam  */
+    ctx.translate(2*W,0);        drawTerrain(time);   /* covers the right seam */
+    ctx.restore();
+  }
 
   /* pale veil over the whole landscape: the BACKGROUND recedes so every
      dark-outlined object in front of it pops forward */
@@ -2526,7 +2543,7 @@ function draw(time){
 
   ctx.strokeStyle='rgba(255,255,255,0.16)';ctx.lineWidth=2;
   for(let i=0;i<7;i++){
-    const zz=((time*0.20*plane.speed)+i/7)%1;
+    const zz=((miles*6)+i/7)%1;   /* signed: reversing runs this backwards too */
     const t=Math.pow(1-zz,1.9);
     const y=horizon+(H-horizon)*t;
     ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
@@ -2762,7 +2779,7 @@ function drawTerrain(time){
   }else if(id==='lake'){
     ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
     for(let i=0;i<8;i++){
-      const zz=((time*0.13*plane.speed)+i/8)%1;
+      const zz=((miles*4)+i/8)%1;
       const p=project((seedA[i]*2-1)*0.9,zz);
       ctx.beginPath();
       ctx.moveTo(p.sx-34*p.scale,p.sy);
@@ -2772,7 +2789,7 @@ function drawTerrain(time){
     wedge(0.35,0.6,'rgba(255,240,180,0.10)');   /* sun glint path */
   }else if(id==='forest'){
     for(let i=0;i<9;i++){
-      const zz=((time*0.20*plane.speed)*0.5+seedA[i+20])%1;
+      const zz=((miles*3)+seedA[i+20])%1;
       const p=project((seedA[i]*2-1)*1.1,zz);
       if(p.sy<horizon)continue;
       ctx.fillStyle='rgba(40,90,50,0.13)';
