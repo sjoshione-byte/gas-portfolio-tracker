@@ -1744,6 +1744,21 @@ function terrainSeed(i,period){
   return ((v%1)+1)%1;
 }
 let dLatStep=0;          /* this frame's sideways world step, in miles */
+/* The ground used to move only when the plane TRANSLATED sideways, so at
+   heading 0 and 180 (where sin(heading) is 0) trees, animals and hazards sat
+   dead still however hard you turned. Rotating changes the view direction, so
+   everything on the ground has to sweep across it too. This is the per-frame
+   swing of the same panorama the horizon uses, shared so ground and sky can
+   never disagree about which way the world went. */
+let prevPanPx=0, panSpawnClock=0.42;
+function worldSwingPx(){
+  let d=terrainShiftPx()-prevPanPx;
+  const wrapPx=PAN_TURNS*W;                 /* heading wraps at +-pi */
+  if(d>wrapPx/2)d-=wrapPx; else if(d<-wrapPx/2)d+=wrapPx;
+  if(Math.abs(d)>W*0.3)d=0;                 /* a resize or a teleport, not a turn */
+  prevPanPx=terrainShiftPx();
+  return d;
+}
 let props=[], clouds=[], skyObjs=[], hazards=[], iceFx=[];
 let animal=null;
 let zoneIdx=0, zonePending=null, zoneBlendT=0, zoneClock=0, spawnClock=0, animalClock=5, hazClock=12;
@@ -2065,6 +2080,16 @@ function readChoices(list){
 }
 
 /* ═══════════ SPAWNING ═══════════ */
+/* a prop swinging into view from the left or right edge during a turn */
+function spawnPropSide(dir){
+  const z=zone();
+  props.push({
+    em:z.props[Math.floor(Math.random()*z.props.length)],
+    x:dir*(2.6+Math.random()*0.8),
+    z:0.06+Math.random()*0.92,
+    size:24+Math.random()*32
+  });
+}
 function spawnProp(behind){
   const z=zone();
   props.push({
@@ -2239,6 +2264,11 @@ function update(dt){
     updateGps();
   }
 
+  /* how far the world swung this frame — from turning AND from travelling.
+     Computed once, here, so every moving thing agrees on it. */
+  const swingPx=worldSwingPx();
+  const swing=swingPx/(W*0.55);         /* the same swing, in prop x units */
+
   flightClock+=dt;
   decayCalm(dt);
 
@@ -2271,7 +2301,7 @@ function update(dt){
   cargoClock-=dt;
   if(cargoClock<=0&&!cargo&&!animal&&!hazards.length&&canInterrupt()){spawnCargo();cargoClock=(CFG.cargoEveryMin||110)+Math.random()*60;}
   if(cargo){
-    cargo.sx-=cargo.v*dt*plane.speed;
+    cargo.sx-=cargo.v*dt*plane.speed*Math.max(0.1,fwd)+swingPx;
     if(Math.hypot(cargo.sx-W/2,cargo.sy-planeScreenY())<52&&canInterrupt()){collectCargo();}
     else if(cargo.sx<-60)cargo=null;
   }
@@ -2296,11 +2326,16 @@ function update(dt){
      the plane when flying backwards — so a U-turn really does reverse the world */
   spawnClock-=Math.abs(zspeed)*dt;
   if(spawnClock<=0){ spawnProp(fwd<0); spawnClock=0.30*0.20; }
-  const xSlide=dLatStep*zPerMile();     /* sideways world shift, in prop x units */
-  props.forEach(p=>{ p.z-=zspeed*dt; p.x-=xSlide; });
+  /* ...and while TURNING, it arrives from whichever side is swinging into
+     view. Without this, flying side-on (where zspeed is 0, so the clock above
+     never ticks) slowly emptied the landscape as everything slid away. */
+  panSpawnClock-=Math.abs(swing);
+  if(panSpawnClock<=0){ spawnPropSide(swing>0?1:-1); panSpawnClock=0.42; }
+
+  props.forEach(p=>{ p.z-=zspeed*dt; p.x-=swing; });
   props=props.filter(p=>p.z>-0.08&&p.z<1.12&&p.x>-4.5&&p.x<4.5);
-  /* clouds and kites drift with the wind AND with the sideways motion */
-  const skySlide=xSlide*W*0.55;
+  /* clouds and kites are far off, so they swing at a gentler parallax */
+  const skySlide=swingPx*0.5;
   clouds.forEach(c=>{
     c.x-=c.v*dt*plane.speed*Math.max(0.15,fwd)+skySlide;
     if(c.x<-80){c.x=W+80;c.y=20+Math.random()*140;}
@@ -2320,7 +2355,7 @@ function update(dt){
     }
   }else{
     animal.z-=zspeed*dt*0.85;
-    animal.x-=dLatStep*zPerMile();      /* it stays put on the ground */
+    animal.x-=swing;                    /* it stays put on the ground */
     if(animal.z<0.5&&!animal.called){animal.called=true;animalCall(animal.em);}
     if(animal.z<=0.14&&animal.z>0.02&&!animal.missed){
       if(Math.abs(animal.x-plane.x)<0.36&&plane.alt<=26&&plane.wheels&&canInterrupt()){startRescue();return;}
@@ -2340,8 +2375,12 @@ function update(dt){
       }
       if(animal.z<-0.1){animal=null;animalClock=animalGap();}
     }
-    /* turned around and flew away from it? Let it go, and send another along.
-       Without this the animal receded for ever and no new one could spawn. */
+    /* turned away from it? Let it go, and send another along. Without this the
+       animal drifted off for ever and no new one could ever spawn. */
+    if(animal&&Math.abs(animal.x)>3.2){
+      if(!animal.missed)toast(`${animal.em} You turned away from ${animal.name}. Another friend will come 💛`);
+      animal=null;animalClock=animalGap();
+    }
     if(animal&&animal.z>1.1){
       if(!animal.missed)toast(`${animal.em} You flew away from ${animal.name}. Another friend will come 💛`);
       animal=null;animalClock=animalGap();
@@ -2369,7 +2408,7 @@ function update(dt){
       cargoClock=Math.max(cargoClock,gapStatic(18,9));
     }
   }
-  updateHazards(dt);
+  updateHazards(dt,swingPx);
 
   /* emergency landing check */
   if(emergencyMode){
@@ -2388,10 +2427,11 @@ function update(dt){
   updateAlt();
 }
 
-function updateHazards(dt){
+function updateHazards(dt,worldSwing){
+  worldSwing=worldSwing||0;
   /* the dodge lane, PLUS the sideways drift of the world itself, so a hazard
      stays where it is on the ground when the plane slides across it */
-  const dxShift=(plane.x-prevPlaneX)*(W*0.5)+dLatStep*zPerMile()*W*0.55;
+  const dxShift=(plane.x-prevPlaneX)*(W*0.5)+worldSwing;
   const py=planeScreenY(),pxc=W/2;
   for(const h of hazards){
     /* the creature growls again every few seconds while it hunts you */
