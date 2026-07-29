@@ -25,6 +25,8 @@
     display:flex;align-items:center;gap:6px;
   }
   .hudbox.odo{gap:8px;padding:4px 10px;pointer-events:auto;cursor:pointer}
+  .hudspk{width:20px;height:20px;margin-left:2px;pointer-events:auto;flex-shrink:0}
+  .hudspk svg{width:11px;height:11px}
   .odopic{font-size:22px;line-height:1}
   .odonums{display:flex;flex-direction:column;line-height:1.25}
   .odorow{font-size:11.5px;font-weight:800;white-space:nowrap}
@@ -757,15 +759,18 @@
 
 <div id="hud">
   <div class="hudcol">
-    <div class="hudbox">🎚️ LV <b id="level">1</b> &nbsp;<span id="hearts">⚙️⚙️⚙️⚙️</span></div>
+    <div class="hudbox">🎚️ LV <b id="level">1</b> &nbsp;<span id="hearts">⚙️⚙️⚙️⚙️</span>
+      <span class="rspk hudspk" onclick="event.stopPropagation();sayRow('level')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12c0-1.8-1-3.3-2.5-4v8c1.5-.7 2.5-2.2 2.5-4z"/><path d="M14 3.2v2.1c2.9.9 5 3.6 5 6.7s-2.1 5.8-5 6.7v2.1c4-1 7-4.6 7-8.8s-3-7.8-7-8.8z"/></svg></span>
+    </div>
     <!-- ODOMETER: how far he has flown and how far is left, with a small
-         picture of the place he is flying to. Tap it to see the village. -->
+         picture of the place he is flying to. Tap it to see the destination. -->
     <div class="hudbox odo" id="odoBox" onclick="showDestination()">
       <span class="odopic" id="odoPic">🏔️</span>
       <span class="odonums">
         <span class="odorow"><b id="odoFlown">0</b> mi flown</span>
         <span class="odorow to"><b id="odoLeft">40</b> mi to go</span>
       </span>
+      <span class="rspk hudspk" onclick="event.stopPropagation();sayRow('miles')"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 12c0-1.8-1-3.3-2.5-4v8c1.5-.7 2.5-2.2 2.5-4z"/><path d="M14 3.2v2.1c2.9.9 5 3.6 5 6.7s-2.1 5.8-5 6.7v2.1c4-1 7-4.6 7-8.8s-3-7.8-7-8.8z"/></svg></span>
     </div>
     <div class="hudbox calmdial" onclick="openCalmChooser()">
       <svg viewBox="0 0 34 34" width="26" height="26">
@@ -834,6 +839,8 @@
   <button class="drawerbtn" style="background:var(--ice)" onclick="toggleDrawer();openCalmChooser()">🧊 CALM POWER
     <span class="rspk" onclick="event.stopPropagation();sayRow('calmbtn')"></span></button>
   <button class="drawerbtn" style="background:var(--idea);margin-top:7px" onclick="toggleDrawer();shareAnyTime()">💝 SHARE POINTS <span class="rspk" onclick="event.stopPropagation();sayRow('sharebtn')"></span></button>
+  <button class="drawerbtn" style="background:#D8F3DC;margin-top:7px" onclick="toggleDrawer();showArcade()">🎮 PLAY A GAME
+    <span class="rspk" onclick="event.stopPropagation();sayRow('gamesbtn')"></span></button>
   <button class="drawerbtn" style="margin-top:7px" onclick="toggleDrawer();openShop()">🏗️ HANGAR / repair
     <span class="rspk" onclick="event.stopPropagation();sayRow('hangarbtn')"></span></button>
   <button id="drawerClose" style="margin-top:7px" onclick="toggleDrawer()">Close ›</button>
@@ -996,10 +1003,15 @@ const DEFAULT_CONFIG={
   sunnyMultiplier:   1.5,    // rescues in sunny weather
   rareMultiplier:    2,      // rescues on the storm route
   crashRepairCost:   250,    // the crew fixing a crash
-  arrivalBonus:      120,    // delivering the medicine
+  arrivalBonus:      120,    // delivering the mission cargo
   flareDodgePoints:   25,    // diving under a solar flare
   realBreathBonus:    20,    // 3+ real tummy breaths, checked by the phone
   teamBonus:          40,    // building something together with Pip
+  groundBonus:        10,    // feeling the body / helping an animal feel grounded
+  nvcBonus:            6,    // extra, on top of the base points, for any feelings exercise
+  calmBonus:            5,    // extra, on top of the base points, for choosing to breathe
+  repairBreathPoints:  10,    // breathing first, while the plane waits to be mended
+  arcadePoints:        10,    // playing any game any time, outside a rescue
 
   /* ── SPENDING: expensive on purpose, so a purchase is a real decision ──── */
   engineCostRepair:  120,    // fix one engine     (REPAIRS)  ≈ 12 rescues
@@ -1422,15 +1434,108 @@ const ZONES = [
    props:['⛵','🚤','🏝️','🌊','🪷','🛶','🌴','🌊','⛱️','🐠','🚢','🏖️','⚓'],animals:['🦆','🐢','🦩','🐬']}
 ];
 const SKYPROPS=['🎈','🪁','🕊️','🎏'];
-/* WHERE WE ARE GOING — one definition, so the odometer, the radar and the
-   mission briefing can never show three different destinations */
-const DEST={
-  em:'🏔️',
-  name:'the lost mountain village',
-  /* the scene the child is flying towards, shown before take-off and again
-     from the odometer, so the reason for the journey stays concrete */
-  scene:[['🏔️','⛰️','🏔️'],['🏚️','🏚️','⛺','🏚️'],['🧑‍⚕️','🧒','👩','👦','🧓']]
-};
+/* WHERE WE ARE GOING — one definition per mission, so the odometer, the
+   radar and the mission briefing can never show three different things.
+   Picked once before take-off (and again for each new journey) instead of
+   choosing a landscape + weather combo by hand. */
+const MISSIONS=[
+  { id:'quake', odoEm:'🏔️', cargoEm:'💊', title:'Earthquake delivery',
+    jobTitle:'Your job: take medicine to the village',
+    briefing:[
+      ['🌍','An earthquake shook a village far away.'],
+      ['💊','The people there need medicine.'],
+      ['✈️','Your plane is taking it to them.'],
+      ['🆘','Help the animals you meet on the way.'],
+      ['🧊','Calm the storms. Do not fight them.']
+    ],
+    placeName:'the village',
+    destHeading:'The village needs you',
+    destBlurb:'An earthquake shook this village. The houses fell down. These people are waiting for the medicine in your plane.',
+    destScene:[['🏔️','⛰️','🏔️'],['🏚️','🏚️','⛺','🏚️'],['🧑‍⚕️','🧒','👩','👦','🧓']],
+    sayBubble:'Please help us!',
+    arrivalTitle:'The medicine is here!',
+    arrivalDrop:['📦','📦','💊'], arrivalBack:['🏔️','⛰️'], arrivalMid:['⛺','🏕️'],
+    arrivalPeople:['🧒','👧','🧑‍⚕️','👦','👩'],
+    arrivalBlurb:'The children run out to meet you. They are all waving. They are all saying <b>thank you</b>. The doctor takes the medicine to the ones who need it most.'
+  },
+  { id:'rocket', odoEm:'🚀', cargoEm:'🛰️', title:'Rocket to the launch pad',
+    jobTitle:'Your job: fly a rocket part to the launch pad',
+    briefing:[
+      ['🚀','A big rocket is waiting at the launch pad.'],
+      ['🛰️','It needs one more part to fly.'],
+      ['✈️','Your plane is taking the part to the astronauts.'],
+      ['🆘','Help the animals you meet on the way.'],
+      ['🧊','Calm the storms. Do not fight them.']
+    ],
+    placeName:'the launch pad',
+    destHeading:'The launch pad needs you',
+    destBlurb:'The rocket cannot fly without this part. The astronauts are waiting for your plane to bring it.',
+    destScene:[['🌵','🏜️','🌵'],['🚀','🗼','📡'],['👨‍🚀','👩‍🚀','🧑‍🚀']],
+    sayBubble:'We are ready for lift-off!',
+    arrivalTitle:'Ready for lift-off!',
+    arrivalDrop:['📦','📦','🛰️'], arrivalBack:['🚀','🗼'], arrivalMid:['📡','🌵'],
+    arrivalPeople:['👨‍🚀','👩‍🚀','🧑‍🚀','👦','👧'],
+    arrivalBlurb:'The astronauts cheer and clap. Your part fits perfectly. Three… two… one… the rocket is ready to fly!'
+  },
+  { id:'forest', odoEm:'🌲', cargoEm:'🐾', title:'Animals to the forest',
+    jobTitle:'Your job: fly the animals home to the forest',
+    briefing:[
+      ['🐾','Some animals lost their forest home.'],
+      ['🌲','A safe new forest is waiting for them.'],
+      ['✈️','Your plane is taking them home.'],
+      ['🆘','Help the animals you meet on the way.'],
+      ['🧊','Calm the storms. Do not fight them.']
+    ],
+    placeName:'the forest',
+    destHeading:'The forest is waiting for you',
+    destBlurb:'These animals need a safe new home. They are waiting for your plane to bring them to the forest.',
+    destScene:[['🌲','🌳','🌲'],['🦉','🍄','🦔'],['🦌','🦊','🐿️']],
+    sayBubble:'Welcome home, little ones!',
+    arrivalTitle:'Home in the forest!',
+    arrivalDrop:['📦','📦','🐾'], arrivalBack:['🌲','🌳'], arrivalMid:['🍄','🦉'],
+    arrivalPeople:['🦌','🦊','🦔','🐿️','🐇'],
+    arrivalBlurb:'The animals bound into the trees. They are safe, and they are home. You can hear them calling <b>thank you</b>.'
+  },
+  { id:'cars', odoEm:'🏁', cargoEm:'🏎️', title:'Racing cars to the track',
+    jobTitle:'Your job: fly the racing cars to the track',
+    briefing:[
+      ['🏎️','Racing cars are needed at the track.'],
+      ['🏁','Race day starts soon!'],
+      ['✈️','Your plane is taking the cars there.'],
+      ['🆘','Help the animals you meet on the way.'],
+      ['🧊','Calm the storms. Do not fight them.']
+    ],
+    placeName:'the race track',
+    destHeading:'The track is waiting for you',
+    destBlurb:'Race day starts soon! The team is waiting for your plane to bring the cars to the track.',
+    destScene:[['🏟️','🏁','🏟️'],['🏎️','🏆','🏎️'],['🧑‍🔧','👨‍🔧','📣']],
+    sayBubble:'Start your engines soon!',
+    arrivalTitle:'Race day is here!',
+    arrivalDrop:['📦','📦','🏎️'], arrivalBack:['🏟️','🏁'], arrivalMid:['🏆','📣'],
+    arrivalPeople:['🧑‍🔧','👨‍🔧','🏎️','👦','👧'],
+    arrivalBlurb:'The crew cheers and waves the chequered flag. The cars are ready. Engines start… and they are racing!'
+  },
+  { id:'safari', odoEm:'🦁', cargoEm:'🎒', title:'Kids to the Africa safari',
+    jobTitle:'Your job: fly the children to the safari',
+    briefing:[
+      ['🎒','Some children are going on a safari.'],
+      ['🦁','A safari in Africa is waiting for them.'],
+      ['✈️','Your plane is taking them there.'],
+      ['🆘','Help the animals you meet on the way.'],
+      ['🧊','Calm the storms. Do not fight them.']
+    ],
+    placeName:'the safari',
+    destHeading:'The safari is waiting for you',
+    destBlurb:'The children are so excited. The safari guide is waiting for your plane to bring them to Africa.',
+    destScene:[['🌅','🌴','🌅'],['🦁','🐘','🦒'],['🧒','👧','🧑‍🌾']],
+    sayBubble:'The safari is waiting for you!',
+    arrivalTitle:'Safari time!',
+    arrivalDrop:['📦','📦','🎒'], arrivalBack:['🌅','🌴'], arrivalMid:['🐘','🦒'],
+    arrivalPeople:['🧑‍🌾','🦁','🧒','👧','🐘'],
+    arrivalBlurb:'The guide welcomes everyone with a big smile. Elephants and giraffes wander close by. The safari begins!'
+  }
+];
+let curMission=MISSIONS[0];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROFILES & SAVED PROGRESS
@@ -1627,7 +1732,8 @@ function addPoints(p){
   if(toSave>0&&started){
     savingsSaid++;
     if(savingsSaid<=2||savingsSaid%4===0){
-      speakNotice(`${toSave} of those points went into your savings, all by themselves. Saved points grow.`);
+      /* short: one fact, not a lecture. The card already shows the number. */
+      speakNotice(`${toSave} points went to your savings.`);
     }
   }
   wNeeds +=Math.round(p*CFG.splitRepairs);
@@ -3168,7 +3274,7 @@ function updateHUD(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   set('odoFlown',Math.round(miles));
   set('odoLeft',Math.max(0,Math.round(milesLeft())));
-  set('odoPic',DEST.em);
+  set('odoPic',curMission.odoEm);
   set('level',level());
   set('hearts','⚙️'.repeat(engines)+'✖️'.repeat(Math.max(0,engineSlots-engines))+(kindness>0?' 💛×'+kindness:''));
   set('calmVal',Math.round(calmPower));
@@ -3185,7 +3291,7 @@ function sayGps(){
   if(Math.abs(rel)>2.2) dir='behind you. Turn all the way around';
   else if(rel>0.5) dir='over to your right';
   else if(rel<-0.5) dir='over to your left';
-  speakPlain(`The village is ${Math.round(milesLeft())} miles away, ${dir}. You have flown ${Math.round(miles)} miles so far.`);
+  speakPlain(`${cap1(curMission.placeName)} is ${Math.round(milesLeft())} miles away, ${dir}. You have flown ${Math.round(miles)} miles so far.`);
 }
 function updateGps(){
   const c=document.getElementById('compass');
@@ -3263,9 +3369,12 @@ function sayRow(what){
     calm:`Your calm is ${Math.round(calmPower)} out of ${calmMax()}. You have earned ${calmEarnedTotal} altogether.`,
     bank:`Repairs has ${wNeeds} points. Fun has ${wWants} points. Savings has ${wVault}. You need ${CFG.vaultGoal} for the golden plane.`,
     crew:`You have helped ${crew.length} animal${crew.length===1?'':'s'}.`,
-    miles:`You have flown ${Math.round(miles)} miles. The village is ${Math.round(milesLeft())} miles away.`,
+    miles:`You have flown ${Math.round(miles)} miles. ${cap1(curMission.placeName)} is ${Math.round(milesLeft())} miles away.`,
     calmbtn:`Calm power. Press this any time. You can breathe, and stop trouble.`,
-    hangarbtn:`Hangar. Press this any time. You can fix engines and spend points.`
+    hangarbtn:`Hangar. Press this any time. You can fix engines and spend points.`,
+    sharebtn:`Share points. Press this any time to give some of your points away.`,
+    gamesbtn:`Play a game. Press this any time to play any game, and earn points.`,
+    level:`You are at level ${level()}.`
   };
   speakPlain(lines[what]||'');
 }
@@ -3470,6 +3579,8 @@ function esc(s){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+/* "the village" → "The village" — for starting a sentence with a mission's placeName */
+function cap1(s){s=String(s);return s.charAt(0).toUpperCase()+s.slice(1);}
 /* auto-read helper — reads the text, then chains (e.g., into the choices) */
 function autoReadIf(id,cb){
   if(suppressAutoRead){ if(cb)cb(); return; }
@@ -3477,12 +3588,16 @@ function autoReadIf(id,cb){
 }
 
 /* ═══════════ CHALLENGE CONTEXT ═══════════
-   ctxMode: 'rescue' | 'freezeOne' | 'freezeAll' | 'repair' | 'practice' | 'sharing' */
+   ctxMode: 'rescue' | 'freezeOne' | 'freezeAll' | 'repair' | 'practice' | 'sharing' | 'arcade' */
 let ctxMode='rescue', rescue={}, frozenTarget=null;
 
 const CHALLENGE_TYPES=[
   {id:'math',    em:'🧮', label:'Vault math',      start:()=>showMath()},
   {id:'feelings',em:'💛', label:'Feelings (NVC)',  start:()=>showFeelStep()},
+  {id:'feelonly',em:'💗', label:'Name the feeling',start:()=>showFeelOnly()},
+  {id:'needonly',em:'🤍', label:'Name the need',   start:()=>showNeedOnly()},
+  {id:'solveonly',em:'💡',label:'Think of a kind idea', start:()=>showSolveOnly()},
+  {id:'ground',  em:'🐾', label:'Help an animal feel grounded', start:()=>showGrounding()},
   {id:'art',     em:'🎨', label:'Trace & paint',   start:()=>showArt()},
   {id:'spelling',em:'🔤', label:'Word builder',    start:()=>showSpelling()},
   {id:'breathe', em:'🧸', label:'Belly-bear calm', start:()=>showBreath('rescue')},
@@ -3522,11 +3637,54 @@ function startRescue(){
   const type=rotation[rotIdx%rotation.length];rotIdx++;
   const pool=allSituations();
   const sit=normSit(pool[Math.floor(Math.random()*pool.length)]);
-  rescue={em:animal.em,name:animal.name,type,sit,zone:zone().id,word:null,wordEm:'',need:null,needEm:'',req:null,own:null};
+  rescue={em:animal.em,name:animal.name,type,sit,zone:zone().id,word:null,wordEm:'',need:null,needEm:'',req:null,own:null,quick:null};
   failsThisChallenge=0;
   animal=null;animalClock=animalGap();hazClock=Math.max(hazClock,gapStatic(12,7));
   animalCall(rescue.em);
   const entry=CHALLENGE_TYPES.find(c=>c.id===type)||CHALLENGE_TYPES[0];
+  entry.start();
+}
+
+/* ═══════════ ARCADE — every game, any time, for its own small reward ═══════
+   A rescue happens when it happens; this is the opposite — a game he picks
+   on purpose, whenever he likes, that still earns him something. It never
+   touches the animal waiting mid-air for a real rescue. */
+function arcadePtsFor(id){
+  if(NVC_TYPES.includes(id))return CFG.arcadePoints+CFG.nvcBonus;
+  if(id==='ground')return CFG.arcadePoints+CFG.groundBonus;
+  if(id==='breathe')return CFG.arcadePoints+CFG.calmBonus;
+  return CFG.arcadePoints;
+}
+function showArcade(){
+  paused=true;engineUpdate();
+  /* 'sharing' is left out: it moves points to someone else, and already has
+     its own standalone door (💝 SHARE POINTS) — mixing it into a list that
+     otherwise always REWARDS points would let points be earned by "giving
+     them away" */
+  const list=CHALLENGE_TYPES.filter(c=>c.id!=='sharing'&&enabled[c.id]!==false&&(c.id!=='custom'||qPool().length));
+  openModal(`
+    <div class="bigem">🎮</div>
+    <h2>Play any game, any time</h2>
+    <p class="msub" id="arcQ">Pick a game, Captain. You can always earn a few points, any time you like.</p>
+    <div class="stack">
+      ${list.map(c=>`<button class="rowcard" onclick="playArcade('${c.id}')"><span class="em">${c.em}</span>${esc(c.label)}<small style="margin-left:auto;font-weight:800;opacity:.7;white-space:nowrap">+${arcadePtsFor(c.id)}</small></button>`).join('')}
+    </div>
+  `);
+  autoReadIf('arcQ');
+}
+function playArcade(id){
+  const entry=CHALLENGE_TYPES.find(c=>c.id===id);
+  if(!entry)return;
+  const z=zone();
+  const em=z.animals[Math.floor(Math.random()*z.animals.length)];
+  const name=ANIMAL_NAMES[em]||'Buddy';
+  suppressAutoRead=false;
+  ctxMode='arcade';
+  paused=true;engineUpdate();
+  const pool=allSituations();
+  const sit=normSit(pool[Math.floor(Math.random()*pool.length)]);
+  rescue={em,name,type:id,sit,zone:z.id,word:null,wordEm:'',need:null,needEm:'',req:null,own:null,quick:null};
+  failsThisChallenge=0;
   entry.start();
 }
 function situationText(){return String(rescue.sit.tx||'').split('{N}').join(rescue.name);}
@@ -3609,10 +3767,10 @@ function landedForRepair(){
   openModal(`
     <div class="bigem">🛬</div>
     <h2>Safe landing, Captain!</h2>
-    <p class="msub" id="emQ">Your plane is safe on the ground. The hangar can fix engines. It costs points from your repairs money.</p>
+    <p class="msub" id="emQ">Your plane is safe on the ground. The hangar can fix engines.</p>
     <div class="stack">
       <button class="rowcard" style="background:#FFE9B8" onclick="closeModal();openShop()"><span class="em">🏗️</span><b>Go to the HANGAR</b> and fix the engines</button>
-      <button class="rowcard icec" onclick="closeModal();ctxMode='repair';showBreath('repair')"><span class="em">🧸</span>Breathe first, while you wait</button>
+      <button class="rowcard icec" onclick="closeModal();ctxMode='repair';showBreath('repair')"><span class="em">🧸</span>Breathe first, while you wait — earn +${CFG.repairBreathPoints} points</button>
       <button class="rowcard" onclick="closeModal()"><span class="em">✈️</span>Keep flying like this</button>
     </div>
   `);
@@ -3687,6 +3845,7 @@ function challengeComplete(msg,sentence,bonus,isImg){
   suppressAutoRead=false;
   if(started)setTimeout(saveProgress,50);
   if(ctxMode==='rescue'){rescueSuccess(msg,sentence,bonus,isImg);return;}
+  if(ctxMode==='arcade'){arcadeSuccess(msg,sentence,bonus,isImg);return;}
 
   if(ctxMode==='freezeOne'){
     const pts=CFG.freezeOnePoints+(bonus||0);
@@ -3716,18 +3875,16 @@ function challengeComplete(msg,sentence,bonus,isImg){
     return;
   }
   if(ctxMode==='repair'){
-    /* breathing does NOT fix engines — it earns CALM POWER.
-       Engines are fixed at the HANGAR, paid from the repairs account. */
+    /* breathing does NOT fix engines — it earns CALM POWER and points.
+       Engines are fixed at the HANGAR, paid from the repairs account, and
+       that is where this leads straight on to. */
     earnCalm(CFG.calmPerFreezeAll,'you stayed calm in a hard moment');
+    addPoints(CFG.repairBreathPoints);
     shield=8;shieldKind='calm';updateHUD();
-    openModal(`
-      <div class="bigem">🧊✈️</div>
-      <h2>You found your calm!</h2>
-      <p class="msub" id="frzmsg">Breathing gave you ${CFG.calmPerFreezeAll} calm power. Your engines still need mending. The hangar does that job.</p>
-      <button class="cta" onclick="closeModal();openShop()">Go to the hangar 🏗️</button>
-      <button class="cta ghost" onclick="closeModal()">Later — keep flying ✈️</button>
-    `);
-    autoReadIf('frzmsg');fanfare();
+    closeModal();
+    toast(`🧊 +${CFG.calmPerFreezeAll} calm · 🏅 +${CFG.repairBreathPoints} points`,true);
+    speakPlain(`Breathing gave you ${CFG.calmPerFreezeAll} calm power, and ${CFG.repairBreathPoints} points. Off to the hangar.`);
+    setTimeout(openShop,1400);
     return;
   }
   if(ctxMode==='practice'){
@@ -3885,6 +4042,10 @@ const RESET_SENSE=[
 ];
 function showShakeItOff(){
   savedModalHTML=modalEl.innerHTML;
+  /* the "not yet, try again" line from flowMiss() is still queued right
+     before this fires — without cutting it off first, this narration waits
+     behind it and sounds delayed */
+  stopSpeak();
   const useBreath = Math.random() < 0.5;
   reset={mode: useBreath?'breath':'body', phase: useBreath?'breathe':'sense',
          breaths:0, cycle:0, sense:0};
@@ -3991,6 +4152,7 @@ function resetDone(){
   if(rRAF)cancelAnimationFrame(rRAF);
   reset=null;
   earnCalm(1,'you came back to yourself');
+  addPoints(CFG.groundBonus);updateHUD();
   confettiBurst();fanfare();
   speakPlain('You came all the way back. '+praise()+' Now let us try again.');
   setTimeout(()=>{ modalEl.innerHTML=savedModalHTML; addSpeakers(); },1200);
@@ -4087,7 +4249,78 @@ function pickWord(i){
   const [em,w]=quiz.feel.opts[i];
   rescue.word=w;rescue.wordEm=em;
   streakUp();
+  if(rescue.quick==='feel'){quickFeelDone();return;}
   showNeedStep();
+}
+/* ═══════════ QUICK NVC — one step, not the whole chain ═══════════
+   The full feeling → need → resolution story is a lot for every single
+   rescue. These let the same situations be practised one skill at a time:
+   just spot the feeling, just spot the need, or just think up the kind
+   idea (told the feeling and need straight away, since guessing them was
+   not the point of this particular game). */
+function showFeelOnly(){
+  rescue.quick='feel';
+  showFeelStep();
+}
+function quickFeelDone(){
+  suppressAutoRead=false;stopSpeak();
+  challengeComplete(`Yes! ${esc(rescue.name)} feels <b>${esc(rescue.word.toLowerCase())}</b>. Well spotted!`,null,0);
+}
+function showNeedOnly(){
+  rescue.quick='need';
+  const fw=synFor(FEELING_SYNS,rescue.sit.feeling);
+  rescue.word=fw?fw[1]:'unsure';rescue.wordEm=fw?fw[0]:'💛';
+  showNeedStep();
+}
+function quickNeedDone(){
+  suppressAutoRead=false;stopSpeak();
+  challengeComplete(`Yes! ${esc(rescue.name)} needs <b>${esc(rescue.need)}</b>. Well spotted!`,null,0);
+}
+function showSolveOnly(){
+  rescue.quick='req';
+  const fw=synFor(FEELING_SYNS,rescue.sit.feeling);
+  rescue.word=fw?fw[1]:'unsure';rescue.wordEm=fw?fw[0]:'💛';
+  const nw=synFor(NEED_SYNS,rescue.sit.need);
+  rescue.need=nw?nw[1]:'help';rescue.needEm=nw?nw[0]:'💛';
+  showReqStep();
+}
+
+/* ═══════════ GROUNDING — help THE ANIMAL feel grounded ═══════════
+   Different from the "shake it off" reset (which helps HIM after three
+   misses): a standalone game where he leads a scared or upset animal
+   through the same feet/breath/soften steps, so grounding is something he
+   also practises doing FOR someone else, not only for himself. */
+const GROUND_STEPS=[
+  {em:'🐾', t:'Feel paws on the ground',  say:'Help {n} feel their paws on the ground.'},
+  {em:'🫁', t:'Take one slow breath',     say:'Help {n} take one slow breath, all the way out.'},
+  {em:'😌', t:'Let the body go soft',     say:'Help {n} let their whole body go soft and still.'}
+];
+let ground=null;
+function showGrounding(){
+  ground={step:0};
+  renderGrounding();
+}
+function renderGrounding(){
+  const s=GROUND_STEPS[ground.step];
+  openModal(`
+    <div class="bigem">${rescue.em}${s.em}</div>
+    <h2>Help ${esc(rescue.name)} feel grounded</h2>
+    <div class="resetsteps">
+      <div class="rstep now"><b>${s.em}</b> ${s.t}
+        <span class="rdots">${'●'.repeat(ground.step)}${'○'.repeat(Math.max(0,GROUND_STEPS.length-1-ground.step))}</span>
+      </div>
+    </div>
+    <p class="msub" id="gndQ">${s.say.replace('{n}',esc(rescue.name))}</p>
+    <button class="cta mint" onclick="groundNext()">Done — ${esc(rescue.name)} is calmer 👍</button>
+  `);
+  autoReadIf('gndQ');
+}
+function groundNext(){
+  tone(700+ground.step*120,0.12,'triangle',0.09);
+  ground.step++;
+  if(ground.step<GROUND_STEPS.length){renderGrounding();return;}
+  ground=null;
+  challengeComplete(`${esc(rescue.name)} feels grounded now — safe and steady. Thank you for helping.`,null,0);
 }
 function showNeedStep(){
   suppressAutoRead=true;
@@ -4109,6 +4342,7 @@ function pickNeed(i){
   const [em,n]=quiz.need.opts[i];
   rescue.need=n;rescue.needEm=em;
   streakUp();
+  if(rescue.quick==='need'){quickNeedDone();return;}
   showReqStep();
 }
 /* ---- "What will help?" — the resolution ---- */
@@ -6052,8 +6286,8 @@ function pfComplete(){
     const pct=Math.round(cfgNum('cleanBoost',0.10,0)*100);
     const line=`All clean! A clean plane is a lighter plane, and a lighter plane flies faster. You get ${pct} per cent more speed.`;
     if(!started){
-      speakPlain(praise()+' '+line+' Now let us pick the way.');
-      showRoutePlanner();
+      speakPlain(praise()+' '+line+' Now let us pick your mission.');
+      showMissionPicker(false);
     }else{
       introReading(false);
       closeModal();
@@ -6067,8 +6301,8 @@ function pfSkip(){
   preflightOK=false;preflightDue=false;
   stopSpeak();
   if(!started){
-    speakPlain('You skipped the check. The plane will feel heavy and slow. Now let us pick the way.');
-    showRoutePlanner();
+    speakPlain('You skipped the check. The plane will feel heavy and slow. Now let us pick your mission.');
+    showMissionPicker(false);
   }else{
     introReading(false);
     closeModal();
@@ -6140,9 +6374,25 @@ function checkAchievements(){
   ACHIEVEMENTS.forEach(a=>{if(!starList.includes(a.id)&&a.test(stats)){starList.push(a.id);newly.push(a);}});
   return newly;
 }
+/* feelings work, grounding and calming earn a little extra on top of the
+   ordinary rescue points — automatic, so every place that leads here (the
+   full chain, the quick one-step versions, the grounding game, breathing)
+   gets it without each call site having to remember the right amount */
+const NVC_TYPES=['feelings','feelonly','needonly','solveonly'];
+/* one short line naming where the points went — the saving habit only
+   teaches if he sees it happen, and it keeps the "well done" card to three
+   plain facts: correct, solved, saved. */
+function savedLine(pts){
+  const toSave=Math.round(pts*CFG.splitSavings);
+  return toSave>0?`<div class="hintline" style="background:#B9E8D8">🏦 ${toSave} points went to your savings</div>`:'';
+}
 function rescueSuccess(msg,sentence,bonus,isImg){
   bonus=bonus||0;
-  let pts=CFG.rescuePoints+bonus;
+  let extra=0,extraLabel='';
+  if(NVC_TYPES.includes(rescue.type)){extra=CFG.nvcBonus;extraLabel='feelings bonus';}
+  else if(rescue.type==='ground'){extra=CFG.groundBonus;extraLabel='grounding bonus';}
+  else if(rescue.type==='breathe'){extra=CFG.calmBonus;extraLabel='calm bonus';}
+  let pts=CFG.rescuePoints+bonus+extra;
   let mult='';
   if(WEATHER[wxIdx][1]==='Sunny'){pts=Math.round(pts*CFG.sunnyMultiplier);mult=' ☀️ Sunny bonus!';}
   if(rareNext){pts*=CFG.rareMultiplier;rareNext=false;mult+=' 🌟 RARE animal ×2!';}
@@ -6155,19 +6405,40 @@ function rescueSuccess(msg,sentence,bonus,isImg){
   markInterrupt();
   updateHUD();confettiBurst();fanfare();saveProgress();
   const starHTML=newStars.map(a=>`<div class="hintline" style="background:#FFE9B8">🌟 <b>NEW GOLD STAR!</b><br>${a.name}</div>`).join('');
+  const bonusHTML=[bonus?`+${bonus} for your idea`:'',extra?`+${extra} ${extraLabel}`:''].filter(Boolean).join(' · ');
   openModal(`
     <div class="bigem">${rescue.em}💛</div>
-    <h2>${praise()} You helped!</h2>
-    <div class="scoreline">+${pts} points 🏅${mult} · You have ${score} · LV ${level()}</div>
-    ${leveled?`<div class="hintline" style="background:#FFE9B8">🎚️ <b>LEVEL UP!</b> The hangar is open — you can spend some points.<br>Your plane needs a check too 🧽</div>`:''}
-    ${bonus?`<div class="hintline mint">💡 Your own idea: +${bonus} points!</div>`:''}
+    <h2>${praise()} Correct!</h2>
+    <div class="scoreline">+${pts} points 🏅${mult}${bonusHTML?' · '+bonusHTML:''}${leveled?' · 🎚️ LEVEL UP!':''} · You have ${score}</div>
+    ${savedLine(pts)}
     ${starHTML}
     <p class="msub" id="sucMsg">${msg}</p>
     ${sentence?(isImg?sentence:`<div class="sentence">${sentence}</div>`):''}
-    <div class="crew">${crew.join('')}</div>
-    ${availableStars()?`<div style="text-align:center;font-size:20px;letter-spacing:2px;margin-bottom:4px">${'⭐'.repeat(availableStars())}</div>`:''}
-    ${leveled?`<button class="cta mint" onclick="showPreflight()">🧽 Check the plane (a good idea!)</button>`:''}
     <button class="cta" onclick="closeRescue()">Back to the sky! ✈️</button>
+  `);
+}
+/* a game played from the ARCADE, on purpose, any time — not a real rescue,
+   so no crew, no achievements, no level-up chrome, just a short "nice one"
+   and the points, then a quick way back into another game or the sky */
+function arcadeSuccess(msg,sentence,bonus,isImg){
+  bonus=bonus||0;
+  let extra=0,extraLabel='';
+  if(NVC_TYPES.includes(rescue.type)){extra=CFG.nvcBonus;extraLabel='feelings bonus';}
+  else if(rescue.type==='ground'){extra=CFG.groundBonus;extraLabel='grounding bonus';}
+  else if(rescue.type==='breathe'){extra=CFG.calmBonus;extraLabel='calm bonus';}
+  const pts=CFG.arcadePoints+bonus+extra;
+  addPoints(pts);
+  updateHUD();confettiBurst();fanfare();saveProgress();
+  const bonusHTML=[bonus?`+${bonus} for your idea`:'',extra?`+${extra} ${extraLabel}`:''].filter(Boolean).join(' · ');
+  openModal(`
+    <div class="bigem">${rescue.em}🎮</div>
+    <h2>${praise()} Correct!</h2>
+    <div class="scoreline">+${pts} points 🏅${bonusHTML?' · '+bonusHTML:''} · You have ${score}</div>
+    ${savedLine(pts)}
+    <p class="msub" id="sucMsg">${msg||''}</p>
+    ${sentence?(isImg?sentence:`<div class="sentence">${sentence}</div>`):''}
+    <button class="cta" onclick="closeModal();showArcade()">Play another game 🎮</button>
+    <button class="cta ghost" onclick="closeModal()">Back to the sky! ✈️</button>
   `);
 }
 /* closing a rescue may lead into a short, gentle sharing offer */
@@ -6301,7 +6572,7 @@ function pickProfile(id){
     `);
     autoReadIf('wbQ',()=>speakPlain(
       `You have ${score} points, ${Math.round(calmPower)} calm, and you have helped ${stats.rescues} animals. `+
-      `The village is ${Math.round(milesLeft())} miles away. Shall we keep going?`));
+      `${cap1(curMission.placeName)} is ${Math.round(milesLeft())} miles away. Shall we keep going?`));
   }else{
     openSettings();
   }
@@ -6349,7 +6620,7 @@ function ceSnippet(){
 
 /* canInterrupt() / markInterrupt() are defined up with the game loop. */
 
-/* ═══════════ ARRIVAL — the medicine gets there ═══════════ */
+/* ═══════════ ARRIVAL — the cargo gets there ═══════════ */
 function arriveAtVillage(){
   paused=true;engineUpdate();
   confettiBurst();fanfare();
@@ -6357,29 +6628,31 @@ function arriveAtVillage(){
   const bonus=CFG.arrivalBonus||120;
   addPoints(bonus);
   const flown=CFG.missionDistance;
+  const m=curMission;
+  const [d1,d2,d3]=m.arrivalDrop, [g1,g2]=m.arrivalBack, [t1,t2]=m.arrivalMid, [k1,k2,k3,k4,k5]=m.arrivalPeople;
   openModal(`
-    <h2 id="arrH">The medicine is here!</h2>
+    <h2 id="arrH">${esc(m.arrivalTitle)}</h2>
     <div class="village">
       <div class="vsky">
         <span class="vplane">✈️</span>
-        <span class="vbox b1">📦</span><span class="vbox b2">📦</span><span class="vbox b3">💊</span>
+        <span class="vbox b1">${d1}</span><span class="vbox b2">${d2}</span><span class="vbox b3">${d3}</span>
       </div>
       <div class="vground">
-        <span class="vmount">🏔️</span><span class="vmount m2">⛰️</span>
-        <span class="vtent">⛺</span><span class="vtent t2">🏕️</span>
+        <span class="vmount">${g1}</span><span class="vmount m2">${g2}</span>
+        <span class="vtent">${t1}</span><span class="vtent t2">${t2}</span>
         <div class="vkids">
-          <span class="vkid k1">🧒</span>
-          <span class="vkid k2">👧</span>
-          <span class="vkid k3">🧑‍⚕️</span>
-          <span class="vkid k4">👦</span>
-          <span class="vkid k5">👩</span>
+          <span class="vkid k1">${k1}</span>
+          <span class="vkid k2">${k2}</span>
+          <span class="vkid k3">${k3}</span>
+          <span class="vkid k4">${k4}</span>
+          <span class="vkid k5">${k5}</span>
         </div>
         <div class="vhearts">
           <span>💛</span><span>💛</span><span>💛</span><span>💛</span><span>💛</span>
         </div>
       </div>
     </div>
-    <p class="msub" id="arrQ">The children run out to meet you. They are all waving. They are all saying <b>thank you</b>. The doctor takes the medicine to the ones who need it most.</p>
+    <p class="msub" id="arrQ">${m.arrivalBlurb}</p>
     <div class="hintline" style="background:#B9E8D8">🗺️ ${flown} miles flown &nbsp;·&nbsp; 🏅 +${bonus} &nbsp;·&nbsp; 🏆 ${stats.rescues} animals helped on the way</div>
     <button class="cta" onclick="nextJourney()">Fly a NEW mission 🛫</button>
     <button class="cta ghost" onclick="closeModal()">Stay a bit longer ✈️</button>
@@ -6388,7 +6661,11 @@ function arriveAtVillage(){
   saveProgress();
 }
 function nextJourney(){
-  /* the next village really is further away — otherwise "a NEW mission" was
+  closeModal();
+  showMissionPicker(true);
+}
+function beginNextMission(){
+  /* the next trip really is further away — otherwise "a NEW mission" was
      the same flight over again */
   CFG.missionDistance=Math.min(200,Math.round(CFG.missionDistance*1.25));
   miles=0;latMiles=0;playMinutes=0;lastInterestMin=0;missionDone=false;
@@ -6404,23 +6681,24 @@ function nextJourney(){
    tapped, so the reason for the flight stays a real place with real people
    rather than a number counting down. */
 function destSceneHTML(){
-  const [far,mid,people]=DEST.scene;
+  const m=curMission;
+  const [far,mid,people]=m.destScene;
   return `
     <div class="destscene">
       <div class="destrow far">${far.join('')}</div>
       <div class="destrow mid">${mid.join('')}</div>
       <div class="destrow people">${people.map(e=>`<span>${e}</span>`).join('')}</div>
-      <div class="desthelpwrap"><div class="desthelp">💬 "Please help us!"</div></div>
+      <div class="desthelpwrap"><div class="desthelp">💬 "${esc(m.sayBubble)}"</div></div>
     </div>`;
 }
 function showDestination(next){
   const flying=started&&!paused;
   if(flying){paused=true;engineUpdate();}
+  const m=curMission;
   openModal(`
-    <h2>The village needs you</h2>
+    <h2>${esc(m.destHeading)}</h2>
     ${destSceneHTML()}
-    <p class="msub" id="dsQ">An earthquake shook this village. The houses fell down.
-      These people are waiting for the medicine in your plane. You have flown
+    <p class="msub" id="dsQ">${esc(m.destBlurb)} You have flown
       <b>${Math.round(miles)}</b> miles. It is <b>${Math.max(0,Math.round(milesLeft()))}</b> more miles to go.</p>
     <button class="cta" onclick="${next?'closeModal();'+next:'closeModal()'}">${next?'Let us go! 🛫':'Keep flying! ✈️'}</button>
   `);
@@ -6428,22 +6706,16 @@ function showDestination(next){
 }
 
 /* ═══════════ MISSION — the reason we fly ═══════════ */
-const MISSION=[
-  ['🌍','An earthquake shook a village far away.'],
-  ['💊','The people there need medicine.'],
-  ['✈️','Your plane is taking it to them.'],
-  ['🆘','Help the animals you meet on the way.'],
-  ['🧊','Calm the storms. Do not fight them.']
-];
 function showMission(){
   introReading(true);
   paused=true;engineUpdate();
+  const m=curMission;
   openModal(`
-    <div class="bigem">🚁💊</div>
-    <h2 id="msTitle">Your job: take medicine to the village</h2>
+    <div class="bigem">🚁${m.cargoEm}</div>
+    <h2 id="msTitle">${esc(m.jobTitle)}</h2>
     <p class="msub" id="msSub">Listen, Captain ${esc(kidName||'Pilot')}. Here is your job:</p>
     <ul class="misslist" id="msList">
-      ${MISSION.map(([em,t],i)=>`<li id="ms${i}"><span class="mi">${em}</span><span>${t}</span></li>`).join('')}
+      ${m.briefing.map(([em,t],i)=>`<li id="ms${i}"><span class="mi">${em}</span><span>${t}</span></li>`).join('')}
     </ul>
     <button class="cta" id="msBtn" onclick="missionAccepted()">Yes, I will do it! 🫡 <span class="spk-mini" onclick="event.stopPropagation();speakPlain('Yes, I will do it!')">▶</span></button>
   `);
@@ -6455,7 +6727,7 @@ function showMission(){
 }
 function readMissionLine(i){
   if(!missionReading)return;
-  if(i>=MISSION.length){
+  if(i>=curMission.briefing.length){
     missionReading=false;skipBtn(false);
     speakPlain('Now press: Yes, I will do it.');
     const b=document.getElementById('msBtn');
@@ -6535,84 +6807,52 @@ function orientationDone(){
   updateHUD();
   saveProgress();
   banner(`🫡 Take off, Captain ${esc(kidName||'Pilot')}!`,3000,true);
-  speakPlain(`Off we go, Captain ${kidName||'Pilot'}. The medicine is loaded. Let us fly.`);
+  speakPlain(`Off we go, Captain ${kidName||'Pilot'}. Everything is loaded. Let us fly.`);
   setTimeout(flashLifelines,1000);
 }
 
-/* ═══════════ PICK THE WAY — after the plane check ═══════════ */
-const ROUTES=[
-  {id:'lake',  em:'🌊', name:'Over the sea',       desc:'Wide open water. Calm, gentle sky.'},
-  {id:'rural', em:'🌾', name:'Over the fields',    desc:'Farms and villages. Lots of animals to help.'},
-  {id:'forest',em:'⛰️', name:'Over the mountains', desc:'Big hills and thick woods. Harder flying, bigger prizes.'}
-];
-const ROUTE_WX=[
-  {i:0, em:'☀️', name:'Sunny',  desc:'Helping is worth more today!'},
-  {i:1, em:'🌬️', name:'Windy',  desc:'The plane drifts. Good steering practice.'},
-  {i:2, em:'⛈️', name:'Stormy', desc:'More trouble. Only for brave pilots!'},
-  {i:3, em:'😌', name:'Calm',   desc:'A peaceful sky. No trouble at all.'}
-];
-let routePick={zone:null, wx:null};
-function showRoutePlanner(){
+/* ═══════════ PICK YOUR MISSION — after the plane check, and again for
+   every new journey. The landscape below and the weather keep changing by
+   themselves as he flies, so there is just one real choice here: which
+   mission to fly. ═══════════ */
+let missionPickId=null, missionPickReturning=false;
+function showMissionPicker(returning){
   introReading(true);
   paused=true;engineUpdate();
-  routePick={zone:null,wx:null};
+  missionPickReturning=!!returning;
+  missionPickId=null;
   openModal(`
     <div class="bigem">🗺️</div>
-    <h2>Pick your way, Captain</h2>
-    <p class="msub" id="rpQ">Which way will you fly, and what weather do you want?</p>
-    <div style="font-weight:800;font-size:12.5px;margin-bottom:6px">1️⃣ Pick your way:</div>
+    <h2>Pick your mission, Captain</h2>
+    <p class="msub" id="rpQ">Where will you fly today?</p>
     <div class="routegrid">
-      ${ROUTES.map(r=>`<button class="routecard" id="rt-${r.id}" onclick="pickRoute('${r.id}')">
-        <span class="rem">${r.em}</span><span><b>${r.name}</b><small>${r.desc}</small></span></button>`).join('')}
+      ${MISSIONS.map(m=>`<button class="routecard" id="rt-${m.id}" onclick="pickMission('${m.id}')">
+        <span class="rem">${m.odoEm}</span><span><b>${esc(m.title)}</b><small>${esc(m.jobTitle)}</small></span></button>`).join('')}
     </div>
-    <div style="font-weight:800;font-size:12.5px;margin:10px 0 6px">2️⃣ Pick the weather:</div>
-    <div class="routegrid">
-      ${ROUTE_WX.map(w=>`<button class="routecard" id="wx-${w.i}" onclick="pickWx(${w.i})">
-        <span class="rem">${w.em}</span><span><b>${w.name}</b><small>${w.desc}</small></span></button>`).join('')}
-    </div>
-    <button class="cta" id="rpGo" disabled onclick="flyRoute()">Pick both, then take off 🛫</button>
+    <button class="cta" id="rpGo" disabled onclick="takeOffMission()">Pick a mission, then take off 🛫</button>
   `);
-  autoReadIf('rpQ',()=>speakPlain('Pick your way. Over the sea, over the fields, or over the mountains. Then pick the weather.'));
+  autoReadIf('rpQ',()=>speakPlain('Pick your mission. '+MISSIONS.map(m=>m.title).join('. ')+'.'));
 }
-function pickRoute(id){
-  routePick.zone=id;
-  ROUTES.forEach(r=>{const e=document.getElementById('rt-'+r.id);if(e)e.classList.toggle('sel',r.id===id);});
-  const r=ROUTES.find(x=>x.id===id);
-  if(r)speakPlain(r.name);
-  routeReady();
-}
-function pickWx(i){
-  routePick.wx=i;
-  ROUTE_WX.forEach(w=>{const e=document.getElementById('wx-'+w.i);if(e)e.classList.toggle('sel',w.i===i);});
-  speakPlain(ROUTE_WX[i].name);
-  routeReady();
-}
-function routeReady(){
+function pickMission(id){
+  missionPickId=id;
+  MISSIONS.forEach(m=>{const e=document.getElementById('rt-'+m.id);if(e)e.classList.toggle('sel',m.id===id);});
+  const m=MISSIONS.find(x=>x.id===id);
+  if(m)speakPlain(m.title);
   const b=document.getElementById('rpGo');
-  if(!b)return;
-  const ok=routePick.zone!==null&&routePick.wx!==null;
-  b.disabled=!ok;
-  b.textContent=ok?'Take off this way! 🛫':'Pick both, then take off 🛫';
+  if(b){b.disabled=false;b.textContent='Take off on this mission! 🛫';}
 }
-function flyRoute(){
-  if(routePick.zone===null||routePick.wx===null)return;
-  const zi=ZONES.findIndex(z=>z.id===routePick.zone);
-  if(zi>=0){
-    const n=ZONES.length;
-    zoneOffset=((zi-rawZoneIndex(miles,latMiles))%n+n)%n;
-    zoneIdx=zi;zonePending=null;zoneBlendT=0;
-  }
-  wxIdx=routePick.wx;wxClock=0;
-  const r=ROUTES.find(x=>x.id===routePick.zone);
-  const wx=ROUTE_WX[routePick.wx];
+function takeOffMission(){
+  if(!missionPickId)return;
+  curMission=MISSIONS.find(x=>x.id===missionPickId)||MISSIONS[0];
   updateHUD();fanfare();
   if(!started){
     showOrientation();     /* first flight: teach the two helpers, then take off */
     return;
   }
+  if(missionPickReturning){beginNextMission();return;}
   introReading(false);
   closeModal();
-  banner(r.name+', '+wx.name+'. '+wx.desc,3600);
+  banner(curMission.title,3200);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -6624,7 +6864,7 @@ function flyRoute(){
    ═══════════════════════════════════════════════════════════════════════════ */
 const DASH_GROUPS=[
   {id:'journey', em:'🗺️', name:'The journey', tab:'Journey', fields:[
-    {k:'missionDistance',      t:'Miles to the village',        min:5,  max:200, step:5},
+    {k:'missionDistance',      t:'Miles to the destination',    min:5,  max:200, step:5},
     {k:'milesPerMinute',       t:'Miles flown each minute',     min:0.5,max:10,  step:0.5},
     {k:'interestEveryMinutes', t:'Interest every … minutes',    min:1,  max:30,  step:1},
     {k:'interestPercent',      t:'Interest rate (%)',           min:0,  max:50,  step:1}
@@ -6639,7 +6879,12 @@ const DASH_GROUPS=[
     {k:'teamBonus',       t:'Building with Pip',            min:0, max:200, step:5},
     {k:'realBreathBonus', t:'Real tummy breaths (sensor)',  min:0, max:100, step:5},
     {k:'flareDodgePoints',t:'Diving under a sun flare',     min:0, max:100, step:5},
-    {k:'arrivalBonus',    t:'Delivering the medicine',      min:0, max:500, step:10}
+    {k:'arrivalBonus',    t:'Delivering the mission cargo',  min:0, max:500, step:10},
+    {k:'groundBonus',     t:'Feeling the body / grounding an animal', min:0, max:100, step:1},
+    {k:'nvcBonus',        t:'Extra for any feelings exercise',        min:0, max:60,  step:1},
+    {k:'calmBonus',       t:'Extra for choosing to breathe',          min:0, max:60,  step:1},
+    {k:'repairBreathPoints',t:'Breathing first, while the plane waits', min:0, max:100, step:5},
+    {k:'arcadePoints',    t:'Playing any game any time',              min:0, max:100, step:1}
   ]},
   {id:'spend', em:'💰', name:'Spending', tab:'Spending', fields:[
     {k:'engineCostRepair', t:'Mend an engine',       min:10, max:2000, step:10},
@@ -7047,7 +7292,7 @@ function openSettings(){
     `<div class="sopt ${enabled[c.id]?'sel':''}" onclick="toggleCh('${c.id}',this)">${c.em} ${c.label}</div>`).join('');
   openModal(`
     <h2>${started?'Grown-up corner ⚙️':'🛫 Sky Rescue 707!'}</h2>
-    <p class="msub">${started?'You can change these any time.':'A village needs medicine. Fly the 707, help the animals you meet, and calm every storm with CALM POWER — by breathing, listening, or thinking.'}</p>
+    <p class="msub">${started?'You can change these any time.':'Pick a mission, fly the 707, help the animals you meet, and calm every storm with CALM POWER — by breathing, listening, or thinking.'}</p>
     <label class="fieldlbl">Pilot’s name</label>
     <input type="text" id="kidname" maxlength="24" value="${esc(kidName)}" placeholder="e.g. Aaries">
     <label class="fieldlbl">Date of birth (sets the age level by itself)</label>
