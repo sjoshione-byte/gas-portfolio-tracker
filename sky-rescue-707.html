@@ -24,7 +24,34 @@
     padding:5px 10px;font-weight:800;font-size:13.5px;box-shadow:var(--shadow);
     display:flex;align-items:center;gap:6px;
   }
-  #zonename{font-family:'Fredoka';font-weight:600}
+  .hudbox.odo{gap:8px;padding:4px 10px;pointer-events:auto;cursor:pointer}
+  .odopic{font-size:22px;line-height:1}
+  .odonums{display:flex;flex-direction:column;line-height:1.25}
+  .odorow{font-size:11.5px;font-weight:800;white-space:nowrap}
+  .odorow b{font-family:'Fredoka';font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+  .odorow.to{color:#9A5B12}
+  /* the place we are flying to, shown before take-off */
+  .destscene{
+    border:3px solid var(--ink);border-radius:20px;overflow:hidden;margin-bottom:12px;
+    background:linear-gradient(#9BD7F2 0%,#CFEAF7 52%,#D8C9A8 52%,#C6B593 100%);
+    padding:10px 8px 12px;
+  }
+  .destrow{display:flex;justify-content:center;gap:6px;line-height:1}
+  .destrow.far{font-size:40px;opacity:.75}
+  .destrow.mid{font-size:28px;margin-top:-6px}
+  .destrow.people{font-size:30px;margin-top:6px}
+  .destrow.people span{animation:destwave 1.6s infinite}
+  .destrow.people span:nth-child(2){animation-delay:.2s}
+  .destrow.people span:nth-child(3){animation-delay:.4s}
+  .destrow.people span:nth-child(4){animation-delay:.6s}
+  .destrow.people span:nth-child(5){animation-delay:.8s}
+  @keyframes destwave{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}}
+  .desthelp{
+    text-align:center;font-family:'Fredoka';font-weight:600;font-size:15px;
+    background:#FFF3D6;border:2.5px solid var(--ink);border-radius:999px;
+    padding:3px 12px;margin:8px auto 0;display:inline-block;
+  }
+  .desthelpwrap{text-align:center}
   .hudcol{display:flex;flex-direction:column;gap:7px}
   .hudcol.r{align-items:flex-end}
   .hudbox.calmdial{pointer-events:auto;cursor:pointer;gap:4px;background:#E4F3FC}
@@ -328,6 +355,9 @@
   #cpSweep{animation:cpsweep 3.4s linear infinite;transform-origin:60px 60px}
   @keyframes cpsweep{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   #compass.wrongway{animation:cpwarn .8s infinite}
+  /* the ONLY off-course signal now, so it has to be unmissable */
+  #compass.wrongway #cpDisc{stroke:#E8564A;stroke-width:6;animation:cpdisc .8s infinite}
+  @keyframes cpdisc{0%,100%{stroke-opacity:1}50%{stroke-opacity:.25}}
   @keyframes cpwarn{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 
   /* ---------- MEMORY / PATTERN / SPINNER ---------- */
@@ -629,31 +659,6 @@
     font-family:'Nunito';font-weight:800;font-size:14px;background:var(--card);color:var(--ink);
   }
 
-  /* ---------- GET READY TO FOCUS ---------- */
-  .focusroom{
-    position:relative;border:3px solid var(--ink);border-radius:16px;background:#F7F5FC;
-    padding:9px;margin-bottom:10px;min-height:190px;
-  }
-  .frow{
-    display:flex;align-items:center;gap:9px;width:100%;padding:10px;border-radius:12px;
-    border:3px solid var(--ink);background:var(--card);box-shadow:0 3px 0 var(--ink);
-    font-weight:800;font-size:13px;margin-bottom:6px;cursor:pointer;color:var(--ink);
-    font-family:'Nunito';text-align:left;
-  }
-  .frow.now{background:#FFF3D6;box-shadow:0 3px 0 var(--ink),inset 0 0 0 2.5px var(--sun);animation:nowpulse 1.3s infinite}
-  .frow.done{background:#DFF3E6;opacity:.85}
-  .frow.later{opacity:.4;box-shadow:none}
-  .frow:disabled{cursor:default}
-  .fem{font-size:22px}
-  .flabel{flex:1}
-  .ftick{font-size:15px}
-  .distract{
-    position:absolute;font-size:30px;border:none;background:transparent;cursor:pointer;
-    animation:distractin .35s ease, jitter .8s .35s infinite alternate;z-index:2;
-  }
-  @keyframes distractin{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
-  @keyframes jitter{from{margin-top:-3px}to{margin-top:4px}}
-
   /* ---------- RESET & RETURN ---------- */
   .resetsteps{margin-bottom:10px}
   .rstep{
@@ -753,11 +758,15 @@
 <div id="hud">
   <div class="hudcol">
     <div class="hudbox">🎚️ LV <b id="level">1</b> &nbsp;<span id="hearts">⚙️⚙️⚙️⚙️</span></div>
-    <!-- BUGFIX: updateHUD() wrote to #zoneem / #zonename / #weatherphase, but
-         those elements did not exist, so the zone and the weather were never
-         shown anywhere. This box gives them a home. -->
-    <div class="hudbox"><span id="zoneem">🏙️</span> <span id="zonename">Downtown</span>
-      &nbsp;<span id="weatherphase">Sunny</span></div>
+    <!-- ODOMETER: how far he has flown and how far is left, with a small
+         picture of the place he is flying to. Tap it to see the village. -->
+    <div class="hudbox odo" id="odoBox" onclick="showDestination()">
+      <span class="odopic" id="odoPic">🏔️</span>
+      <span class="odonums">
+        <span class="odorow"><b id="odoFlown">0</b> mi flown</span>
+        <span class="odorow to"><b id="odoLeft">40</b> mi to go</span>
+      </span>
+    </div>
     <div class="hudbox calmdial" onclick="openCalmChooser()">
       <svg viewBox="0 0 34 34" width="26" height="26">
         <circle cx="17" cy="17" r="13" fill="none" stroke="#DDE6F0" stroke-width="5"/>
@@ -824,6 +833,7 @@
   <div style="font-weight:800;font-size:11.5px;text-align:center;opacity:.65;margin:10px 0 6px">Use these any time 👇</div>
   <button class="drawerbtn" style="background:var(--ice)" onclick="toggleDrawer();openCalmChooser()">🧊 CALM POWER
     <span class="rspk" onclick="event.stopPropagation();sayRow('calmbtn')"></span></button>
+  <button class="drawerbtn" style="background:var(--idea);margin-top:7px" onclick="toggleDrawer();shareAnyTime()">💝 SHARE POINTS <span class="rspk" onclick="event.stopPropagation();sayRow('sharebtn')"></span></button>
   <button class="drawerbtn" style="margin-top:7px" onclick="toggleDrawer();openShop()">🏗️ HANGAR / repair
     <span class="rspk" onclick="event.stopPropagation();sayRow('hangarbtn')"></span></button>
   <button id="drawerClose" style="margin-top:7px" onclick="toggleDrawer()">Close ›</button>
@@ -865,7 +875,6 @@
     </g>
   </svg>
   <div id="cpMiles">40 mi</div>
-  <div id="cpTurn" class="cpturn good">▲ straight on</div>
 </div>
 
 <div id="dial">
@@ -1021,8 +1030,6 @@ const DEFAULT_CONFIG={
   calmPerFreezeAll:    3,    // ...by calming the whole sky
   archeryRounds:       3,    // shots each in the archery game
   patternRounds:       4,    // rounds to win Copy the Pattern
-  distractChance:   0.55,    // how often something distracting pops up
-  distractEvery:       3,    // ...checked roughly every N seconds
   spellBlanks:         0,    // missing letters (0 = pick by age)
   donationKarmaPer:   30,
   weatherSeconds:     50,
@@ -1048,7 +1055,8 @@ const DEFAULT_CONFIG={
   cruiseSpeed:       0.7,
   climbSpeed:        1.05,
   boostSpeed:        1.55,
-  sluggishFactor:    0.82,   // speed if the pre-flight check was skipped
+  sluggishFactor:    0.82,   // speed if the plane check was skipped
+  cleanBoost:        0.10,   // a freshly cleaned plane flies this much faster
 
   /* ── WHAT APPEARS ────────────────────────────────────────────────────────*/
   shareAskChance:    0.4,    // how often an animal asks him to share
@@ -1414,6 +1422,15 @@ const ZONES = [
    props:['⛵','🚤','🏝️','🌊','🪷','🛶','🌴','🌊','⛱️','🐠','🚢','🏖️','⚓'],animals:['🦆','🐢','🦩','🐬']}
 ];
 const SKYPROPS=['🎈','🪁','🕊️','🎏'];
+/* WHERE WE ARE GOING — one definition, so the odometer, the radar and the
+   mission briefing can never show three different destinations */
+const DEST={
+  em:'🏔️',
+  name:'the lost mountain village',
+  /* the scene the child is flying towards, shown before take-off and again
+     from the odometer, so the reason for the journey stays concrete */
+  scene:[['🏔️','⛰️','🏔️'],['🏚️','🏚️','⛺','🏚️'],['🧑‍⚕️','🧒','👩','👦','🧓']]
+};
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROFILES & SAVED PROGRESS
@@ -1552,7 +1569,7 @@ let kidName=PILOT_NAME.split(' ')[0];     /* "Aaries" */
 let kidDOB=PILOT_DOB;
 let band=bandForAge(pilotAge(PILOT_DOB)); /* 6 years old → ages 5–7 */
 let soundOn=true, autoRead=true;
-let enabled={math:true,feelings:true,art:true,spelling:true,breathe:true,sharing:true,talk:true,archery:true,custom:true,build:true,sayit:true,tictac:true,focus:true,triz:true,memory:true,pattern:true};
+let enabled={math:true,feelings:true,art:true,spelling:true,breathe:true,sharing:true,talk:true,archery:true,custom:true,build:true,sayit:true,tictac:true,mcq:true,triz:true,memory:true,pattern:true};
 let rotation=[], rotIdx=0;
 let score=0, starList=[], crew=[];
 let stats={rescues:0,ideas:0,arts:0,spells:0,vaults:0,freezes:0,zens:0,zonesRescued:{}};
@@ -1586,7 +1603,6 @@ let preflightOK=true, preflightDue=false;
 let emergencyMode=false, emReminderT=0;
 let strikeCount=0;                       /* hits taken on the current engine */
 let cargo=null, cargoClock=95, depositAmt=0;
-let offCourseT=0;
 /* ONE THING AT A TIME — see canInterrupt() */
 let lastInterruptAt=-999, flightClock=0;
 /* live from CFG, so the grown-up can widen or tighten the calm gap */
@@ -1602,8 +1618,18 @@ function experienceNow(){return Math.min(1,(level()-1)/8*0.6+Math.min(1,score/25
 function gapStatic(base,floor){return lerp(base,floor,experienceNow());}
 
 /* every reward is auto-deposited across 3 bank accounts */
+let savingsSaid=0;
 function addPoints(p){
   score+=p;
+  /* SAY the saving out loud — the habit only teaches if he notices it.
+     Not on every single reward, or it becomes noise he stops hearing. */
+  const toSave=Math.round(p*CFG.splitSavings);
+  if(toSave>0&&started){
+    savingsSaid++;
+    if(savingsSaid<=2||savingsSaid%4===0){
+      speakNotice(`${toSave} of those points went into your savings, all by themselves. Saved points grow.`);
+    }
+  }
   wNeeds +=Math.round(p*CFG.splitRepairs);
   wWants +=Math.round(p*CFG.splitFun);
   wVault +=Math.round(p*CFG.splitSavings);
@@ -2223,7 +2249,8 @@ function update(dt){
   if(input.down)target*=0.9;
   if(plane.wheels)target*=0.62;
   target*=(0.5+0.5*engines/engineSlots);        /* fewer engines = slower plane */
-  if(!preflightOK)target*=CFG.sluggishFactor;   /* skipped the pre-flight check */
+  if(!preflightOK)target*=CFG.sluggishFactor;   /* skipped the plane check */
+  else target*=(1+cfgNum('cleanBoost',0.10,0));/* a clean plane is a light plane */
   plane.speed=lerp(plane.speed,target,dt*2.5);
   /* ── HONEST MOTION ────────────────────────────────────────────────────────
      The scenery is driven by the heading, not by a stopwatch. Fly forward and
@@ -2237,15 +2264,9 @@ function update(dt){
 
   /* ── the miles tick by ──────────────────────────────────────────────── */
   /* pointing the wrong way? the radar says so, gently */
-  const relB=relBearing();
-  if(Math.abs(relB)>1.75 && distToDest()>3){   /* matches the radar's threshold */
-    offCourseT+=dt;
-    if(offCourseT>7){                          /* clears the 6s notice-dedupe */
-      offCourseT=0;
-      speakNotice(Math.abs(relB)>2.2 ? 'The village is behind you. Turn all the way around.'
-                : (relB>0 ? 'Turn right, towards the village.' : 'Turn left, towards the village.'));
-    }
-  }else offCourseT=0;
+  /* Badly off course? The radar pulses red and that is all. Being told
+     "turn left" over and over while exploring was nagging, and the child
+     can already read the radar — so the picture warns, the voice does not. */
 
   if(!missionDone){
     /* fly towards the village and the miles fall away. Turn away, and they
@@ -3145,11 +3166,11 @@ function blendColor(a,b,t){
 /* ═══════════ HUD + RIGHT-SIDE STATS DRAWER ═══════════ */
 function updateHUD(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  set('zoneem',zone().em);
-  set('zonename',zone().name);
+  set('odoFlown',Math.round(miles));
+  set('odoLeft',Math.max(0,Math.round(milesLeft())));
+  set('odoPic',DEST.em);
   set('level',level());
   set('hearts','⚙️'.repeat(engines)+'✖️'.repeat(Math.max(0,engineSlots-engines))+(kindness>0?' 💛×'+kindness:''));
-  set('weatherphase',WEATHER[wxIdx][0]+' '+WEATHER[wxIdx][1]);
   set('calmVal',Math.round(calmPower));
   const arc=document.getElementById('calmArc');
   if(arc){const frac=calmFrac();arc.setAttribute('stroke-dashoffset',String(82-82*frac));}
@@ -3194,18 +3215,8 @@ function updateGps(){
   const mi=document.getElementById('cpMiles');
   if(mi)mi.textContent=Math.max(0,Math.round(milesLeft()))+' mi';
 
-  /* WHICH WAY TO TURN, in a word — the blip already shows where the nose is
-     pointing, but a six-year-old should not have to work the geometry out. */
-  const relTurn=relBearing();
-  const turn=document.getElementById('cpTurn');
-  if(turn){
-    const a=Math.abs(relTurn);
-    turn.textContent = a<0.35 ? '▲ straight on'
-                     : a>2.2  ? '▼ turn around'
-                     : relTurn>0 ? '▶ turn right'
-                                 : '◀ turn left';
-    turn.className = a<0.35 ? 'cpturn good' : 'cpturn';
-  }
+  /* the blip's nose already shows which way he is pointing, and the disc
+     pulses red when he is well off track — no words needed */
 
   /* the radar disc tints toward the zone he is actually over */
   const disc=document.getElementById('cpDisc');
@@ -3448,7 +3459,6 @@ function closeModal(){
   stopSpeak();
   stopBreath();
   if(typeof arch!=='undefined'&&arch)archStop();
-  focusG=null;                 /* stop any pending focus-game distractions */
   overlay.classList.remove('show');
   if(started)paused=false;
   engineUpdate();updateCalmBtn();
@@ -3483,7 +3493,7 @@ const CHALLENGE_TYPES=[
   {id:'build',   em:'🪜', label:'Build with Pip',  start:()=>showBuild()},
   {id:'sayit',   em:'🔊', label:'Say it right',    start:()=>showSayIt()},
   {id:'tictac',  em:'⭕', label:'Tic-tac-toe',     start:()=>showTicTac()},
-  {id:'focus',   em:'📖', label:'Get ready to focus', start:()=>showFocusGame()},
+  {id:'mcq',     em:'🧠', label:'Thinking questions', start:()=>showMCQ()},
   {id:'triz',    em:'🔀', label:'Inventor puzzles',   start:()=>showTriz()},
   {id:'memory',  em:'🧠', label:'Memory match',       start:()=>showMemory()},
   {id:'pattern', em:'🎵', label:'Copy the pattern',   start:()=>showPattern()}
@@ -4637,6 +4647,25 @@ function finishBreath(){
 
 /* ═══════════ 6) SHARING — short, kind, and skippable ═══════════ */
 let shareAmt=10;
+/* SHARE ANY TIME — sharing used to happen only when an animal happened to
+   ask. Generosity should be something he can choose, not only answer. */
+function shareAnyTime(){
+  if(score<1){
+    toast('Earn a few points first 💛',true);
+    speakPlain('You have no points yet. Help an animal, then you can share.');
+    return;
+  }
+  paused=true;engineUpdate();
+  /* borrow a friendly face if no animal is on screen */
+  if(!rescue||!rescue.name){
+    const z=zone();
+    const em=z.animals[Math.floor(Math.random()*z.animals.length)];
+    rescue={em,name:ANIMAL_NAMES[em]||'Buddy',sit:normSit(SITUATIONS[0]),zone:z.id,
+            word:null,wordEm:'',need:null,needEm:'',req:null,own:null};
+  }
+  ctxMode='sharing';
+  showSharing();
+}
 function showSharing(){
   shareAmt=Math.min(10,Math.max(0,score));
   openModal(`
@@ -5534,6 +5563,11 @@ function openShop(){
     <div class="gbar" style="height:10px;border:2px solid var(--ink);margin-bottom:12px"><div style="width:${vaultPct}%;background:linear-gradient(90deg,#FFD35C,#FFB432)"></div></div>
 
     <div class="stack">
+      <button class="rowcard${preflightOK?'':' idea'}" onclick="closeModal();showPreflight()">
+        <span class="em">🧽</span>
+        <span class="shopname">${preflightOK?'Clean the plane again':'Clean the plane — it is dirty!'}</span>
+        <span class="shopcost ok">FREE<small>✓</small></span>
+      </button>
       ${engines<engineSlots?row(wNeeds>=CFG.engineCostRepair,'buyRepair()','🔧','Mend an engine',CFG.engineCostRepair,'repairs'):''}
       ${engineSlots<CFG.maxEngines?row(wNeeds>=CFG.engineCostNew,'buyEngine()','⚙️','A NEW engine — stronger plane',CFG.engineCostNew,'repairs'):''}
       ${row(wWants>=CFG.paintCost,'buyPaint()','🎨','New tail paint',CFG.paintCost,'fun')}
@@ -5541,7 +5575,11 @@ function openShop(){
       ${!vaultUnlocked?row(wVault>=CFG.vaultGoal,'unlockVault()','👑','The GOLDEN 707 👑',CFG.vaultGoal,'savings'):''}
     </div>
 
+    ${canWithdraw()?`<button class="rowcard" onclick="offerWithdraw('repairs')">
+      <span class="em">🏦</span><span class="shopname">Take some out of savings</span>
+      <span class="shopcost ok">${wVault}<small>✓</small></span></button>`:''}
     <div class="hintline">🏆 Kind helpers: ${rank.map((r,i)=>`${i+1}. ${r.me?'<b>':''}${r.n} — ${r.k}${r.me?'</b>':''}`).join(' · ')}</div>
+    <button class="cta mint" onclick="closeModal();shareAnyTime()">💝 Share some points</button>
     <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
   `);
   document.querySelectorAll('#acctBox .rspk').forEach(e=>{if(!e.innerHTML)e.innerHTML=SPK;});
@@ -5564,11 +5602,82 @@ function sayHowSplit(){
     `${tenths(CFG.splitFun)} bits go to fun, for paint and stickers. `+
     `And ${tenths(CFG.splitSavings)} bits get saved up for the golden plane.`);
 }
-/* kind refusal when he cannot afford something */
+/* ═══════════ TAKING MONEY BACK OUT OF SAVINGS ═══════════
+   Saving is the habit being taught, so the savings pot is deliberately a
+   little sticky: he is told it is there, told what it is for, and has to
+   choose an amount on purpose. It is never taken automatically. */
+let wdTo='repairs', wdAmt=0;
+function canWithdraw(){ return wVault>0; }
+function offerWithdraw(acct){
+  wdTo=(acct==='fun')?'fun':'repairs';
+  wdAmt=Math.min(wVault,50);
+  renderWithdraw();
+  if(autoRead)setTimeout(()=>speakPlain(
+    `You have ${wVault} points saved up. You can take some out for ${wdTo==='fun'?'fun':'repairs'} if you need to. Choose how many, then press Take it out.`),350);
+}
+function renderWithdraw(){
+  const potName=wdTo==='fun'?'fun':'repairs';
+  const potNow =wdTo==='fun'?wWants:wNeeds;
+  openModal(`
+    <div class="bigem">🏦➡️${wdTo==='fun'?'🎉':'🔧'}</div>
+    <h2>Take some out of savings?</h2>
+    <p class="msub" id="wdQ">You have <b>${wVault}</b> points saved up.
+      Your ${potName} pot has <b>${potNow}</b>. How many shall we move across?</p>
+    <div class="spinwrap">
+      <button class="spinbtn" onclick="wdSpin(-10)">−</button>
+      <div class="spinval" id="wdVal">${wdAmt}</div>
+      <button class="spinbtn" onclick="wdSpin(10)">+</button>
+    </div>
+    <div class="seg">
+      <div class="sopt ${wdTo==='repairs'?'sel':''}" onclick="wdWhere('repairs')">🔧 to repairs</div>
+      <div class="sopt ${wdTo==='fun'?'sel':''}" onclick="wdWhere('fun')">🎉 to fun</div>
+    </div>
+    <div class="hintline">💡 Saved points grow by ${CFG.interestPercent}% every ${CFG.interestEveryMinutes} minutes. Points you take out stop growing.</div>
+    <button class="cta mint" onclick="doWithdraw()">🏦 Take out <b id="wdGoN">${wdAmt}</b></button>
+    <button class="cta ghost" onclick="closeModal();openShop()">← Leave it saved</button>
+  `);
+}
+function wdSpin(d){
+  wdAmt=Math.max(0,Math.min(wVault,wdAmt+d));
+  const v=document.getElementById('wdVal'); if(v)v.textContent=wdAmt;
+  const n=document.getElementById('wdGoN'); if(n)n.textContent=wdAmt;
+  tone(560+wdAmt*4,0.06,'triangle',0.07);
+}
+function wdWhere(where){ wdTo=where; renderWithdraw(); }
+function doWithdraw(){
+  const amt=Math.max(0,Math.min(wVault,wdAmt));
+  if(amt<=0){toast('Choose how many first ✏️',true);return;}
+  wVault-=amt;
+  if(wdTo==='fun')wWants+=amt; else wNeeds+=amt;
+  flyChip(amt);fanfare();updateHUD();saveProgress();
+  closeModal();openShop();
+  speakPlain(`${amt} points moved from savings to ${wdTo==='fun'?'fun':'repairs'}. You have ${wVault} still saved up.`);
+}
+
+/* kind refusal when he cannot afford something — and a way out if he has
+   savings sitting there */
 function cantAfford(acct,cost){
   const have={repairs:wNeeds,fun:wWants,savings:wVault}[acct]||0;
   const nice={repairs:'repairs',fun:'fun',savings:'saved up'}[acct]||acct;
   tone(300,0.12,'sine',0.07);tone(240,0.16,'sine',0.07,0.12);
+  const short=cost-have;
+  /* if the savings pot could cover it, say so and offer the choice */
+  if(acct!=='savings'&&canWithdraw()){
+    toast('Not enough — but you have savings 🏦',true);
+    openModal(`
+      <div class="bigem">🏦</div>
+      <h2>Not quite enough…</h2>
+      <p class="msub" id="caQ">Your ${nice} pot has <b>${have}</b>, and this costs <b>${cost}</b>.
+        You need <b>${short}</b> more. But you have <b>${wVault}</b> points saved up!
+        You can take some out if you want to.</p>
+      <div class="stack">
+        <button class="rowcard idea" onclick="offerWithdraw('${acct}')"><span class="em">🏦</span><b>Take some out of savings</b></button>
+        <button class="rowcard" onclick="closeModal();openShop()"><span class="em">💪</span>Keep saving — I will earn it</button>
+      </div>
+    `);
+    autoReadIf('caQ');
+    return;
+  }
   toast('Not enough points yet 💛',true);
   speakPlain(`Not enough points yet. You need ${cost} ${nice}, and you have ${have}. Help one more animal and you will get there.`);
 }
@@ -5685,102 +5794,110 @@ function cargoModal(em,msg){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   GETTING READY TO FOCUS  —  with Pip
+   🧠 THINKING QUESTIONS  —  multiple choice
    ---------------------------------------------------------------------------
-   An animal cannot concentrate. You and Pip get the room ready together, in
-   order: clear the table, shut the door, turn off the radio, then open the
-   book. If something distracting sneaks back in, Pip says start again —
-   because you get better at focusing by practising it.
+   A bank of topics. Each has SEVERAL right answers and a pool of wrong ones;
+   every round shows ONE of the right answers together with freshly drawn
+   wrong ones, so the same topic never looks the same twice and the child
+   cannot learn the position of the answer.
    ═══════════════════════════════════════════════════════════════════════════ */
-const FOCUS_STEPS=[
-  {id:'table', em:'🧹', label:'Clear the mess off the table', pip:'"First we clear the table," says Pip. "A tidy table helps a tidy head."'},
-  {id:'door',  em:'🚪', label:'Shut the door',               pip:'"Now shut the door," says Pip. "That keeps the noise out."'},
-  {id:'radio', em:'📻', label:'Turn off the radio',          pip:'"Radio off," says Pip. "One thing at a time."'},
-  {id:'book',  em:'📖', label:'Open the book',               pip:'"And NOW we open the book," smiles Pip. "We are ready."'}
+const MCQ_TOPICS=[
+  {
+    id:'focus', em:'📖', ask:'What helps you focus?',
+    right:[
+      'Put away things that pull your eyes — the TV, the phone',
+      'Move away from things that pull your eyes — the TV, noisy friends',
+      'If you lose your place, start again. And start again.',
+      'Start with the easy bit first'
+    ],
+    wrong:[
+      'Do three things at the same time',
+      'Keep the TV on so it is not too quiet',
+      'Start with the very hardest bit',
+      'Give up if it takes a long time',
+      'Check the phone after every question',
+      'Ask someone to just tell you the answer',
+      'Do it while jumping on the bed',
+      'Wait until you are very sleepy'
+    ]
+  },
+  {
+    id:'calm', em:'🧸', ask:'What helps when you feel cross?',
+    right:[
+      'Breathe slowly, with your tummy going up and down',
+      'Say out loud how you feel',
+      'Take a little break, then come back',
+      'Ask someone you trust for a hug'
+    ],
+    wrong:[
+      'Shout as loudly as you can',
+      'Throw the nearest thing',
+      'Say something unkind back',
+      'Pretend you feel fine when you do not',
+      'Stamp off and slam the door'
+    ]
+  },
+  {
+    id:'kind', em:'💛', ask:'What is a kind thing to do?',
+    right:[
+      'Ask someone playing alone to join in',
+      'Say sorry when you bump someone',
+      'Share when a friend has none',
+      'Listen all the way to the end'
+    ],
+    wrong:[
+      'Laugh when someone trips over',
+      'Take the biggest piece every time',
+      'Talk over someone who is talking',
+      'Tell a friend they are no good at it'
+    ]
+  },
+  {
+    id:'money', em:'🏦', ask:'What is a good money habit?',
+    right:[
+      'Save some of it instead of spending it all',
+      'Keep money aside for mending things that break',
+      'Wait, and think, before buying something',
+      'Give a little to someone who needs it'
+    ],
+    wrong:[
+      'Spend it all the moment you get it',
+      'Buy the same toy twice',
+      'Never mend anything, just buy a new one',
+      'Keep it all and never help anyone'
+    ]
+  }
 ];
-let focusG=null;
-function showFocusGame(){
-  focusG={i:0, restarts:0, dist:null};
-  renderFocus();
-  speakPlain(`${rescue.name} cannot concentrate. Pip will help you get the room ready. Do it in order.`);
-  scheduleDistraction();
-}
-function renderFocus(){
-  const g=focusG;
-  if(!g)return;
-  const done=g.i;
+let mcq=null;
+function showMCQ(){
+  const t=MCQ_TOPICS[Math.floor(Math.random()*MCQ_TOPICS.length)];
+  /* one of the right answers, plus wrong ones drawn fresh each time */
+  const ok=t.right[Math.floor(Math.random()*t.right.length)];
+  const nWrong=(band==='t')?1:(band==='y'?2:3);
+  const wrongs=shuffle([...t.wrong]).slice(0,nWrong);
+  const opts=shuffle([ok,...wrongs]);
+  mcq={topic:t,ok,opts,correct:opts.indexOf(ok)};
   openModal(`
-    <div class="bigem">${rescue.em}🦊</div>
-    <h2>Get ready to focus</h2>
-    <div class="focusroom">
-      ${FOCUS_STEPS.map((st,i)=>`
-        <button class="frow ${i<done?'done':(i===done?'now':'later')}"
-                onclick="focusDo(${i})" ${i!==done?'disabled':''}>
-          <span class="fem">${st.em}</span>
-          <span class="flabel">${st.label}</span>
-          <span class="ftick">${i<done?'✅':(i===done?'👉':'')}</span>
-        </button>`).join('')}
+    <div class="bigem">${rescue.em}${t.em}</div>
+    <h2>${esc(rescue.name)} wants to know…</h2>
+    <p class="msub" id="mcQ">${esc(t.ask)}</p>
+    <div class="stack">
+      ${opts.map((o,i)=>`<button class="rowcard" id="mc${i}" onclick="pickMCQ(${i})"><span class="em">${t.em}</span>${esc(o)}</button>`).join('')}
     </div>
-    <div class="archnote" id="fNote">${g.i===0?'"Let us start at the beginning," says Pip.':FOCUS_STEPS[g.i-1].pip}</div>
-    ${g.restarts?`<div class="tinynote">🔁 Started again ${g.restarts} time${g.restarts>1?'s':''} — and that is how you get good at it.</div>`:''}
   `);
+  autoReadIf('mcQ',()=>readChoices(opts));
 }
-function focusDo(i){
-  const g=focusG;
-  if(!g||i!==g.i)return;
-  g.i++;
-  tone(600+i*90,0.1,'triangle',0.09);
-  if(g.i>=FOCUS_STEPS.length){ focusWin(); return; }
-  renderFocus();
-  speakPlain(FOCUS_STEPS[g.i-1].pip);
-}
-/* something distracting sneaks in — if he taps it, everything starts again */
-function scheduleDistraction(){
-  if(!focusG||focusG.i>=FOCUS_STEPS.length)return;
-  setTimeout(()=>{
-    if(!focusG||focusG.i>=FOCUS_STEPS.length)return;
-    if(Math.random()<cfgNum('distractChance',0.55,0)) popDistraction();
-    scheduleDistraction();
-  }, cfgNum('distractEvery',3,0.5)*1000+Math.random()*3500);
-}
-const DISTRACTIONS=[['📺','a loud TV'],['🍭','a sweet'],['🎮','a game'],['🔔','the doorbell'],['🐒','a silly monkey'],['📱','a buzzing phone']];
-function popDistraction(){
-  const d=DISTRACTIONS[Math.floor(Math.random()*DISTRACTIONS.length)];
-  const box=modalEl&&modalEl.querySelector('.focusroom');
-  if(!box)return;
-  const el=document.createElement('button');
-  el.className='distract';
-  el.textContent=d[0];
-  el.style.left=(10+Math.random()*72)+'%';
-  el.style.top=(8+Math.random()*70)+'%';
-  el.onclick=()=>focusDistracted(d[1]);
-  box.appendChild(el);
-  tone(950,0.09,'square',0.07);
-  setTimeout(()=>{ if(el.parentNode)el.remove(); }, 2600);
-}
-function focusDistracted(what){
-  const g=focusG;
-  if(!g)return;
-  g.restarts++;
-  g.i=0;
-  if(modalEl)modalEl.querySelectorAll('.distract').forEach(e=>e.remove());
-  tone(200,0.2,'sine',0.08);
-  renderFocus();
-  const n=document.getElementById('fNote');
-  if(n)n.textContent=`🦊 "You looked at ${what}! Start again," says Pip. "You get better every time."`;
-  speakPlain(`You looked at ${what}. Start again, says Pip. You get better every time.`);
-}
-function focusWin(){
-  if(!focusG)return;
-  const tries=focusG.restarts;
-  focusG=null;                        /* stops any pending distraction timer */
-  confettiBurst();fanfare();
-  addPoints(CFG.practicePoints*2);
-  earnCalm(1,'you got ready to focus');
+function pickMCQ(i){
+  if(!mcq)return;
+  if(i!==mcq.correct){flowMiss(document.getElementById('mc'+i));return;}
+  streakUp();
+  const t=mcq.topic, ok=mcq.ok;
+  /* show the OTHER right answers too — there is rarely just one good way */
+  const others=t.right.filter(r=>r!==ok);
+  mcq=null;
   challengeComplete(
-    `📖 The room is quiet, the table is clear, and the book is open. ${esc(rescue.name)} can think again!` +
-    (tries?` "And you started again ${tries} time${tries>1?'s':''} without giving up," says Pip. "THAT is the clever bit."`
-          :` "You did it first time," says Pip.`)
+    `${t.em} Yes! <b>${esc(ok)}</b>`+
+    (others.length?`<br><br><small>These help too:<br>${others.map(o=>'• '+esc(o)).join('<br>')}</small>`:'')
   );
 }
 
@@ -5932,13 +6049,16 @@ function pfComplete(){
   preflightOK=true;preflightDue=false;
   addPoints(CFG.preflightPoints);updateHUD();fanfare();confettiBurst();saveProgress();
   setTimeout(()=>{
+    const pct=Math.round(cfgNum('cleanBoost',0.10,0)*100);
+    const line=`All clean! A clean plane is a lighter plane, and a lighter plane flies faster. You get ${pct} per cent more speed.`;
     if(!started){
-      speakPlain(praise()+' Your plane is looked after. Now let us pick the way.');
+      speakPlain(praise()+' '+line+' Now let us pick the way.');
       showRoutePlanner();
     }else{
       introReading(false);
       closeModal();
-      banner('✅ Plane checked',2200);
+      banner(`✨ All clean — ${pct}% faster!`,2600,true);
+      speakPlain(line);
     }
   },900);
 }
@@ -5962,19 +6082,14 @@ function maybeFork(){
   if(!canInterrupt())return;                    /* something else just happened */
   /* NOTE: route + weather planning happens ONCE, before take-off. It must
      never interrupt a flight already under way. */
-  if(preflightDue){preflightDue=false;markInterrupt();paused=true;engineUpdate();showPreflight();return;}
+  /* the plane check no longer ambushes him in mid-air — it belongs before
+     take-off, or in the hangar when he chooses to go there */
   /* BUG FIX: markInterrupt() used to run here, at the top — so on the ~37% of
      calls that showed nothing at all, the quiet-gap budget was spent anyway
      and real events (rescues, gifts) got silently swallowed. It now only runs
      when something is actually about to appear. And the focus game used to
      open its modal WITHOUT pausing, so the plane kept flying underneath it. */
-  const roll=Math.random();
-  if(roll<0.25){
-    markInterrupt();paused=true;engineUpdate();
-    startFocusFromSky();
-    return;
-  }
-  if(roll<0.62)return;                          /* nothing this time */
+  if(Math.random()<0.5)return;                  /* nothing this time */
   markInterrupt();
   paused=true;engineUpdate();
   openModal(`
@@ -6004,15 +6119,6 @@ function forkStorm(){
 function forkCalm(){
   closeModal();
   ctxMode='practice';showBreath('practice');
-}
-/* the focus game needs an animal to help, so borrow one from this zone */
-function startFocusFromSky(){
-  const z=zone();
-  const em=z.animals[Math.floor(Math.random()*z.animals.length)];
-  rescue={em,name:ANIMAL_NAMES[em]||'Buddy',sit:normSit(SITUATIONS[0]),zone:z.id,
-          word:null,wordEm:'',need:null,needEm:'',req:null,own:null,body:null};
-  ctxMode='rescue';
-  showFocusGame();
 }
 
 /* ═══════════ SUCCESS + GOLD STARS ═══════════ */
@@ -6293,6 +6399,34 @@ function nextJourney(){
   saveProgress();
 }
 
+/* ═══════════ WHERE WE ARE GOING ═══════════
+   Shown once the mission is accepted, and again any time the odometer is
+   tapped, so the reason for the flight stays a real place with real people
+   rather than a number counting down. */
+function destSceneHTML(){
+  const [far,mid,people]=DEST.scene;
+  return `
+    <div class="destscene">
+      <div class="destrow far">${far.join('')}</div>
+      <div class="destrow mid">${mid.join('')}</div>
+      <div class="destrow people">${people.map(e=>`<span>${e}</span>`).join('')}</div>
+      <div class="desthelpwrap"><div class="desthelp">💬 "Please help us!"</div></div>
+    </div>`;
+}
+function showDestination(next){
+  const flying=started&&!paused;
+  if(flying){paused=true;engineUpdate();}
+  openModal(`
+    <h2>The village needs you</h2>
+    ${destSceneHTML()}
+    <p class="msub" id="dsQ">An earthquake shook this village. The houses fell down.
+      These people are waiting for the medicine in your plane. You have flown
+      <b>${Math.round(miles)}</b> miles. It is <b>${Math.max(0,Math.round(milesLeft()))}</b> more miles to go.</p>
+    <button class="cta" onclick="${next?'closeModal();'+next:'closeModal()'}">${next?'Let us go! 🛫':'Keep flying! ✈️'}</button>
+  `);
+  autoReadIf('dsQ');
+}
+
 /* ═══════════ MISSION — the reason we fly ═══════════ */
 const MISSION=[
   ['🌍','An earthquake shook a village far away.'],
@@ -6341,7 +6475,8 @@ function readMissionLine(i){
 function missionAccepted(){
   missionReading=false;
   stopSpeak();
-  showPreflight();          /* the plane check comes straight after */
+  /* see the place first — then check the plane */
+  showDestination('showPreflight()');
 }
 
 /* ═══ ORIENTATION — your two helpers, always there ═══ */
@@ -6543,9 +6678,7 @@ const DASH_GROUPS=[
     {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
     {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
     {k:'patternRounds',      t:'Rounds to win Copy the Pattern',      min:1, max:10, step:1},
-    {k:'spellBlanks',        t:'Missing letters (0 = by age)',        min:0, max:5,  step:1},
-    {k:'distractChance',     t:'How often a distraction pops up',     min:0, max:1,  step:0.05},
-    {k:'distractEvery',      t:'…checked every N seconds',            min:0.5,max:20,step:0.5}
+    {k:'spellBlanks',        t:'Missing letters (0 = by age)',        min:0, max:5,  step:1}
   ]},
   {id:'plane', em:'✈️', name:'The plane', tab:'Plane', fields:[
     {k:'startingEngines', t:'Engines to start with', min:1, max:6,  step:1},
@@ -6553,7 +6686,8 @@ const DASH_GROUPS=[
     {k:'cruiseSpeed',     t:'Cruise speed',          min:0.3,max:1.5,step:0.05},
     {k:'boostSpeed',      t:'Boost speed',           min:0.8,max:3,  step:0.05},
     {k:'climbSpeed',      t:'Speed while climbing',  min:0.1,max:3,  step:0.05},
-    {k:'sluggishFactor',  t:'Speed if the check is skipped', min:0.4,max:1,step:0.02}
+    {k:'sluggishFactor',  t:'Speed if the check is skipped', min:0.4,max:1,step:0.02},
+    {k:'cleanBoost',      t:'Speed bonus for a clean plane', min:0, max:1, step:0.05}
   ]},
   {id:'learn', em:'📚', name:'Learning', tab:'Learning', fields:[
     {k:'shareAskChance',  t:'How often an animal asks to share', min:0, max:1, step:0.05},
