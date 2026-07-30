@@ -1197,6 +1197,11 @@ const DEFAULT_CONFIG={
                              // so it stays a treat and not a toll on every win
   shareAskGap:         4,    // fewest rescues between two share asks
   distanceCallSeconds:75,    // roughly how often "you are this far away" is said
+  vehicleEverySeconds:95,    // roughly how often the weather changes the machine
+  vehicleLastsSeconds:70,    // how long a stretch in the car or on the skis lasts
+  jumpRise:         150,     // how fast the car/skier leaps when you push up
+  jumpFall:         110,     // how fast gravity brings them back down
+  jumpHeight:        58,     // the top of a jump
   maxHazardsAtOnce:  2,
 
   /* ── SAVED PROGRESS ──────────────────────────────────────────────────────
@@ -1837,6 +1842,67 @@ let invuln=0, shield=0;
 let kindness=0, starsSpent=0, viewMode='chase';
 /* engines replace hearts: physical damage model */
 let engineSlots=CFG.startingEngines, engines=CFG.startingEngines;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOW HE IS TRAVELLING  —  plane, car or skis
+   ---------------------------------------------------------------------------
+   A long flight in one machine gets samey, so twice a journey the weather
+   turns and he has to change how he travels: severe lightning grounds him
+   into a CAR, a severe snow storm puts him on SKIS. The controls stay in the
+   same places and mean the same things — swerve left and right, go up and
+   down, and one big button to get to an animal — but on the ground "up" is a
+   JUMP that falls back, the parts that take the damage are different, and
+   reaching an animal means opening a door or planting your poles rather than
+   putting the wheels down.
+   `plane.wheels` is the shared "the helping thing is engaged" flag for all
+   three; only its name and picture change.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const VEHICLES={
+  plane:{
+    id:'plane', name:'the 707', the:'your plane', em:'✈️', ground:false,
+    partEm:'⚙️', partGone:'✖️', part:'engine', parts:'engines',
+    actEm:'🛞', actLabel:'wheels', actOn:'Wheels DOWN', actOff:'Wheels UP',
+    helpHint:'go LOW ⬇️ + WHEELS 🛞',
+    missHigh:'Too high! Fly lower next time 🛬',
+    missAct:'Wheels DOWN next time 🛞',
+    emergency:'🚨 LAND NOW! Go LOW ⬇️ + WHEELS 🛞',
+    emergencySay:'Only one engine left! Land now. Fly low and put your wheels down.',
+    crashLine:'All the engines stopped!',
+    breakLine:'An engine broke!',
+    switchSay:null
+  },
+  car:{
+    id:'car', name:'the rescue car', the:'your car', em:'🚙', ground:true,
+    partEm:'🛞', partGone:'💥', part:'tyre', parts:'tyres',
+    actEm:'🚪', actLabel:'door', actOn:'Door OPEN', actOff:'Door SHUT',
+    helpHint:'slow down ⬇️ + open the DOOR 🚪',
+    missHigh:'You were still jumping! Come down first ⬇️',
+    missAct:'Open the DOOR next time 🚪',
+    emergency:'🚨 STOP! Go SLOW ⬇️ + open the DOOR 🚪',
+    emergencySay:'Only one good tyre left! Stop now. Slow down and open the door.',
+    crashLine:'All the tyres burst!',
+    breakLine:'A tyre burst!',
+    switchSay:'Severe lightning ahead! It is not safe to fly. Land, and drive the rescue car. Swerve left and right, and jump over the bumps.'
+  },
+  ski:{
+    id:'ski', name:'the rescue skis', the:'your skis', em:'⛷️', ground:true,
+    partEm:'🎿', partGone:'💥', part:'ski', parts:'skis and poles',
+    actEm:'🥢', actLabel:'poles', actOn:'Poles DOWN', actOff:'Poles UP',
+    helpHint:'slow down ⬇️ + rest your POLES 🥢',
+    missHigh:'You were still jumping! Come down first ⬇️',
+    missAct:'Rest your POLES next time 🥢',
+    emergency:'🚨 STOP! Go SLOW ⬇️ + rest your POLES 🥢',
+    emergencySay:'Only one ski left! Stop now. Slow down and rest your poles.',
+    crashLine:'Your skis and poles all broke!',
+    breakLine:'A ski broke!',
+    switchSay:'A severe snow storm ahead! It is not safe to fly. Land, and put on the rescue skis. Swerve left and right, and jump over the bumps.'
+  }
+};
+let vehicle='plane';
+function VEH(){ return VEHICLES[vehicle]||VEHICLES.plane; }
+/* on the ground the two skis and two poles are what break, so the four parts
+   are named individually rather than all being "engines" */
+const SKI_PARTS=['left ski','right ski','left pole','right pole'];
 /* three bank accounts: REPAIRS 50% / FUN 30% / SAVINGS 20% */
 let wNeeds=0, wVault=0, wWants=0, vaultUnlocked=false;
 /* karma from sharing → surprise help later */
@@ -2016,6 +2082,73 @@ function distanceCall(){
 function distanceGap(){
   const base=cfgNum('distanceCallSeconds',75,10);
   return base+Math.random()*base*0.4;   /* jittered, so it never feels metronomic */
+}
+
+/* ═══════════ THE WEATHER TURNS — change how you travel ═══════════
+   Announced first, always, so it is never a surprise that costs him a life:
+   the sky is cleared of trouble, the machine changes, and a card explains
+   the new controls before anything can hit him. */
+let vehClock=0, vehLeft=0, vehSwaps=0;
+function vehicleGap(){
+  const base=cfgNum('vehicleEverySeconds',95,20);
+  return base+Math.random()*base*0.5;
+}
+function vehicleTick(dt){
+  if(!started||!missionChosen)return;
+  if(vehicle!=='plane'){
+    /* a stretch on the ground, then back into the air */
+    vehLeft-=dt;
+    if(vehLeft<=0&&canInterrupt())switchVehicle('plane');
+    return;
+  }
+  vehClock-=dt;
+  if(vehClock>0)return;
+  if(!canInterrupt()){vehClock=6;return;}          /* wait for a quiet moment */
+  if(animal||cargo||hazards.length){vehClock=6;return;}
+  if(milesLeft()<6){vehClock=20;return;}           /* not right at the end */
+  switchVehicle(vehSwaps%2===0?'car':'ski');
+}
+function switchVehicle(to){
+  if(vehicle===to)return;
+  const back=(to==='plane');
+  vehicle=to;
+  const v=VEH();
+  if(!back){vehSwaps++;vehLeft=cfgNum('vehicleLastsSeconds',70,15);}
+  else{vehClock=vehicleGap();}
+  /* nothing may be in the air while the machine changes underneath him */
+  hazards=[];animal=null;cargo=null;
+  hazClock=Math.max(hazClock,6);animalClock=Math.max(animalClock,5);
+  plane.wheels=false;plane.alt=back?62:6;input.boost=false;
+  markInterrupt();
+  updateHUD();updateAlt();
+  paused=true;engineUpdate();
+  const title=back
+    ? '☀️ The weather cleared!'
+    : (to==='car'?'⚡ SEVERE LIGHTNING AHEAD!':'❄️ SEVERE SNOW STORM AHEAD!');
+  const why=back
+    ? `The storm is behind you. ${cap1(VEHICLES.plane.the)} is ready again — back into the sky.`
+    : (to==='car'
+       ? 'It is not safe to fly through lightning. Land the plane and take the rescue car.'
+       : 'It is not safe to fly through a snow storm. Land the plane and put on the rescue skis.');
+  openModal(`
+    <div class="bigem">${back?'✈️☀️':(to==='car'?'⚡🚙':'❄️⛷️')}</div>
+    <h2 id="vhH">${title}</h2>
+    <p class="msub" id="vhQ">${esc(why)}</p>
+    <div class="stack">
+      <div class="rowcard"><span class="em">↔️</span><b>Swerve</b> left and right, the same as before</div>
+      <div class="rowcard"><span class="em">${back?'⬆️':'🤸'}</span><b>${back?'Climb and dive':'Jump'}</b> — ${back?'up high is faster':'push up to hop over things, and you fall back down'}</div>
+      <div class="rowcard"><span class="em">${v.partEm}</span>Now it is your <b>${esc(v.parts)}</b> that take the bumps</div>
+      <div class="rowcard" style="background:#FFE9B8"><span class="em">${v.actEm}</span>To help an animal: <b>${esc(v.helpHint)}</b></div>
+    </div>
+    <button class="cta" onclick="closeModal()">${back?'Back to the sky! ✈️':'Let us go! '+v.em}</button>
+  `);
+  if(autoRead){
+    const say=back
+      ? 'The weather cleared. Back into the sky, and up high is faster again.'
+      : v.switchSay;
+    setTimeout(()=>speakHL('vhH',()=>speakPlain(say)),250);
+  }
+  banner(title,2600,true);
 }
 /* the compass asks two questions:
      relBearing() — which way is the village, from the nose? (0 = dead ahead)
@@ -2434,7 +2567,7 @@ function spawnAnimal(){
   animal={em,name:ANIMAL_NAMES[em]||'Buddy',x:(Math.random()*1.2-0.6),z:1,missed:false,called:false};
   hazClock=Math.max(hazClock,gapStatic(12,6));
   cargoClock=Math.max(cargoClock,gapStatic(14,8));
-  banner(`🆘 ${animal.name} ahead — go LOW ⬇️ + WHEELS 🛞`,3000,true);
+  banner(`🆘 ${animal.name} ahead — ${VEH().helpHint}`,3000,true);
   animalCall(em);
   /* BUGFIX: capture the name now — the animal may be rescued (and set to null)
      before this delayed announcement fires. */
@@ -2537,22 +2670,33 @@ function update(dt){
   }
   plane.heading=normAng(plane.heading);
 
-  if(input.up)plane.alt+=48*dt;
-  if(input.down)plane.alt-=52*dt;
-  plane.alt=Math.max(6,Math.min(100,plane.alt));
+  if(VEH().ground){
+    /* ON THE GROUND: "up" is a JUMP, not a climb. Hold it to leap, and
+       gravity always pulls you back down to the road or the snow — so the
+       same stick that flies the plane hops the car and the skis over what
+       is in the way. */
+    if(input.up)plane.alt+=cfgNum('jumpRise',150,10)*dt;
+    plane.alt-=cfgNum('jumpFall',110,10)*dt*(input.down?1.9:1);
+    plane.alt=Math.max(6,Math.min(cfgNum('jumpHeight',58,10),plane.alt));
+  }else{
+    if(input.up)plane.alt+=48*dt;
+    if(input.down)plane.alt-=52*dt;
+    plane.alt=Math.max(6,Math.min(100,plane.alt));
+  }
 
   let target=CFG.cruiseSpeed;
-  if(input.up)target=cfgNum('climbSpeed',1.05,0.1);
+  if(input.up&&!VEH().ground)target=cfgNum('climbSpeed',1.05,0.1);
   if(input.boost)target=CFG.boostSpeed;
   if(input.down)target*=0.9;
   if(plane.wheels)target*=0.62;
-  target*=(0.5+0.5*engines/engineSlots);        /* fewer engines = slower plane */
+  target*=(0.5+0.5*engines/engineSlots);        /* fewer parts = slower going */
   if(!preflightOK)target*=CFG.sluggishFactor;   /* skipped the plane check */
   else target*=(1+cfgNum('cleanBoost',0.10,0));/* a clean plane is a light plane */
   /* HIGHER IS FASTER: the air is thin up high, so the plane goes faster the
      higher he flies, and noticeably slower down near the ground. Smooth, so
-     the joystick teaches it by feel rather than by a rule. */
-  target*=1+cfgNum('altSpeedBonus',0.25,0)*(altFrac()-0.5)*2;
+     the joystick teaches it by feel rather than by a rule. On the ground
+     there is no thin air to find, so jumping does not make you quicker. */
+  if(!VEH().ground)target*=1+cfgNum('altSpeedBonus',0.25,0)*(altFrac()-0.5)*2;
   plane.speed=lerp(plane.speed,target,dt*2.5);
   highFlyHint();
   /* ── HONEST MOTION ────────────────────────────────────────────────────────
@@ -2625,6 +2769,9 @@ function update(dt){
   distClock-=dt;
   if(distClock<=0)distanceCall();
 
+  /* the weather turning, and the machine changing with it */
+  vehicleTick(dt);
+
   /* mystery cargo — a rare surprise gift */
   cargoClock-=dt;
   if(cargoClock<=0&&!cargo&&!animal&&!hazards.length&&canInterrupt()){spawnCargo();cargoClock=(CFG.cargoEveryMin||110)+Math.random()*60;}
@@ -2696,8 +2843,8 @@ function update(dt){
            back (canInterrupt). Now the message is always true. */
         const linedUp=Math.abs(animal.x-plane.x)<0.36&&plane.alt<=26&&plane.wheels;
         toast(`${animal.em} `+(
-          plane.alt>26 ? 'Too high! Fly lower next time 🛬'
-          : !plane.wheels ? 'Wheels DOWN next time 🛞'
+          plane.alt>26 ? VEH().missHigh
+          : !plane.wheels ? VEH().missAct
           : linedUp ? 'So close! One at a time — catch the next one 💛'
           : 'Steer closer next time ⬅️➡️'));
       }
@@ -2743,7 +2890,7 @@ function update(dt){
     emReminderT+=dt;
     if(emReminderT>8){
       emReminderT=0;alarmSound();
-      banner('🚨 LAND! Go LOW ⬇️ + WHEELS 🛞',2400);
+      banner(VEH().emergency,2400);
     }
     if(plane.alt<=13&&plane.wheels){emergencyMode=false;landedForRepair();return;}
   }
@@ -2890,8 +3037,8 @@ function hitPlane(h){
   }else if(engines===1){
     enterEmergency();
   }else{
-    toast(`💥 An engine broke! ${engines}/${engineSlots} left`,true);
-    if(autoRead)speakPlain('An engine broke. The hangar can fix it, with points.');
+    toast(`💥 ${VEH().breakLine} ${engines}/${engineSlots} left`,true);
+    if(autoRead)speakPlain(`${VEH().breakLine} The hangar can fix it, with points.`);
   }
 }
 
@@ -3244,6 +3391,10 @@ function drawPlane(time,an){
   ctx.beginPath();ctx.ellipse(px,shY,60*shS,12*shS,0,0,Math.PI*2);ctx.fill();
   if(blink)return;
 
+  /* on the ground he is in the car or on the skis instead */
+  if(vehicle==='car'){ drawCar(time,px,py); drawTapZone(px,py); return; }
+  if(vehicle==='ski'){ drawSkier(time,px,py); drawTapZone(px,py); return; }
+
   ctx.save();
   ctx.translate(px,py);
   ctx.rotate(plane.bank*0.30);
@@ -3300,12 +3451,176 @@ function drawPlane(time,an){
     ctx.beginPath();ctx.ellipse(8*s,6*s,8*s,5*s,0.5,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
-
-  /* keep the "tap the plane" zone sitting exactly over the plane */
+  drawTapZone(px,py);
+}
+/* keep the "tap me" zone sitting exactly over whatever he is travelling in */
+function drawTapZone(px,py){
   const tap=document.getElementById('planetap');
   if(tap){
     tap.classList.toggle('show',started&&!paused);
     tap.style.top=Math.max(0,py-75)+'px';
+  }
+}
+
+/* ═══════════ THE RESCUE CAR — driven when lightning grounds the plane ═══════
+   Four tyres carry the damage; a burst one goes dark and smokes. Opening the
+   door is what lets him reach an animal, so the door is drawn swinging wide.
+   The whole body leans into a swerve and squashes on landing, so a jump has
+   real weight to it. */
+function drawCar(time,px,py){
+  const s=1.0+(engineSlots-4)*0.05;
+  const air=Math.max(0,(plane.alt-6)/52);          /* 0 on the road, 1 at the top */
+  ctx.save();
+  ctx.translate(px,py);
+  ctx.rotate(plane.bank*0.22);
+  /* squash as it lands, stretch as it leaps */
+  ctx.scale(1+air*0.06,1-air*0.05+(air===0?Math.sin(time*9)*0.012:0));
+  ctx.strokeStyle='#33305E';ctx.lineWidth=3;ctx.lineJoin='round';
+  /* body */
+  ctx.fillStyle=paint;
+  rr(-52*s,-6*s,104*s,34*s,12*s);ctx.fill();ctx.stroke();
+  /* roof + windows */
+  ctx.fillStyle='#C9D2E0';
+  ctx.beginPath();
+  ctx.moveTo(-32*s,-6*s);ctx.lineTo(-22*s,-32*s);ctx.lineTo(26*s,-32*s);ctx.lineTo(36*s,-6*s);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#7FC4F2';
+  rr(-25*s,-28*s,22*s,19*s,4*s);ctx.fill();ctx.stroke();
+  rr(4*s,-28*s,22*s,19*s,4*s);ctx.fill();ctx.stroke();
+  /* the rescue door — swings open when he is ready to help */
+  if(plane.wheels){
+    ctx.fillStyle='#FFE39A';
+    ctx.save();
+    ctx.translate(-6*s,4*s);ctx.rotate(-0.72);
+    rr(0,-16*s,30*s,32*s,5*s);ctx.fill();ctx.stroke();
+    ctx.restore();
+    ctx.font=(15*s)+'px serif';ctx.textAlign='center';
+    ctx.fillText('🐾',-30*s,-34*s);
+  }else{
+    ctx.strokeStyle='#33305E';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(-6*s,-6*s);ctx.lineTo(-6*s,26*s);ctx.stroke();
+    ctx.lineWidth=3;
+  }
+  /* lamps */
+  ctx.fillStyle='#FFF3D6';
+  ctx.beginPath();ctx.ellipse(50*s,8*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  /* four tyres — burst ones go dark and smoke */
+  const tyrePos=[[-34,30],[34,30],[-14,31],[14,31],[-50,29],[50,29]];
+  for(let i=0;i<Math.min(engineSlots,tyrePos.length);i++){
+    const [tx,ty]=tyrePos[i];
+    const alive=i<engines;
+    /* wheels spin on the road and hang still in the air */
+    const spin=alive?time*(air>0.1?2:9):0;
+    ctx.fillStyle=alive?'#2B2833':'#5A4550';
+    ctx.beginPath();ctx.arc(tx*s,ty*s,10*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=alive?'#8E97AC':'#3A3540';
+    ctx.beginPath();ctx.arc(tx*s,ty*s,4.5*s,0,Math.PI*2);ctx.fill();
+    if(alive){
+      ctx.strokeStyle='#8E97AC';ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(tx*s+Math.cos(spin)*9*s,ty*s+Math.sin(spin)*9*s);
+      ctx.lineTo(tx*s-Math.cos(spin)*9*s,ty*s-Math.sin(spin)*9*s);
+      ctx.stroke();
+      ctx.strokeStyle='#33305E';ctx.lineWidth=3;
+    }else drawSmoke(tx*s,ty*s,time+i*0.4,engines<=1);
+  }
+  /* stickers ride on the roof */
+  if(stickers>0){
+    ctx.font=(11*s)+'px serif';ctx.textAlign='left';
+    for(let i=0;i<Math.min(5,stickers);i++)ctx.fillText('⭐',(-18+i*11)*s,-36*s);
+  }
+  if(input.boost){
+    ctx.fillStyle='rgba(255,200,120,0.5)';
+    ctx.beginPath();ctx.ellipse(-58*s,20*s,9,7+Math.random()*5,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  /* dust kicked up while it is actually on the road */
+  if(air<0.08){
+    ctx.globalAlpha=0.25;ctx.fillStyle='#C9B593';
+    for(let i=0;i<3;i++){
+      const p=((time*1.6)+i/3)%1;
+      ctx.beginPath();ctx.arc(px-46-p*40,py+30*s,4+p*9,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+/* ═══════════ THE RESCUE SKIER — worn when a snow storm grounds the plane ════
+   Two skis and two poles are the four parts that break. Resting the poles
+   flat is what lets him reach an animal, so the poles swing down and out. */
+function drawSkier(time,px,py){
+  const s=1.0+(engineSlots-4)*0.04;
+  const air=Math.max(0,(plane.alt-6)/52);
+  const lean=plane.bank*0.30;
+  const crouch=(air>0.1?-4:Math.sin(time*7)*1.2);
+  ctx.save();
+  ctx.translate(px,py);
+  ctx.rotate(lean);
+  ctx.strokeStyle='#33305E';ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';
+  /* parts 0,1 are the skis; parts 2,3 are the poles */
+  const skiOK=[engines>0,engines>1], poleOK=[engines>2,engines>3];
+  /* skis */
+  [[-17,1],[17,-1]].forEach(([sx,tilt],i)=>{
+    ctx.fillStyle=skiOK[i]?'#E8564A':'#5A4550';
+    ctx.save();
+    ctx.translate(sx*s,34*s+crouch);ctx.rotate(tilt*0.05+air*0.12);
+    rr(-30*s,-4*s,60*s,8*s,4*s);ctx.fill();ctx.stroke();
+    /* turned-up tip */
+    ctx.beginPath();ctx.moveTo(28*s,-3*s);ctx.quadraticCurveTo(38*s,-6*s,36*s,-11*s);ctx.stroke();
+    ctx.restore();
+    if(!skiOK[i])drawSmoke(sx*s,34*s,time+i*0.5,engines<=1);
+  });
+  /* legs */
+  ctx.strokeStyle='#3D6BB3';ctx.lineWidth=8*s;
+  ctx.beginPath();
+  ctx.moveTo(-9*s,6*s);ctx.lineTo(-15*s,30*s+crouch);
+  ctx.moveTo(9*s,6*s);ctx.lineTo(15*s,30*s+crouch);
+  ctx.stroke();
+  ctx.strokeStyle='#33305E';ctx.lineWidth=3;
+  /* body, leaning forward like a real skier */
+  ctx.fillStyle=paint;
+  ctx.save();ctx.translate(0,-6*s);ctx.rotate(0.12);
+  rr(-16*s,-18*s,32*s,30*s,9*s);ctx.fill();ctx.stroke();
+  ctx.restore();
+  /* head, hat and goggles */
+  ctx.fillStyle='#FFD9B8';
+  ctx.beginPath();ctx.arc(2*s,-32*s,13*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#33305E';
+  rr(-8*s,-36*s,20*s,7*s,3*s);ctx.fill();
+  ctx.fillStyle='#E8564A';
+  ctx.beginPath();ctx.arc(2*s,-42*s,10*s,Math.PI,0);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.arc(11*s,-50*s,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  /* the two poles: tucked while racing, planted flat when helping */
+  [[-30,0],[30,1]].forEach(([hx],i)=>{
+    if(!poleOK[i]){drawSmoke(hx*s,10*s,time+i*0.7,engines<=1);return;}
+    ctx.strokeStyle='#8E97AC';ctx.lineWidth=4*s;
+    ctx.save();
+    ctx.translate(hx*s,-4*s);
+    ctx.rotate(plane.wheels?(i?1.25:-1.25):(i?0.45:-0.45));
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,34*s);ctx.stroke();
+    /* the basket near the tip */
+    ctx.strokeStyle='#33305E';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(0,28*s,5*s,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle='#33305E';ctx.lineWidth=3;
+  });
+  if(plane.wheels){
+    ctx.font=(15*s)+'px serif';ctx.textAlign='center';
+    ctx.fillText('🐾',0,-58*s);
+  }
+  if(stickers>0){
+    ctx.font=(10*s)+'px serif';ctx.textAlign='left';
+    for(let i=0;i<Math.min(5,stickers);i++)ctx.fillText('⭐',(-14+i*10)*s,-14*s);
+  }
+  ctx.restore();
+  /* snow spray while the skis are actually on the snow */
+  if(air<0.08){
+    ctx.globalAlpha=0.5;ctx.fillStyle='#FFFFFF';
+    for(let i=0;i<4;i++){
+      const p=((time*2.1)+i/4)%1;
+      ctx.beginPath();ctx.arc(px-34-p*46,py+34*s-p*14,3+p*8,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
   }
 }
 
@@ -3403,9 +3718,9 @@ let panelBuilt=false;
 function buildPanel(){
   panelEl.innerHTML=`
     <div class="gauge tap" onclick="sayGps()"><div class="glbl">TO GO</div><div class="gval" id="pDistV">40mi</div><div class="gbar"><div id="pDistBar" style="background:#B9E8D8"></div></div></div>
-    <div class="gauge"><div class="glbl">HIGH</div><div class="gval" id="pAlt">62</div><div class="gbar"><div id="pAltBar"></div></div></div>
+    <div class="gauge"><div class="glbl" id="pAltL">HIGH</div><div class="gval" id="pAlt">62</div><div class="gbar"><div id="pAltBar"></div></div></div>
     <div class="gauge"><div class="glbl">SPEED</div><div class="gval" id="pSpd">CRZ</div></div>
-    <div class="gauge"><div class="glbl">WHEELS</div><div class="gval" id="pGear">UP</div></div>
+    <div class="gauge"><div class="glbl" id="pGearL">WHEELS</div><div class="gval" id="pGear">UP</div></div>
     <div class="gauge calm tap" id="pCalm" onclick="openCalmChooser()"><div class="glbl">CALM</div><div class="gval" id="pCalmV">0</div><div class="glbl" id="pCalmS">READY</div></div>
     <div class="gauge radar" id="pRadar"><div class="glbl">ANIMAL</div><div class="gval" id="pRadarV">—</div><div class="gbar"><div id="pRadarBar" style="background:#7FE3A0"></div></div></div>
     <div class="gauge warng" id="pWarn"><div class="glbl">TROUBLE</div><div class="gval" id="pWarnV">—</div></div>
@@ -3420,8 +3735,10 @@ function updatePanel(force){
   const set=(id,v)=>{const e=document.getElementById(id);if(e&&e.textContent!==String(v))e.textContent=v;};
   set('pAlt',Math.round(plane.alt));
   const ab=document.getElementById('pAltBar');if(ab)ab.style.width=plane.alt+'%';
-  set('pSpd',plane.wheels?'GEAR':(input.boost?'BST!':(input.up?'CLB':'CRZ')));
-  set('pGear',plane.wheels?'DN ▼':'UP');
+  set('pSpd',plane.wheels?'SLOW':(input.boost?'BST!':(input.up?(VEH().ground?'JUMP':'CLB'):'CRZ')));
+  set('pGearL',VEH().actLabel.toUpperCase());
+  set('pGear',plane.wheels?'ON ▼':'OFF');
+  set('pAltL',VEH().ground?'JUMP':'HIGH');
   set('pLove',kindness);
   set('pDistV',Math.max(0,Math.round(milesLeft()))+'mi');
   const db=document.getElementById('pDistBar');
@@ -3477,12 +3794,15 @@ function updateHUD(){
   set('odoLeft',Math.max(0,Math.round(milesLeft())));
   set('odoPic',missionChosen?curMission.odoEm:'🗺️');
   set('level',level());
-  set('hearts','⚙️'.repeat(engines)+'✖️'.repeat(Math.max(0,engineSlots-engines))+(kindness>0?' 💛×'+kindness:''));
+  set('hearts',VEH().partEm.repeat(engines)+VEH().partGone.repeat(Math.max(0,engineSlots-engines))+(kindness>0?' 💛×'+kindness:''));
   set('calmVal',Math.round(calmPower));
   const arc=document.getElementById('calmArc');
   if(arc){const frac=calmFrac();arc.setAttribute('stroke-dashoffset',String(82-82*frac));}
   const bw=document.getElementById('btnWheels');
-  if(bw)bw.classList.toggle('down',plane.wheels);
+  if(bw){
+    bw.classList.toggle('down',plane.wheels);
+    bw.textContent=`${VEH().actEm} ${VEH().actLabel}`;
+  }
   updateDrawer();
 }
 function sayGps(){
@@ -3607,7 +3927,11 @@ function updateAlt(){
   const f=document.getElementById('altfill');
   const p=document.getElementById('altplane');
   if(f)f.style.height=plane.alt+'%';
-  if(p)p.style.bottom=plane.alt+'%';
+  /* the marker, the joystick knob and the tail of the bar all show whatever
+     he is travelling in right now, so nothing still says "plane" in a car */
+  if(p){p.style.bottom=plane.alt+'%'; if(p.textContent!==VEH().em)p.textContent=VEH().em;}
+  const k=document.getElementById('dialKnob');
+  if(k&&k.textContent!==VEH().em)k.textContent=VEH().em;
 }
 function updateCalmBtn(){
   const bar=document.getElementById('actionbar');
@@ -3688,7 +4012,7 @@ function tryBoost(on){
     input.boost=false;
     if(btn)btn.classList.add('locked');
     toast('🛞 Wheels are down — no boost',true);
-    speakPlain('Your wheels are down. Boost does not work now.');
+    speakPlain(`Your ${VEH().actLabel} are down. Boost does not work now.`);
     return;
   }
   if(btn)btn.classList.remove('locked');
@@ -3957,9 +4281,9 @@ function applyFreezeAll(){
 /* ═══════════ EMERGENCY, CRASH & RESET ═══════════ */
 function enterEmergency(){
   emergencyMode=true;emReminderT=0;
-  banner('🚨 LAND NOW! Go LOW ⬇️ + WHEELS 🛞',3600,true);
+  banner(VEH().emergency,3600,true);
   alarmSound();
-  if(autoRead)setTimeout(()=>speakPlain('Only one engine left! Land now. Fly low and put your wheels down.'),400);
+  if(autoRead)setTimeout(()=>speakPlain(VEH().emergencySay),400);
   updateCalmBtn();
 }
 function landedForRepair(){
@@ -3988,7 +4312,7 @@ function crash(){
      answers back. */
   openModal(`
     <div class="bigem">💥🛬</div>
-    <h2>All the engines stopped!</h2>
+    <h2>${VEH().crashLine}</h2>
     <p class="msub" id="crQ">Your plane glided down and landed with a bump. Everyone is okay. You can pay the crew to fix it, or start again.</p>
     <div class="stack">
       <button class="rowcard${canPay?'':' cantafford'}" onclick="${canPay?'payRepair()':`cantAfford('points',${CFG.crashRepairCost})`}">
@@ -4022,6 +4346,7 @@ function restartAfterCrash(){
   shownLevel=1;
   animalClock=5;hazClock=16;cargo=null;cargoClock=95;
   distClock=distanceGap();lastDistSaid=null;highFlySaid=false;lastShareAskAt=-99;
+  vehicle='plane';vehClock=vehicleGap();vehLeft=0;vehSwaps=0;
   updateHUD();closeModal();
   banner('🛫 Fresh start!',2400);
 }
@@ -7113,6 +7438,7 @@ function beginNextMission(){
   miles=0;latMiles=0;playMinutes=0;lastInterestMin=0;missionDone=false;
   plane.heading=0;
   distClock=distanceGap();lastDistSaid=null;
+  vehicle='plane';vehClock=vehicleGap();vehLeft=0;
   closeModal();
   updateGps();updateHUD();
   banner(`🗺️ New mission — ${CFG.missionDistance} miles`,2600);
@@ -7407,6 +7733,8 @@ const DASH_GROUPS=[
     {k:'animalMinInterval',  t:'…once he is experienced',             min:2, max:90, step:1},
     {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
     {k:'distanceCallSeconds',t:'Seconds between distance call-outs',  min:10,max:300,step:5},
+    {k:'vehicleEverySeconds',t:'Seconds between weather changes',     min:20,max:600,step:5},
+    {k:'vehicleLastsSeconds',t:'Seconds in the car / on the skis',    min:15,max:300,step:5},
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
     {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
     {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
@@ -7421,7 +7749,10 @@ const DASH_GROUPS=[
     {k:'climbSpeed',      t:'Speed while climbing',  min:0.1,max:3,  step:0.05},
     {k:'sluggishFactor',  t:'Speed if the check is skipped', min:0.4,max:1,step:0.02},
     {k:'cleanBoost',      t:'Speed bonus for a clean plane', min:0, max:1, step:0.05},
-    {k:'altSpeedBonus',   t:'Extra speed for flying high',   min:0, max:1, step:0.05}
+    {k:'altSpeedBonus',   t:'Extra speed for flying high',   min:0, max:1, step:0.05},
+    {k:'jumpRise',        t:'How fast the car/skier jumps',  min:20,max:400,step:10},
+    {k:'jumpFall',        t:'How fast they fall back down',  min:20,max:400,step:10},
+    {k:'jumpHeight',      t:'How high a jump goes',          min:15,max:100,step:1}
   ]},
   {id:'learn', em:'📚', name:'Learning', tab:'Learning', fields:[
     {k:'shareAskChance',  t:'How often an animal asks to share', min:0, max:1, step:0.05},
