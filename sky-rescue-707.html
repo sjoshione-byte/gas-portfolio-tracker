@@ -407,36 +407,67 @@
     background:#EAF1FF;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .memcard.up{background:#FFF3D6}
   .memcard.done{background:#DFF3E6;opacity:.6}
-  /* ---------- PIANO WITH PIP: a real little keyboard ---------- */
+  /* ---------- PIANO WITH PIP: a real keyboard, white keys and black ----------
+     The black keys are positioned over the white ones exactly as on a real
+     piano — in a group of two, then a group of three — because that pattern
+     is how a child learns to find their way about the keys. */
   .pianocase{
     border:4px solid var(--ink);border-radius:16px;background:#33305E;
-    padding:9px 8px 10px;box-shadow:var(--shadow);margin:8px 0 10px;
+    padding:9px 7px 10px;box-shadow:var(--shadow);margin:8px 0 10px;
   }
-  .pianokeys{position:relative;display:flex;gap:3px;height:112px;justify-content:center}
+  .pianokeys{position:relative;height:124px;margin:0 auto;touch-action:manipulation}
   .pkey{
-    position:relative;flex:1;max-width:44px;border:3px solid var(--ink);border-radius:0 0 9px 9px;
-    background:linear-gradient(#FFFFFF,#EFEFF6);cursor:pointer;padding:0 0 7px;
-    display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;
-    font-family:'Fredoka';font-weight:600;font-size:13px;color:#5A5580;
-    box-shadow:inset 0 -5px 0 rgba(51,48,94,.12);
+    position:absolute;top:0;border:3px solid var(--ink);cursor:pointer;padding:0;
+    display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+    font-family:'Fredoka';font-weight:600;box-shadow:inset 0 -5px 0 rgba(51,48,94,.10);
   }
-  .pkey .dot{width:13px;height:13px;border-radius:50%;background:#E4E2F0;border:2px solid #B9B4D6}
-  .pkey.lit{background:linear-gradient(#FFE39A,#FFC94D);transform:translateY(3px)}
+  .pkey.white{
+    height:124px;border-radius:0 0 9px 9px;background:linear-gradient(#FFFFFF,#EFEFF6);
+    font-size:13px;color:#5A5580;padding-bottom:7px;gap:3px;z-index:1;
+  }
+  .pkey.black{
+    height:74px;border-radius:0 0 7px 7px;background:linear-gradient(#4A4570,#2B2848);
+    font-size:9.5px;color:#D9D4F0;padding-bottom:5px;gap:2px;z-index:2;
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,.35),0 3px 0 rgba(51,48,94,.5);
+  }
+  .pkey .dot{width:12px;height:12px;border-radius:50%;background:#E4E2F0;border:2px solid #B9B4D6}
+  .pkey.black .dot{width:10px;height:10px;background:#6B6595;border-color:#8F89B8}
+  /* the finger to use — under the note letter, the way a beginner's piano
+     book prints it, and clear of the black keys above */
+  .pkey .fing{
+    width:16px;height:16px;border-radius:50%;flex-shrink:0;
+    background:#FFE39A;border:2px solid var(--ink);font-size:10px;line-height:12px;
+    font-weight:900;color:var(--ink);
+  }
+  .pkey.white.lit{background:linear-gradient(#FFE39A,#FFC94D);transform:translateY(3px)}
+  .pkey.black.lit{background:linear-gradient(#E8A33A,#C2761B);transform:translateY(3px)}
   .pkey.lit .dot{background:#E8564A;border-color:var(--ink)}
-  .pkey.pip.lit{background:linear-gradient(#FFD9B8,#FFB877)}
+  .pkey.white.pip.lit{background:linear-gradient(#FFD9B8,#FFB877)}
+  .pkey.next{box-shadow:inset 0 0 0 3px #E8564A,inset 0 -5px 0 rgba(51,48,94,.10)}
   .pkey:disabled{cursor:default}
-  .pianokeys.locked .pkey{opacity:.8}
+  .pianokeys.locked .pkey{opacity:.82}
   .pianonote{
     text-align:center;font-weight:800;font-size:12px;color:#EFEAFB;letter-spacing:2px;
-    min-height:16px;font-family:'Nunito';
+    min-height:16px;font-family:'Nunito';margin-top:5px;
   }
-  .tunedots{display:flex;justify-content:center;gap:5px;margin-bottom:6px}
-  .tunedot{
-    width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);background:#EFEAFB;
-    font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  /* the tune written out, so he reads music while he plays it */
+  .staff{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-bottom:7px;
+    background:#FFF9E9;border:2.5px solid var(--ink);border-radius:12px;padding:6px 5px;
   }
-  .tunedot.done{background:#8FE0B0}
-  .tunedot.now{background:var(--sun);animation:nowpulse 1.1s infinite}
+  .snote{
+    min-width:30px;border:2px solid var(--ink);border-radius:8px;background:#FFF;
+    font-family:'Fredoka';font-weight:600;font-size:13px;text-align:center;padding:2px 3px;
+    line-height:1.15;
+  }
+  .snote small{display:block;font-family:'Nunito';font-weight:900;font-size:9px;opacity:.65}
+  .snote.black{background:#4A4570;color:#FFF;border-color:#2B2848}
+  .snote.done{background:#8FE0B0}
+  .snote.now{background:var(--sun);animation:nowpulse 1.1s infinite}
+  .pianotip{
+    background:#EAF1FF;border:2.5px dashed var(--ink);border-radius:12px;
+    padding:6px 9px;font-size:12px;font-weight:800;line-height:1.45;margin-bottom:8px;
+  }
   .spinwrap{display:flex;align-items:center;justify-content:center;gap:18px;margin:14px 0}
   .spinbtn{width:52px;height:52px;border-radius:50%;border:3px solid var(--ink);background:#EAF1FF;
     font-size:28px;font-weight:900;cursor:pointer;line-height:1;color:var(--ink)}
@@ -793,25 +824,35 @@
     border:2.5px solid var(--ink);border-radius:11px;padding:3px 9px;background:#EFEAFB;opacity:.45;
   }
   .jigwho .tag.on{opacity:1;background:#FFF3D6;box-shadow:0 2px 0 var(--ink);animation:nowpulse 1.3s infinite}
-  .jiggrid{
-    display:grid;grid-template-columns:repeat(3,1fr);gap:5px;
-    max-width:230px;margin:0 auto 4px;
+  /* ONE picture, really cut up: every slot and every loose piece shows a
+     different window onto the same big drawing, so the pieces genuinely
+     belong together and can be matched by looking. */
+  .jigwrap{display:flex;gap:10px;align-items:flex-start;justify-content:center;margin-bottom:6px}
+  .jigboard{
+    display:grid;gap:2px;background:#B9AEDA;border:3px solid var(--ink);border-radius:10px;
+    padding:2px;flex-shrink:0;
   }
-  .jigslot{
-    aspect-ratio:1;border:3px dashed #B9AEDA;border-radius:12px;background:#FFF;
-    display:flex;align-items:center;justify-content:center;font-size:26px;
+  .jigcell{position:relative;overflow:hidden;background:#FFF;border-radius:4px}
+  .jigcell.next{background:#FFF9E9;box-shadow:inset 0 0 0 3px var(--sun);animation:nowpulse 1.2s infinite}
+  .jigart{position:absolute;top:0;left:0;display:flex;align-items:center;justify-content:center;line-height:1}
+  /* the finished picture, to look at while you work — like the box lid */
+  .jigref{flex-shrink:0;text-align:center}
+  .jigrefbox{
+    position:relative;border:3px solid var(--ink);border-radius:10px;overflow:hidden;
+    background:#FFF;
   }
-  .jigslot.filled{border-style:solid;border-color:var(--ink);background:#DFF3E6}
-  .jigslot.next{border-color:var(--sun);background:#FFF9E9;animation:nowpulse 1.2s infinite}
+  .jigrefgrid{position:absolute;inset:0;display:grid;pointer-events:none}
+  .jigrefcell{border:1px dashed rgba(51,48,94,.28)}
+  .jigrefcell.want{background:rgba(255,201,77,.55);border:2px solid #E8564A}
+  .jigreflbl{font-size:10px;font-weight:900;opacity:.7;margin-top:3px;line-height:1.2}
   .jigtray{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
   .jigpiece{
-    width:46px;height:46px;border:3px solid var(--ink);border-radius:12px;background:#FFE9B8;
-    font-size:24px;cursor:pointer;box-shadow:0 3px 0 var(--ink);
-    display:flex;align-items:center;justify-content:center;font-family:'Nunito';
+    position:relative;overflow:hidden;border:3px solid var(--ink);border-radius:9px;
+    background:#FFF;cursor:pointer;box-shadow:0 3px 0 var(--ink);padding:0;
   }
   .jigpiece:active{transform:translateY(3px);box-shadow:none}
   .jigpiece.wrong{animation:shakeX .35s}
-  .jigpiece.locked{opacity:.4;pointer-events:none}
+  .jigpiece.locked{opacity:.45;pointer-events:none}
   @keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
   /* ---------- SAY IT RIGHT ---------- */
@@ -4200,6 +4241,14 @@ function flowMiss(el){
   if(failsThisChallenge>=3){failsThisChallenge=0;showShakeItOff();return true;}
   return false;
 }
+/* A GENTLER MISS — for games where getting it wrong is part of playing.
+   Finding a piano key or a jigsaw piece by trying is how those games are
+   MEANT to be played, so a wrong tap here must never count towards the
+   three-strikes reset. It nudges, and that is all. */
+function softMiss(el){
+  if(el){el.classList.add('wrong');setTimeout(()=>el.classList.remove('wrong'),350);}
+  tone(170,0.12,'square',0.07);
+}
 /* ═══════════════════════════════════════════════════════════════════════════
    RESET & RETURN  (after three misses)
    EITHER three slow belly breaths, OR feel the body: feet → hands → face,
@@ -5299,55 +5348,118 @@ function memFlip(i){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🎹 PIANO WITH PIP  —  a real little keyboard, taking turns
+   🎹 PIANO WITH PIP  —  a real keyboard, white keys and black
    ---------------------------------------------------------------------------
-   Pip plays a short tune on the keys, and every key he presses lights up as
-   it sounds, so the tune can be SEEN as well as heard. Then it is the child's
-   turn on the very same keys, making the very same music. Real note names on
-   real keys, and the tunes are ones he will recognise.
+   This is a first piano lesson, not a memory game. The keyboard is laid out
+   properly: seven white keys with their letter names, and the black keys
+   raised above them in the group of two and the group of three that a child
+   uses to find their way about a real piano. Every tune is written out above
+   the keys as note names with finger numbers, so he READS the music while he
+   plays it. Pip demonstrates; the child copies; Pip will play it again as
+   many times as he likes. Pressing a wrong key is just part of finding your
+   way, so it never counts as a failure.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* one octave of C major — the white keys only, which is all these tunes need */
+/* One octave of C, exactly as it sits on a real keyboard.
+     white:true  → a lettered white key
+     white:false → a black key, drawn between its two neighbours
+   `pos` is the white-key index a black key sits after, so C♯ has pos 0
+   (just right of C). This is what puts the black keys into their 2 + 3
+   groups without any hand-placed pixel values. */
 const PIANO_KEYS=[
-  {n:'C', f:261.63},{n:'D', f:293.66},{n:'E', f:329.63},{n:'F', f:349.23},
-  {n:'G', f:392.00},{n:'A', f:440.00},{n:'B', f:493.88},{n:'C²',f:523.25}
+  {n:'C',  say:'C',        f:261.63, white:true,  fing:1},
+  {n:'C♯', say:'C sharp',  f:277.18, white:false, pos:0, fing:2},
+  {n:'D',  say:'D',        f:293.66, white:true,  fing:2},
+  {n:'D♯', say:'D sharp',  f:311.13, white:false, pos:1, fing:3},
+  {n:'E',  say:'E',        f:329.63, white:true,  fing:3},
+  {n:'F',  say:'F',        f:349.23, white:true,  fing:4},
+  {n:'F♯', say:'F sharp',  f:369.99, white:false, pos:3, fing:2},
+  {n:'G',  say:'G',        f:392.00, white:true,  fing:5},
+  {n:'G♯', say:'G sharp',  f:415.30, white:false, pos:4, fing:3},
+  {n:'A',  say:'A',        f:440.00, white:true,  fing:3},
+  {n:'A♯', say:'A sharp',  f:466.16, white:false, pos:5, fing:4},
+  {n:'B',  say:'B',        f:493.88, white:true,  fing:4},
+  {n:'C²', say:'high C',   f:523.25, white:true,  fing:5}
 ];
-/* short, well-known openings — indexes into PIANO_KEYS */
+const WHITE_IDX=PIANO_KEYS.map((k,i)=>k.white?i:-1).filter(i=>i>=0);
+/* Tunes he will recognise, plus two that exist to TEACH something specific:
+   walking up the scale, and finding the black keys. Each carries a one-line
+   lesson, said and shown before he plays it. */
 const PIANO_TUNES=[
-  {name:'Twinkle Twinkle',      notes:[0,0,4,4,5,5,4]},
-  {name:'Mary Had a Little Lamb',notes:[2,1,0,1,2,2,2]},
-  {name:'Hot Cross Buns',       notes:[2,1,0,2,1,0]},
-  {name:'Happy Birthday',       notes:[0,0,1,0,3,2]},
-  {name:'Baa Baa Black Sheep',  notes:[0,0,4,4,5,5,4]},
-  {name:'Row Row Row Your Boat',notes:[0,0,0,1,2,2,1]},
-  {name:'This Old Man',         notes:[4,2,4,2,5,4,2]},
-  {name:'Frère Jacques',        notes:[0,1,2,0,0,1,2,0]}
+  {name:'Twinkle Twinkle',       notes:[0,0,7,7,9,9,7],
+   tip:'C C G G A A G. Start on C — the white key just left of the TWO black keys.'},
+  {name:'Mary Had a Little Lamb',notes:[4,2,0,2,4,4,4],
+   tip:'E D C D E E E. Three notes, side by side: C, D, E. Walk down, then back up.'},
+  {name:'Hot Cross Buns',        notes:[4,2,0,4,2,0],
+   tip:'E D C, twice. Just three white keys next to each other.'},
+  {name:'Happy Birthday',        notes:[0,0,2,0,5,4],
+   tip:'C C D C F E. The same note twice, then a step up.'},
+  {name:'Row Row Row Your Boat', notes:[0,0,0,2,4,4,2],
+   tip:'C C C D E E D. Stay on C, then step up one white key at a time.'},
+  {name:'This Old Man',          notes:[7,4,7,4,9,7,4],
+   tip:'G E G E A G E. Hop between G and E, skipping the key in between.'},
+  {name:'Frère Jacques',         notes:[0,2,4,0,0,2,4,0],
+   tip:'C D E C. Four white keys walking up, then back to the start.'},
+  {name:'Walking Up the Scale',  notes:[0,2,4,5,7,9,11,12],
+   tip:'C D E F G A B C. Every white key in a row — this is the C scale.'},
+  {name:'Black Key Song',        notes:[1,3,1,3,6,8],
+   tip:'The BLACK keys! Two together, then three together. Find the two first.'}
 ];
 let piano=null;
 function showPattern(){
   const t=PIANO_TUNES[Math.floor(Math.random()*PIANO_TUNES.length)];
   /* only as many notes as the age band can hold in mind at once */
   const len=(band==='t')?3:(band==='y'?5:t.notes.length);
-  piano={tune:t, notes:t.notes.slice(0,len), input:0, busy:true, round:1};
-  renderPiano('"Listen and watch," says Pip. "Then you play it back to me."');
-  if(autoRead&&!suppressAutoRead) autoReadIf('pnQ',()=>pipPlays());
-  else setTimeout(pipPlays,500);
+  piano={tune:t, notes:t.notes.slice(0,len), input:0, busy:true, round:1, replays:0};
+  renderPiano('"Watch my paws," says Pip. "Then you play it back to me."','pip');
+  if(autoRead&&!suppressAutoRead){
+    setTimeout(()=>speakPlain(t.tip,()=>pipPlays()),300);
+  }else setTimeout(pipPlays,500);
+}
+/* the keyboard, drawn to scale: white keys side by side, black keys sitting
+   over the crack between two whites, exactly as on a real piano */
+function keyboardHTML(who){
+  const nW=WHITE_IDX.length;
+  const WW=100/nW;                       /* white-key width, in % */
+  const BW=WW*0.62;                      /* a black key is narrower */
+  const parts=[];
+  PIANO_KEYS.forEach((k,i)=>{
+    const on=(who==='you');
+    const isNext=on&&piano&&piano.notes[piano.input]===i;
+    if(k.white){
+      const w=WHITE_IDX.indexOf(i);
+      parts.push(`<button class="pkey white${on?'':' pip'}${isNext?' next':''}" id="pk${i}"
+        style="left:${w*WW}%;width:${WW}%" onclick="pianoPress(${i})"${on?'':' disabled'}>
+        <span class="dot"></span>${k.n}<span class="fing">${k.fing}</span></button>`);
+    }else{
+      /* centred on the join between white key `pos` and the next one */
+      const left=(k.pos+1)*WW-BW/2;
+      parts.push(`<button class="pkey black${on?'':' pip'}${isNext?' next':''}" id="pk${i}"
+        style="left:${left}%;width:${BW}%" onclick="pianoPress(${i})"${on?'':' disabled'}>
+        <span class="dot"></span>${k.n}</button>`);
+    }
+  });
+  return parts.join('');
+}
+/* the tune written out — note name, finger number, and where he is up to */
+function staffHTML(who){
+  return piano.notes.map((n,i)=>{
+    const k=PIANO_KEYS[n];
+    const state=(who==='you')?(i<piano.input?'done':(i===piano.input?'now':'')):'';
+    return `<span class="snote ${k.white?'':'black'} ${state}">${k.n}<small>${k.fing}</small></span>`;
+  }).join('');
 }
 function renderPiano(msg,who){
   const p=piano;
   openModal(`
-    <div class="bigem">${who==='you'?'🧑‍✈️':'🦊'}🎹</div>
-    <h2>${esc(p.tune.name)} — on the piano</h2>
-    <div class="tunedots">
-      ${p.notes.map((_,i)=>`<span class="tunedot ${who==='you'?(i<p.input?'done':(i===p.input?'now':'')):''}">${i+1}</span>`).join('')}
-    </div>
+    <h2>${esc(p.tune.name)} 🎹</h2>
+    <div class="pianotip">🦊 ${esc(p.tune.tip)}</div>
+    <div class="staff">${staffHTML(who)}</div>
     <div class="pianocase">
-      <div class="pianokeys${who==='you'?'':' locked'}" id="pnKeys">
-        ${PIANO_KEYS.map((k,i)=>`<button class="pkey${who==='you'?'':' pip'}" id="pk${i}" onclick="pianoPress(${i})"${who==='you'?'':' disabled'}>
-          <span class="dot"></span>${k.n}</button>`).join('')}
-      </div>
+      <div class="pianokeys${who==='you'?'':' locked'}" id="pnKeys">${keyboardHTML(who)}</div>
       <div class="pianonote" id="pnNote">${who==='you'?'YOUR TURN':'PIP IS PLAYING…'}</div>
     </div>
     <p class="msub" id="pnQ">${esc(msg)}</p>
+    <button class="cta ghost" id="pnAgain" onclick="pipPlayAgain()"${who==='you'?'':' disabled'}>🦊 Pip, play it again 🔁</button>
   `);
 }
 /* light a key and sound it — the same helper for Pip and for the child, so
@@ -5357,60 +5469,72 @@ function pianoStrike(i,dur){
   if(b){b.classList.add('lit');setTimeout(()=>b.classList.remove('lit'),Math.max(140,dur*700));}
   tone(PIANO_KEYS[i].f,dur,'triangle',0.16,0,PIANO_KEYS[i].f*0.996);
 }
+/* he can ask for the tune again as often as he likes — asking to hear it
+   once more is exactly what a learner should do, so it costs nothing */
+function pipPlayAgain(){
+  if(!piano||piano.busy)return;
+  piano.replays++;
+  pipPlays();
+}
 function pipPlays(){
   if(!piano)return;
   piano.busy=true;piano.input=0;
-  renderPiano('Watch which keys Pip presses.','pip');
+  renderPiano('Watch which keys Pip presses, and listen.','pip');
   let i=0;
   const step=()=>{
     if(!piano)return;
     if(i>=piano.notes.length){
       piano.busy=false;
-      renderPiano('Now you play it. Press the same keys, in the same order.','you');
-      speakPlain('Your turn. Play the same keys.');
+      renderPiano('Now you play it. Follow the notes above the keys.','you');
+      speakPlain('Your turn. Follow the note names.');
       return;
     }
+    const k=PIANO_KEYS[piano.notes[i]];
     pianoStrike(piano.notes[i],0.34);
     const note=document.getElementById('pnNote');
-    if(note)note.textContent='PIP: '+PIANO_KEYS[piano.notes[i]].n;
-    i++;setTimeout(step,520);
+    if(note)note.textContent='PIP: '+k.n;
+    i++;setTimeout(step,540);
   };
   setTimeout(step,350);
 }
 function pianoPress(i){
   if(!piano||piano.busy)return;
   pianoStrike(i,0.26);
+  const k=PIANO_KEYS[i];
   const note=document.getElementById('pnNote');
-  if(note)note.textContent='YOU: '+PIANO_KEYS[i].n;
+  if(note)note.textContent='YOU: '+k.n;
   if(piano.notes[piano.input]!==i){
-    /* wrong key: Pip plays it again from the top, kindly */
-    piano.busy=true;
-    flowMiss(document.getElementById('pk'+i));
-    setTimeout(()=>{
-      if(!piano)return;
-      speakPlain('Nearly! Listen once more.');
-      pipPlays();
-    },1000);
+    /* Hunting for a key is HOW you learn a keyboard, so a wrong press is
+       never a failure here — no strike, no reset. It just says which note
+       to look for, and the tune is always one button away. */
+    softMiss(document.getElementById('pk'+i));
+    const want=PIANO_KEYS[piano.notes[piano.input]];
+    if(note)note.textContent='LOOK FOR '+want.n;
+    speakNotice('That one is '+k.say+'. You want '+want.say+'.');
     return;
   }
   piano.input++;
-  /* redraw so the dots keep up with where he is in the tune */
-  renderPiano('Keep going — you are playing it!','you');
-  if(piano.input>=piano.notes.length){
-    piano.busy=true;
-    if(piano.round>=cfgNum('patternRounds',2,1)){
-      const nm=piano.tune.name;
-      piano=null;
-      confettiBurst();
-      challengeComplete(`🎹 You played <b>${esc(nm)}</b> on the piano, Captain ${esc(kidName||'Pilot')}! Pip claps his paws. "We took turns," he says, "and it sounded lovely." 🦊💛`);
-      return;
-    }
-    /* another round: a longer stretch of the same tune, so it grows */
-    piano.round++;
-    const full=piano.tune.notes;
-    if(piano.notes.length<full.length)piano.notes=full.slice(0,piano.notes.length+1);
-    setTimeout(()=>{ if(piano)pipPlays(); },800);
+  const done=piano.input>=piano.notes.length;
+  if(!done){
+    renderPiano('Keep going — you are playing it!','you');
+    return;
   }
+  piano.busy=true;
+  if(piano.round>=cfgNum('patternRounds',2,1)){
+    const nm=piano.tune.name, tip=piano.tune.tip;
+    piano=null;
+    confettiBurst();
+    challengeComplete(
+      `🎹 You played <b>${esc(nm)}</b>, Captain ${esc(kidName||'Pilot')}!`,
+      `<div class="pianotip">🦊 "You read the notes and found them all," says Pip. "${esc(tip)}"</div>`,
+      0,true);
+    return;
+  }
+  /* another round: a longer stretch of the same tune, so it grows */
+  piano.round++;
+  const full=piano.tune.notes;
+  if(piano.notes.length<full.length)piano.notes=full.slice(0,piano.notes.length+1);
+  setTimeout(()=>{ if(piano)pipPlays(); },800);
 }
 
 /* ═══════════ INVENTOR PUZZLES WITH PIP — four real TRIZ tools, child-sized ═══
@@ -5669,49 +5793,101 @@ function archConcede(){
 /* ═══════════════════════════════════════════════════════════════════════════
    9) JIGSAW WITH PIP  —  taking turns with Pip the Polite Fox
    ---------------------------------------------------------------------------
-   A picture has come apart into six pieces. You and Pip put it back together
-   TAKING TURNS: he places one, you place one, all the way to the end. Waiting
-   for your turn is half the game; the other half is looking carefully, because
-   only one piece fits the glowing hole.
+   A REAL jigsaw: one picture, genuinely cut up. Every slot and every loose
+   piece is a different window onto the same big drawing — each piece is
+   rendered from the whole picture, shifted so only its own part shows — so
+   the pieces truly belong together and can be matched by looking rather than
+   by remembering. The finished picture sits beside the board like the lid of
+   a jigsaw box, with the hole he is filling marked on it, which is exactly
+   how a child works a real puzzle.
+   You and Pip put it together TAKING TURNS: he places one, you place one.
    ═══════════════════════════════════════════════════════════════════════════ */
 const JIGSAWS=[
-  {id:'rocket', name:'a rocket',    em:'🚀', cells:['🌙','⭐','🛰️','🚀','🔥','🌍']},
-  {id:'garden', name:'a garden',    em:'🌻', cells:['☀️','🦋','🌈','🌻','🐝','🌷']},
-  {id:'beach',  name:'the seaside', em:'🏖️', cells:['⛅','🌴','🪁','🏖️','🐚','🌊']},
-  {id:'farm',   name:'a farm',      em:'🚜', cells:['🌦️','🌾','🏡','🚜','🐄','🐓']},
-  {id:'plane',  name:'an aeroplane',em:'✈️', cells:['☁️','🕊️','☁️','✈️','🛞','🗺️']},
-  {id:'forest', name:'a forest',    em:'🌲', cells:['🌤️','🦉','🌲','🦌','🍄','🪨']},
-  {id:'party',  name:'a party',     em:'🎉', cells:['🎈','🎊','🎈','🎂','🎁','🕯️']},
-  {id:'winter', name:'a snowy day', em:'⛄', cells:['🌨️','❄️','🌨️','⛄','🧤','🛷']}
+  {id:'rocket',    name:'a rocket',    em:'🚀'},
+  {id:'sunflower', name:'a sunflower', em:'🌻'},
+  {id:'butterfly', name:'a butterfly', em:'🦋'},
+  {id:'rainbow',   name:'a rainbow',   em:'🌈'},
+  {id:'lion',      name:'a lion',      em:'🦁'},
+  {id:'cake',      name:'a birthday cake', em:'🎂'},
+  {id:'turtle',    name:'a turtle',    em:'🐢'},
+  {id:'castle',    name:'a castle',    em:'🏰'},
+  {id:'world',     name:'the whole world', em:'🌍'},
+  {id:'tiger',     name:'a tiger',     em:'🐯'}
 ];
+/* how big the assembled picture is drawn, and how it is cut */
+const JIG_SIZE=156;
+function jigGrid(){ return (band==='t')?{c:2,r:2}:(band==='y'?{c:3,r:2}:{c:3,r:3}); }
 let jig=null;
 function showBuild(){
   const d=JIGSAWS[Math.floor(Math.random()*JIGSAWS.length)];
-  /* Pip goes first, so the child sees a turn modelled before taking one */
-  jig={def:d, slots:d.cells.map(()=>null), tray:shuffle([...d.cells]), turn:'pip', busy:false};
+  const g=jigGrid(), n=g.c*g.r;
+  /* piece k is the fragment of the picture at column k%c, row k/c */
+  jig={def:d, grid:g, slots:Array(n).fill(null),
+       tray:shuffle([...Array(n).keys()]), turn:'pip', busy:false};
   openModal(`
     <div class="bigem">${rescue.em}${d.em}</div>
     <h2>A jigsaw with Pip!</h2>
-    <div class="speech" id="bdQ">${esc(rescue.name)} dropped a picture of ${d.name} and it came apart into six pieces. Pip the Fox will help you mend it. You take turns: Pip, then you, then Pip, then you.</div>
+    <div class="speech" id="bdQ">${esc(rescue.name)} dropped a picture of ${d.name} and it broke into ${n} pieces. Pip the Fox will help you mend it. You take turns: Pip, then you, then Pip, then you.</div>
+    ${jigRefHTML(-1)}
     <button class="cta" onclick="jigBegin()">Start the jigsaw 🧩</button>
   `);
-  autoReadIf('bdQ',()=>speakPlain('You take turns. Pip goes first. Watch him, then it is your turn.'));
+  autoReadIf('bdQ',()=>speakPlain('Look at the whole picture first. Then we take turns. Pip goes first.'));
 }
 function jigBegin(){ if(jig)jigTurn(); }
 /* the first hole still waiting for a piece */
 function jigNextSlot(){ return jig.slots.findIndex(s=>s===null); }
+/* one window onto the picture: the whole thing drawn at full size inside a
+   small box, slid so that only piece `k` shows through */
+function jigFragHTML(k,cellW,cellH){
+  const g=jig.grid;
+  const col=k%g.c, row=Math.floor(k/g.c);
+  const fullW=cellW*g.c, fullH=cellH*g.r;
+  /* the picture FILLS the frame — scaled to the long side, so it is cropped
+     rather than letterboxed. Sized any smaller and the corner pieces come out
+     blank, which makes them impossible to place by looking. */
+  const size=jigArtSize(fullW,fullH);
+  return `<div class="jigart" style="width:${fullW}px;height:${fullH}px;
+    transform:translate(${-col*cellW}px,${-row*cellH}px);font-size:${size}px">${jig.def.em}</div>`;
+}
+/* one scale rule, shared by the board, the loose pieces and the reference, so
+   a fragment looks the same wherever it is drawn */
+function jigArtSize(w,h){ return Math.max(w,h)*1.04; }
+/* the finished picture, with the hole he is filling marked on it */
+function jigRefHTML(wantSlot){
+  const g=jig.grid;
+  const w=96, h=Math.round(96*g.r/g.c);
+  const size=jigArtSize(w,h);
+  return `<div class="jigref" style="margin:0 auto 8px">
+    <div class="jigrefbox" style="width:${w}px;height:${h}px">
+      <div class="jigart" style="width:${w}px;height:${h}px;font-size:${size}px">${jig.def.em}</div>
+      <div class="jigrefgrid" style="grid-template-columns:repeat(${g.c},1fr);grid-template-rows:repeat(${g.r},1fr)">
+        ${Array(g.c*g.r).fill(0).map((_,i)=>`<div class="jigrefcell${i===wantSlot?' want':''}"></div>`).join('')}
+      </div>
+    </div>
+    <div class="jigreflbl">${wantSlot>=0?'this bit ↑':'the finished picture'}</div>
+  </div>`;
+}
 function jigBoard(){
   const next=jigNextSlot();
+  const g=jig.grid;
+  const cw=Math.round(JIG_SIZE/g.c), ch=Math.round(JIG_SIZE/g.c); /* square pieces */
+  /* loose pieces are drawn a little smaller so a full tray still fits */
+  const tw=Math.round(cw*0.82), th=Math.round(ch*0.82);
   return `<div class="buildwrap">
     <div class="jigwho">
       <span class="tag ${jig.turn==='pip'?'on':''}">🦊 Pip</span>
       <span class="tag ${jig.turn==='you'?'on':''}">🧑‍✈️ You</span>
     </div>
-    <div class="jiggrid">
-      ${jig.slots.map((s,i)=>`<div class="jigslot ${s?'filled':(i===next?'next':'')}">${s||''}</div>`).join('')}
+    <div class="jigwrap">
+      <div class="jigboard" style="grid-template-columns:repeat(${g.c},${cw}px)">
+        ${jig.slots.map((s,i)=>`<div class="jigcell ${i===next?'next':''}" style="width:${cw}px;height:${ch}px">
+          ${s!==null?jigFragHTML(s,cw,ch):''}</div>`).join('')}
+      </div>
+      ${jigRefHTML(next)}
     </div>
     <div class="jigtray">
-      ${jig.tray.map((pc,i)=>`<button class="jigpiece${jig.turn==='you'?'':' locked'}" id="jp${i}" onclick="jigPlace(${i})">${pc}</button>`).join('')}
+      ${jig.tray.map((k,i)=>`<button class="jigpiece${jig.turn==='you'?'':' locked'}" id="jp${i}"
+        style="width:${tw}px;height:${th}px" onclick="jigPlace(${i})">${jigFragHTML(k,tw,th)}</button>`).join('')}
     </div>
   </div>`;
 }
@@ -5720,10 +5896,9 @@ function jigTurn(){
   if(jigNextSlot()<0){ jigDone(); return; }
   if(jig.turn==='pip'){ jigPipTurn(); return; }
   openModal(`
-    <div class="bigem">🧑‍✈️🧩</div>
-    <h2>Your turn!</h2>
+    <h2>Your turn! 🧩</h2>
     ${jigBoard()}
-    <p class="msub" id="bdY">Look at the glowing hole. Which piece belongs there? Tap it.</p>
+    <p class="msub" id="bdY">Look at the glowing hole, and at the marked bit of the picture. Which piece is it? Tap it.</p>
   `);
   autoReadIf('bdY');
 }
@@ -5731,8 +5906,7 @@ function jigPipTurn(){
   jig.busy=true;
   const slot=jigNextSlot();
   openModal(`
-    <div class="bigem">🦊🧩</div>
-    <h2>Pip’s turn</h2>
+    <h2>Pip’s turn 🦊</h2>
     ${jigBoard()}
     <p class="msub" id="bdW">"My turn — I am looking for my piece," says Pip. "You wait, and then it is you."</p>
   `);
@@ -5741,10 +5915,9 @@ function jigPipTurn(){
   setTimeout(()=>{
     if(!jig)return;
     /* Pip finds the piece that fits and puts it in */
-    const want=jig.def.cells[slot];
-    const ti=jig.tray.indexOf(want);
+    const ti=jig.tray.indexOf(slot);
     if(ti>=0)jig.tray.splice(ti,1);
-    jig.slots[slot]=want;
+    jig.slots[slot]=slot;
     jig.busy=false;
     tone(760,0.12,'triangle',0.1);
     if(jigNextSlot()<0){ jigDone(); return; }
@@ -5757,15 +5930,16 @@ function jigPlace(i){
   if(!jig||jig.busy||jig.turn!=='you')return;
   const slot=jigNextSlot();
   if(slot<0)return;
-  const pc=jig.tray[i];
-  if(pc!==jig.def.cells[slot]){
-    /* wrong piece — flowMiss handles the kind "not yet", and the reset
-       exercise after three of them */
-    flowMiss(document.getElementById('jp'+i));
+  const k=jig.tray[i];
+  if(k!==slot){
+    /* Trying a piece that turns out not to fit is how a jigsaw is DONE, so
+       it costs nothing here — no strike, no reset, just put it back. */
+    softMiss(document.getElementById('jp'+i));
+    speakNotice('Not that one. Look at the marked bit of the picture.');
     return;
   }
   jig.tray.splice(i,1);
-  jig.slots[slot]=pc;
+  jig.slots[slot]=k;
   streakUp();
   tone(880,0.12,'triangle',0.1);
   kindActs++;
