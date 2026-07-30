@@ -718,24 +718,37 @@
   .shopcost.ok{background:#B9E8D8}
   .shopcost.no{background:#FFD6CE}
 
-  /* ---------- BUILD IT TOGETHER ---------- */
+  /* ---------- JIGSAW WITH PIP ---------- */
   .buildwrap{border:3px solid var(--ink);border-radius:16px;background:#F7F5FC;padding:8px;margin-bottom:10px}
-  .brung{
-    display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:11px;
-    font-weight:800;font-size:12.5px;margin-bottom:4px;opacity:.42;
-  }
-  .brung.done{opacity:1;background:#DFF3E6}
-  .brung.now{opacity:1;background:#FFF3D6;box-shadow:inset 0 0 0 2.5px var(--sun);animation:nowpulse 1.3s infinite}
   @keyframes nowpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
-  .bwho{
-    width:26px;height:26px;border-radius:50%;border:2.5px solid var(--ink);
-    display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+  .jigwho{
+    display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;
+    font-size:13px;margin-bottom:8px;
   }
-  .bwho.pip{background:#FFD9B8}
-  .bwho.you{background:#B9E8D8}
-  .bem{font-size:17px}
-  .bact{flex:1;text-align:left}
-  .btick{font-size:14px}
+  .jigwho .tag{
+    border:2.5px solid var(--ink);border-radius:11px;padding:3px 9px;background:#EFEAFB;opacity:.45;
+  }
+  .jigwho .tag.on{opacity:1;background:#FFF3D6;box-shadow:0 2px 0 var(--ink);animation:nowpulse 1.3s infinite}
+  .jiggrid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:5px;
+    max-width:230px;margin:0 auto 4px;
+  }
+  .jigslot{
+    aspect-ratio:1;border:3px dashed #B9AEDA;border-radius:12px;background:#FFF;
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+  }
+  .jigslot.filled{border-style:solid;border-color:var(--ink);background:#DFF3E6}
+  .jigslot.next{border-color:var(--sun);background:#FFF9E9;animation:nowpulse 1.2s infinite}
+  .jigtray{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
+  .jigpiece{
+    width:46px;height:46px;border:3px solid var(--ink);border-radius:12px;background:#FFE9B8;
+    font-size:24px;cursor:pointer;box-shadow:0 3px 0 var(--ink);
+    display:flex;align-items:center;justify-content:center;font-family:'Nunito';
+  }
+  .jigpiece:active{transform:translateY(3px);box-shadow:none}
+  .jigpiece.wrong{animation:shakeX .35s}
+  .jigpiece.locked{opacity:.4;pointer-events:none}
+  @keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
   /* ---------- SAY IT RIGHT ---------- */
   .sayopt{transition:transform .15s, background .15s}
@@ -915,12 +928,14 @@
 
    RESCUES     🆘 animals appear; fly LOW with WHEELS DOWN to land beside them.
                One of these challenges then unlocks the rescue (toggle in ⚙️):
-               🧮 vault math · 💛 feelings (NVC) · 🎨 trace & paint ·
-               🔤 word builder · 🧸 belly-bear breathing · 🤝 sharing ·
-               💬 kind words · 🏹 archery vs Pip · 📝 parent questions ·
-               🪜 build with Pip · 🔊 say it right · ⭕ tic-tac-toe ·
-               📖 get ready to focus · 🔀 inventor puzzles · 🧠 memory ·
-               🎵 copy the pattern.
+               🧮 vault math · 💛 feelings (NVC) · 💗 name the feeling ·
+               🤍 name the need · 💡 think of a kind idea ·
+               🤲 calm down together · 🎨 trace & paint · 🔤 word builder ·
+               🧸 belly-bear breathing · 🤝 sharing · 💬 kind words ·
+               🏹 archery vs Pip · 📝 parent questions · 🧩 jigsaw with Pip ·
+               🔊 say it right · ⭕ tic-tac-toe · 🧠 thinking questions (MCQ) ·
+               🔀 inventor puzzles · 🧠 memory · 🎵 copy the pattern.
+               Every one of them is also playable ANY TIME from 🎮 PLAY A GAME.
 
    HAZARDS     🦅 eagle → ⛈️ storm → 🐉 dragon → 🛩️ jet → 🌀 hurricane →
                ☄️ asteroid → 🛰️ satellite → 🚀 missile → 🌞 solar flare.
@@ -1006,7 +1021,7 @@ const DEFAULT_CONFIG={
   arrivalBonus:      120,    // delivering the mission cargo
   flareDodgePoints:   25,    // diving under a solar flare
   realBreathBonus:    20,    // 3+ real tummy breaths, checked by the phone
-  teamBonus:          40,    // building something together with Pip
+  teamBonus:          40,    // finishing the jigsaw with Pip, taking turns
   groundBonus:        10,    // feeling the body / helping an animal feel grounded
   nvcBonus:            6,    // extra, on top of the base points, for any feelings exercise
   calmBonus:            5,    // extra, on top of the base points, for choosing to breathe
@@ -1069,9 +1084,14 @@ const DEFAULT_CONFIG={
   boostSpeed:        1.55,
   sluggishFactor:    0.82,   // speed if the plane check was skipped
   cleanBoost:        0.10,   // a freshly cleaned plane flies this much faster
+  altSpeedBonus:     0.25,   // thin air up high: this much faster at the ceiling,
+                             // and the same amount slower down near the ground
 
   /* ── WHAT APPEARS ────────────────────────────────────────────────────────*/
-  shareAskChance:    0.4,    // how often an animal asks him to share
+  shareAskChance:   0.15,    // how often an animal asks him to share — rare,
+                             // so it stays a treat and not a toll on every win
+  shareAskGap:         4,    // fewest rescues between two share asks
+  distanceCallSeconds:75,    // roughly how often "you are this far away" is said
   maxHazardsAtOnce:  2,
 
   /* ── SAVED PROGRESS ──────────────────────────────────────────────────────
@@ -1674,7 +1694,7 @@ let kidName=PILOT_NAME.split(' ')[0];     /* "Aaries" */
 let kidDOB=PILOT_DOB;
 let band=bandForAge(pilotAge(PILOT_DOB)); /* 6 years old → ages 5–7 */
 let soundOn=true, autoRead=true;
-let enabled={math:true,feelings:true,art:true,spelling:true,breathe:true,sharing:true,talk:true,archery:true,custom:true,build:true,sayit:true,tictac:true,mcq:true,triz:true,memory:true,pattern:true};
+let enabled={math:true,feelings:true,feelonly:true,needonly:true,solveonly:true,ground:true,art:true,spelling:true,breathe:true,sharing:true,talk:true,archery:true,custom:true,build:true,sayit:true,tictac:true,mcq:true,triz:true,memory:true,pattern:true};
 let rotation=[], rotIdx=0;
 let score=0, starList=[], crew=[];
 let stats={rescues:0,ideas:0,arts:0,spells:0,vaults:0,freezes:0,zens:0,zonesRescued:{}};
@@ -1825,6 +1845,44 @@ const plane={x:0, alt:62, speed:0.7, bank:0, wheels:false, heading:0};
 /* heading: 0 = straight at the village. He may turn as far as he likes —
    right round and fly home again if he wants. The compass always knows. */
 function normAng(a){ while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI; return a; }
+/* how high he is, as 0 (skimming the ground) … 1 (right up at the ceiling).
+   plane.alt is clamped to 6…100, so this is the same range every frame. */
+function altFrac(){ return Math.max(0,Math.min(1,(plane.alt-6)/94)); }
+/* said ONCE, the first time he climbs up high — after that the feel of the
+   joystick is the lesson, and a repeated line would just be noise */
+let highFlySaid=false;
+function highFlyHint(){
+  if(highFlySaid||!started)return;
+  if(altFrac()<0.85)return;
+  highFlySaid=true;
+  speakNotice('Up high the air is thin, so your plane flies faster. Down low it is slower.');
+}
+
+/* ═══════════ "YOU ARE THIS FAR AWAY" ═══════════
+   From time to time, how many miles are left. It goes through the SAME
+   one-thing-at-a-time gate as every other interruption, so it can neither
+   land on top of another announcement nor tread on its heels; if the moment
+   is busy it simply waits and tries again shortly. */
+let distClock=0, lastDistSaid=null;
+function distanceCall(){
+  /* not while something else is happening — come back in a moment */
+  if(!started||!canInterrupt()){distClock=6;return;}
+  const left=Math.max(0,Math.round(milesLeft()));
+  /* nothing to say if he has not moved a meaningful distance since last time */
+  if(lastDistSaid!==null&&Math.abs(lastDistSaid-left)<2){distClock=distanceGap();return;}
+  lastDistSaid=left;
+  markInterrupt();
+  const where=cap1(curMission.placeName);
+  banner(`🗺️ ${left} mi to ${curMission.placeName}`,2600,true);
+  speakNotice(left<=5
+    ? `Almost there! ${where} is only ${left} miles away.`
+    : `${where} is ${left} miles away.`);
+  distClock=distanceGap();
+}
+function distanceGap(){
+  const base=cfgNum('distanceCallSeconds',75,10);
+  return base+Math.random()*base*0.4;   /* jittered, so it never feels metronomic */
+}
 /* the compass asks two questions:
      relBearing() — which way is the village, from the nose? (0 = dead ahead)
      distToDest() — how far is it still?                                     */
@@ -2357,7 +2415,12 @@ function update(dt){
   target*=(0.5+0.5*engines/engineSlots);        /* fewer engines = slower plane */
   if(!preflightOK)target*=CFG.sluggishFactor;   /* skipped the plane check */
   else target*=(1+cfgNum('cleanBoost',0.10,0));/* a clean plane is a light plane */
+  /* HIGHER IS FASTER: the air is thin up high, so the plane goes faster the
+     higher he flies, and noticeably slower down near the ground. Smooth, so
+     the joystick teaches it by feel rather than by a rule. */
+  target*=1+cfgNum('altSpeedBonus',0.25,0)*(altFrac()-0.5)*2;
   plane.speed=lerp(plane.speed,target,dt*2.5);
+  highFlyHint();
   /* ── HONEST MOTION ────────────────────────────────────────────────────────
      The scenery is driven by the heading, not by a stopwatch. Fly forward and
      it streams towards you; turn side-on and it slides across; turn right
@@ -2423,6 +2486,10 @@ function update(dt){
     }
     fanfare();updateHUD();
   }
+
+  /* "you are this far away" — see distanceCall() */
+  distClock-=dt;
+  if(distClock<=0)distanceCall();
 
   /* mystery cargo — a rare surprise gift */
   cargoClock-=dt;
@@ -3597,7 +3664,7 @@ const CHALLENGE_TYPES=[
   {id:'feelonly',em:'💗', label:'Name the feeling',start:()=>showFeelOnly()},
   {id:'needonly',em:'🤍', label:'Name the need',   start:()=>showNeedOnly()},
   {id:'solveonly',em:'💡',label:'Think of a kind idea', start:()=>showSolveOnly()},
-  {id:'ground',  em:'🐾', label:'Help an animal feel grounded', start:()=>showGrounding()},
+  {id:'ground',  em:'🤲', label:'Calm down together',  start:()=>showGrounding()},
   {id:'art',     em:'🎨', label:'Trace & paint',   start:()=>showArt()},
   {id:'spelling',em:'🔤', label:'Word builder',    start:()=>showSpelling()},
   {id:'breathe', em:'🧸', label:'Belly-bear calm', start:()=>showBreath('rescue')},
@@ -3605,7 +3672,7 @@ const CHALLENGE_TYPES=[
   {id:'talk',    em:'💬', label:'Kind words',      start:()=>showTalk()},
   {id:'archery', em:'🏹', label:'Archery vs Pip',  start:()=>showArchery()},
   {id:'custom',  em:'📝', label:'My own questions',start:()=>showCustomQ()},
-  {id:'build',   em:'🪜', label:'Build with Pip',  start:()=>showBuild()},
+  {id:'build',   em:'🧩', label:'Jigsaw with Pip',  start:()=>showBuild()},
   {id:'sayit',   em:'🔊', label:'Say it right',    start:()=>showSayIt()},
   {id:'tictac',  em:'⭕', label:'Tic-tac-toe',     start:()=>showTicTac()},
   {id:'mcq',     em:'🧠', label:'Thinking questions', start:()=>showMCQ()},
@@ -3820,6 +3887,7 @@ function restartAfterCrash(){
   plane.heading=0;plane.alt=62;plane.wheels=false;
   shownLevel=1;
   animalClock=5;hazClock=16;cargo=null;cargoClock=95;
+  distClock=distanceGap();lastDistSaid=null;highFlySaid=false;lastShareAskAt=-99;
   updateHUD();closeModal();
   banner('🛫 Fresh start!',2400);
 }
@@ -3943,35 +4011,45 @@ function makeMath(){
     return {q,ans,opts:[...new Set(opts)].slice(0,4)};
   }
 
-  /* how many digits the addition uses, weighted by age band */
-  const addDigits=(()=>{
+  /* ADDITION sizes: mostly a 2-digit number plus a 1- or 2-digit one, and
+     sometimes a 3-digit number plus a 1-, 2- or 3-digit one. The older bands
+     see the big ones more often, but the shape of the sum is the same. */
+  const bigAdd=(()=>{
     const roll=Math.random();
-    if(band==='y') return roll<0.45?1:(roll<0.85?2:3);   /* mostly 1-2, some 3 */
-    if(band==='m') return roll<0.20?1:(roll<0.65?2:3);
-    return roll<0.10?1:(roll<0.45?2:3);                   /* 'o' leans big */
+    if(band==='y') return roll<0.25;      /* 1 in 4 is a 3-digit sum */
+    if(band==='m') return roll<0.45;
+    return roll<0.65;                      /* 'o' leans big */
   })();
 
   const kind=r(3);            /* 0 = add, 1 = subtract, 2 = multiply */
 
   if(kind===0){
-    let a,b;
-    if(addDigits===1){a=d1();b=d1();}
-    else if(addDigits===2){a=d2();b=(Math.random()<0.5?d1():d2());}
-    else{a=d3();b=(Math.random()<0.5?d2():d3());}
+    let a,b,near;
+    if(bigAdd){
+      /* 3-digit + (1, 2 or 3 digit) */
+      a=d3();
+      const w=r(3);
+      b=w===0?d1():(w===1?d2():d3());
+      near=100;
+    }else{
+      /* 2-digit + (1 or 2 digit) */
+      a=d2();
+      b=(Math.random()<0.5?d1():d2());
+      near=10;
+    }
     ans=a+b;q=`${a} + ${b} = ?`;
-    const near=addDigits===1?1:(addDigits===2?10:100);
     opts=shuffle([ans,ans+near,Math.max(0,ans-near),ans+1]);
   }
   else if(kind===1){
-    /* 1 or 2 digit subtraction, answer never negative */
+    /* SUBTRACTION: a 1-digit or a 2-digit take-away, never below zero */
     let a,b;
-    if(band==='y'&&Math.random()<0.5){a=2+r(8);b=1+r(a);}      /* 1-digit */
-    else{a=d2();b=(Math.random()<0.6?d1():1+r(a-1));}          /* 2-digit */
+    if(Math.random()<(band==='y'?0.5:0.3)){a=2+r(8);b=1+r(a);}   /* 1-digit */
+    else{a=d2();b=(Math.random()<0.6?d1():1+r(a-1));}            /* 2-digit */
     ans=a-b;q=`${a} − ${b} = ?`;
     opts=shuffle([ans,ans+1,Math.max(0,ans-1),ans+10]);
   }
   else{
-    /* single digit x single digit */
+    /* MULTIPLICATION: single digit × single digit, always */
     const a=(band==='y')?2+r(5):2+r(8);   /* 2..6 for the little ones, 2..9 later */
     const b=(band==='y')?2+r(5):2+r(8);
     ans=a*b;q=`${a} × ${b} = ?`;
@@ -4290,37 +4368,63 @@ function showSolveOnly(){
    misses): a standalone game where he leads a scared or upset animal
    through the same feet/breath/soften steps, so grounding is something he
    also practises doing FOR someone else, not only for himself. */
+/* ═══════════ GROUNDING — practise WITH the animal, one body part at a time
+   The animal is wound up, and the two of them settle it together: palm
+   first, then face, then leg. He does each one on himself at the same time,
+   which is the whole point — the animal gives him a reason to practise, and
+   doing it together is what makes it work. One part per screen, never a
+   list to remember. */
 const GROUND_STEPS=[
-  {em:'🐾', t:'Feel paws on the ground',  say:'Help {n} feel their paws on the ground.'},
-  {em:'🫁', t:'Take one slow breath',     say:'Help {n} take one slow breath, all the way out.'},
-  {em:'😌', t:'Let the body go soft',     say:'Help {n} let their whole body go soft and still.'}
+  {em:'🤲', part:'PALM', t:'Feel your PALMS',
+   say:'Put your palms together with {n}. Feel how warm they are. Press them, then let go.'},
+  {em:'😌', part:'FACE', t:'Feel your FACE',
+   say:'Now your face, with {n}. Let your forehead go soft. Let your jaw go loose.'},
+  {em:'🦵', part:'LEGS', t:'Feel your LEGS',
+   say:'Now your legs, with {n}. Press your feet down. Feel how strong and steady they are.'}
 ];
 let ground=null;
 function showGrounding(){
   ground={step:0};
   renderGrounding();
+  /* the opening line names what is happening, in the animal's words, so the
+     exercise has a reason before it has instructions */
+  if(autoRead)setTimeout(()=>speakPlain(
+    `${rescue.name} feels all wound up and fidgety. Wound-up bodies calm down one part at a time. Let us do it together.`,
+    ()=>speakPlain(GROUND_STEPS[0].say.split('{n}').join(rescue.name))),250);
 }
 function renderGrounding(){
   const s=GROUND_STEPS[ground.step];
   openModal(`
     <div class="bigem">${rescue.em}${s.em}</div>
-    <h2>Help ${esc(rescue.name)} feel grounded</h2>
+    <h2>Calm down together with ${esc(rescue.name)}</h2>
     <div class="resetsteps">
       <div class="rstep now"><b>${s.em}</b> ${s.t}
         <span class="rdots">${'●'.repeat(ground.step)}${'○'.repeat(Math.max(0,GROUND_STEPS.length-1-ground.step))}</span>
       </div>
     </div>
-    <p class="msub" id="gndQ">${s.say.replace('{n}',esc(rescue.name))}</p>
-    <button class="cta mint" onclick="groundNext()">Done — ${esc(rescue.name)} is calmer 👍</button>
+    <div class="sensebody">
+      ${GROUND_STEPS.map((g,i)=>`
+        <div class="sensepart ${i<ground.step?'done':(i===ground.step?'now':'')}">
+          <span class="sem">${g.em}</span>
+          <span>${g.t}</span>
+          <span class="stick">${i<ground.step?'✅':''}</span>
+        </div>`).join('')}
+    </div>
+    <p class="msub" id="gndQ">${s.say.split('{n}').join(esc(rescue.name))}</p>
+    <button class="cta mint" onclick="groundNext()">Done — that part feels calmer 👍</button>
   `);
-  autoReadIf('gndQ');
+  /* the first screen is narrated by showGrounding()'s two-part intro */
+  if(ground.step>0)autoReadIf('gndQ');
 }
 function groundNext(){
   tone(700+ground.step*120,0.12,'triangle',0.09);
   ground.step++;
   if(ground.step<GROUND_STEPS.length){renderGrounding();return;}
   ground=null;
-  challengeComplete(`${esc(rescue.name)} feels grounded now — safe and steady. Thank you for helping.`,null,0);
+  earnCalm(1,'you calmed a wound-up body, one part at a time');
+  challengeComplete(
+    `${esc(rescue.name)} is not fidgety any more — palms calm, face calm, legs calm. You did it together.`,
+    null,0);
 }
 function showNeedStep(){
   suppressAutoRead=true;
@@ -5397,128 +5501,119 @@ function archConcede(){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   9) BUILD IT TOGETHER  —  working with Pip the Polite Fox
+   9) JIGSAW WITH PIP  —  taking turns with Pip the Polite Fox
    ---------------------------------------------------------------------------
-   An animal needs something built. You and Pip build it TOGETHER, one rung at
-   a time, taking turns. Pip cannot reach the high rungs; you cannot cut the
-   wood. Neither of you can finish alone — that is the whole point.
+   A picture has come apart into six pieces. You and Pip put it back together
+   TAKING TURNS: he places one, you place one, all the way to the end. Waiting
+   for your turn is half the game; the other half is looking carefully, because
+   only one piece fits the glowing hole.
    ═══════════════════════════════════════════════════════════════════════════ */
-const BUILDS=[
-  {id:'ladder', em:'🪜', name:'a ladder',  why:'to reach the kitten up the tree',
-   steps:[
-     {who:'pip', act:'Pip cuts the wood', me:'I will cut the wood', em:'🪚'},
-     {who:'you', act:'Hold the steps still', em:'✋', ask:'Pip cannot hold and hammer at the same time. Will you hold?'},
-     {who:'pip', act:'Pip hammers the step', me:'I will hammer the step', em:'🔨'},
-     {who:'you', act:'Lift the ladder up high', em:'💪', ask:'Pip is too small to lift it. Can you?'},
-     {who:'pip', act:'Pip climbs up', me:'I will climb up', em:'🐾'},
-     {who:'you', act:'Hold the bottom so Pip is safe', em:'🛡️', ask:'Pip is wobbling! Will you hold the bottom?'}
-   ]},
-  {id:'bridge', em:'🌉', name:'a bridge', why:'so the ducklings can cross the stream',
-   steps:[
-     {who:'pip', act:'Pip finds two long planks', me:'I will find two long planks', em:'🪵'},
-     {who:'you', act:'Carry the heavy plank across', em:'💪', ask:'It is too heavy for Pip. Will you help?'},
-     {who:'pip', act:'Pip ties the knots', me:'I will tie the knots', em:'🪢'},
-     {who:'you', act:'Pull the rope tight', em:'🧗', ask:'Pip needs someone to pull. Will you?'},
-     {who:'pip', act:'Pip tries the first step', me:'I will try the first step', em:'🐾'},
-     {who:'you', act:'Walk across together', em:'🤝', ask:'Shall we cross together?'}
-   ]},
-  {id:'nest', em:'🪺', name:'a new nest', why:'because the storm blew the old one away',
-   steps:[
-     {who:'pip', act:'Pip picks soft moss', me:'I will pick soft moss', em:'🍃'},
-     {who:'you', act:'Get twigs from the high branch', em:'🌿', ask:'Pip cannot reach up there. Can you?'},
-     {who:'pip', act:'Pip weaves it all together', me:'I will weave it all together', em:'🧶'},
-     {who:'you', act:'Put something warm inside', em:'🧸', ask:'It needs to be cosy. Will you help?'},
-     {who:'pip', act:'Pip checks it is safe', me:'I will check it is safe', em:'🔍'},
-     {who:'you', act:'Lift it gently into the tree', em:'🌳', ask:'Last job — up it goes?'}
-   ]}
+const JIGSAWS=[
+  {id:'rocket', name:'a rocket',    em:'🚀', cells:['🌙','⭐','🛰️','🚀','🔥','🌍']},
+  {id:'garden', name:'a garden',    em:'🌻', cells:['☀️','🦋','🌈','🌻','🐝','🌷']},
+  {id:'beach',  name:'the seaside', em:'🏖️', cells:['⛅','🌴','🪁','🏖️','🐚','🌊']},
+  {id:'farm',   name:'a farm',      em:'🚜', cells:['🌦️','🌾','🏡','🚜','🐄','🐓']},
+  {id:'plane',  name:'an aeroplane',em:'✈️', cells:['☁️','🕊️','☁️','✈️','🛞','🗺️']},
+  {id:'forest', name:'a forest',    em:'🌲', cells:['🌤️','🦉','🌲','🦌','🍄','🪨']},
+  {id:'party',  name:'a party',     em:'🎉', cells:['🎈','🎊','🎈','🎂','🎁','🕯️']},
+  {id:'winter', name:'a snowy day', em:'⛄', cells:['🌨️','❄️','🌨️','⛄','🧤','🛷']}
 ];
-let build=null;
+let jig=null;
 function showBuild(){
-  const b=BUILDS[Math.floor(Math.random()*BUILDS.length)];
-  build={def:b, i:0, helped:0};
+  const d=JIGSAWS[Math.floor(Math.random()*JIGSAWS.length)];
+  /* Pip goes first, so the child sees a turn modelled before taking one */
+  jig={def:d, slots:d.cells.map(()=>null), tray:shuffle([...d.cells]), turn:'pip', busy:false};
   openModal(`
-    <div class="bigem">${rescue.em}${b.em}</div>
-    <h2>Build it together!</h2>
-    <div class="speech" id="bdQ">${esc(rescue.name)} needs ${b.name} ${b.why}. Pip the Fox will help — but nobody can do it alone.</div>
-    <button class="cta" onclick="buildStep()">Start building 🔨</button>
+    <div class="bigem">${rescue.em}${d.em}</div>
+    <h2>A jigsaw with Pip!</h2>
+    <div class="speech" id="bdQ">${esc(rescue.name)} dropped a picture of ${d.name} and it came apart into six pieces. Pip the Fox will help you mend it. You take turns: Pip, then you, then Pip, then you.</div>
+    <button class="cta" onclick="jigBegin()">Start the jigsaw 🧩</button>
   `);
-  autoReadIf('bdQ',()=>speakPlain('Pip cannot do it alone. You cannot either. Together you can.'));
+  autoReadIf('bdQ',()=>speakPlain('You take turns. Pip goes first. Watch him, then it is your turn.'));
 }
-function buildLadder(){
-  const b=build.def;
-  const done=build.i;
+function jigBegin(){ if(jig)jigTurn(); }
+/* the first hole still waiting for a piece */
+function jigNextSlot(){ return jig.slots.findIndex(s=>s===null); }
+function jigBoard(){
+  const next=jigNextSlot();
   return `<div class="buildwrap">
-    ${b.steps.map((st,i)=>`
-      <div class="brung ${i<done?'done':(i===done?'now':'')}">
-        <span class="bwho ${st.who}">${st.who==='pip'?'🦊':'🧑‍✈️'}</span>
-        <span class="bem">${st.em}</span>
-        <span class="bact">${esc(st.act)}</span>
-        <span class="btick">${i<done?'✅':''}</span>
-      </div>`).join('')}
+    <div class="jigwho">
+      <span class="tag ${jig.turn==='pip'?'on':''}">🦊 Pip</span>
+      <span class="tag ${jig.turn==='you'?'on':''}">🧑‍✈️ You</span>
+    </div>
+    <div class="jiggrid">
+      ${jig.slots.map((s,i)=>`<div class="jigslot ${s?'filled':(i===next?'next':'')}">${s||''}</div>`).join('')}
+    </div>
+    <div class="jigtray">
+      ${jig.tray.map((pc,i)=>`<button class="jigpiece${jig.turn==='you'?'':' locked'}" id="jp${i}" onclick="jigPlace(${i})">${pc}</button>`).join('')}
+    </div>
   </div>`;
 }
-function buildStep(){
-  if(!build)return;
-  const b=build.def;
-  if(build.i>=b.steps.length){ buildDone(); return; }
-  const st=b.steps[build.i];
-  if(st.who==='pip'){
-    /* Pip takes his turn — the child WAITS and watches.
-       BUG FIX: this line used to be built by st.act.replace('Pip ','I will '),
-       which produced "I will saws the wood". Each step now carries its own
-       first-person line. */
-    openModal(`
-      <div class="bigem">🦊${st.em}</div>
-      <h2>Pip’s turn</h2>
-      ${buildLadder()}
-      <p class="msub" id="bdW">"${esc(st.me||st.act)}," says Pip. "You wait — I will tell you when I need you."</p>
-      <button class="cta ghost" id="bdBtn" disabled>Pip is working… ⏳</button>
-    `);
-    autoReadIf('bdW');
-    tone(500,0.1,'triangle',0.08);
-    setTimeout(()=>{
-      if(!build)return;
-      const btn=document.getElementById('bdBtn');
-      if(btn){btn.disabled=false;btn.className='cta';btn.textContent='Thanks, Pip! My turn 🙋';btn.onclick=()=>{build.i++;buildStep();};}
-      tone(760,0.12,'triangle',0.1);
-      speakPlain('Done! Your turn now.');
-    },2600);
-  }else{
-    /* the child's turn — and Pip really cannot do this bit */
-    openModal(`
-      <div class="bigem">🧑‍✈️${st.em}</div>
-      <h2>Your turn!</h2>
-      ${buildLadder()}
-      <p class="msub" id="bdY">${esc(st.ask)}</p>
-      <div class="stack">
-        <button class="rowcard idea" onclick="buildHelp(true)"><span class="em">${st.em}</span><b>Yes — ${esc(st.act)}</b></button>
-        <button class="rowcard" onclick="buildHelp(false)"><span class="em">🙅</span>Let Pip do it on his own</button>
-      </div>
-    `);
-    autoReadIf('bdY');
-  }
+function jigTurn(){
+  if(!jig)return;
+  if(jigNextSlot()<0){ jigDone(); return; }
+  if(jig.turn==='pip'){ jigPipTurn(); return; }
+  openModal(`
+    <div class="bigem">🧑‍✈️🧩</div>
+    <h2>Your turn!</h2>
+    ${jigBoard()}
+    <p class="msub" id="bdY">Look at the glowing hole. Which piece belongs there? Tap it.</p>
+  `);
+  autoReadIf('bdY');
 }
-function buildHelp(yes){
-  if(!build)return;
-  if(!yes){
-    tone(200,0.2,'sine',0.07);
-    toast('🦊 Pip cannot do it alone',true);
-    speakPlain('Pip really cannot do this one alone. He needs you.');
-    return;                                    /* gently insists — teamwork is the lesson */
+function jigPipTurn(){
+  jig.busy=true;
+  const slot=jigNextSlot();
+  openModal(`
+    <div class="bigem">🦊🧩</div>
+    <h2>Pip’s turn</h2>
+    ${jigBoard()}
+    <p class="msub" id="bdW">"My turn — I am looking for my piece," says Pip. "You wait, and then it is you."</p>
+  `);
+  autoReadIf('bdW');
+  tone(500,0.1,'triangle',0.08);
+  setTimeout(()=>{
+    if(!jig)return;
+    /* Pip finds the piece that fits and puts it in */
+    const want=jig.def.cells[slot];
+    const ti=jig.tray.indexOf(want);
+    if(ti>=0)jig.tray.splice(ti,1);
+    jig.slots[slot]=want;
+    jig.busy=false;
+    tone(760,0.12,'triangle',0.1);
+    if(jigNextSlot()<0){ jigDone(); return; }
+    jig.turn='you';
+    jigTurn();
+    speakPlain('In it goes. Your turn now.');
+  },1900);
+}
+function jigPlace(i){
+  if(!jig||jig.busy||jig.turn!=='you')return;
+  const slot=jigNextSlot();
+  if(slot<0)return;
+  const pc=jig.tray[i];
+  if(pc!==jig.def.cells[slot]){
+    /* wrong piece — flowMiss handles the kind "not yet", and the reset
+       exercise after three of them */
+    flowMiss(document.getElementById('jp'+i));
+    return;
   }
-  build.helped++;
-  build.i++;
-  fanfare();
+  jig.tray.splice(i,1);
+  jig.slots[slot]=pc;
+  streakUp();
+  tone(880,0.12,'triangle',0.1);
   kindActs++;
-  buildStep();
+  if(jigNextSlot()<0){ jigDone(); return; }
+  jig.turn='pip';
+  jigTurn();
 }
-function buildDone(){
-  const b=build.def;
-  build=null;
+function jigDone(){
+  const d=jig.def;
+  jig=null;
   confettiBurst();
   /* points go through challengeComplete so the card shows the real number */
   challengeComplete(
-    `${b.em} You and Pip built ${b.name} together! "I could never do that on my own," says Pip. "And nor could you. That is a team."`,
+    `${d.em} You and Pip mended the picture of ${d.name}! "We took turns," says Pip, "and it worked."`,
     null, CFG.teamBonus
   );
 }
@@ -6452,10 +6547,17 @@ function closeRescue(){
   }
   closeModal();
 }
-/* ---- after some rescues, the animal simply asks. Short. Skippable. ---- */
+/* ---- ONCE IN A WHILE after a rescue, the animal simply asks. Short.
+   Skippable. Two guards keep it occasional: the dice, and a floor of
+   several rescues between asks — without the floor, an unlucky run of rolls
+   could ask three rescues in a row and it stops feeling like a gift.
+   He can always share on purpose from 💝 SHARE POINTS instead. ---- */
+let lastShareAskAt=-99;
 function maybeAskShare(){
   if(score<10)return false;
+  if(stats.rescues-lastShareAskAt<cfgNum('shareAskGap',4,0))return false;
   if(Math.random()>CFG.shareAskChance)return false;
+  lastShareAskAt=stats.rescues;
   markInterrupt();
   setTimeout(()=>{ ctxMode='sharing'; showSharing(); }, 900);
   return true;
@@ -6670,6 +6772,7 @@ function beginNextMission(){
   CFG.missionDistance=Math.min(200,Math.round(CFG.missionDistance*1.25));
   miles=0;latMiles=0;playMinutes=0;lastInterestMin=0;missionDone=false;
   plane.heading=0;
+  distClock=distanceGap();lastDistSaid=null;
   closeModal();
   updateGps();updateHUD();
   banner(`🗺️ New mission — ${CFG.missionDistance} miles`,2600);
@@ -6876,11 +6979,11 @@ const DASH_GROUPS=[
     {k:'freezeAllPoints', t:'Calming the whole sky',        min:0, max:200, step:5},
     {k:'practicePoints',  t:'Calm practice',                min:0, max:60,  step:1},
     {k:'preflightPoints', t:'The plane check',              min:0, max:60,  step:1},
-    {k:'teamBonus',       t:'Building with Pip',            min:0, max:200, step:5},
+    {k:'teamBonus',       t:'Finishing the jigsaw with Pip', min:0, max:200, step:5},
     {k:'realBreathBonus', t:'Real tummy breaths (sensor)',  min:0, max:100, step:5},
     {k:'flareDodgePoints',t:'Diving under a sun flare',     min:0, max:100, step:5},
     {k:'arrivalBonus',    t:'Delivering the mission cargo',  min:0, max:500, step:10},
-    {k:'groundBonus',     t:'Feeling the body / grounding an animal', min:0, max:100, step:1},
+    {k:'groundBonus',     t:'Feeling the body / calming down together', min:0, max:100, step:1},
     {k:'nvcBonus',        t:'Extra for any feelings exercise',        min:0, max:60,  step:1},
     {k:'calmBonus',       t:'Extra for choosing to breathe',          min:0, max:60,  step:1},
     {k:'repairBreathPoints',t:'Breathing first, while the plane waits', min:0, max:100, step:5},
@@ -6919,6 +7022,7 @@ const DASH_GROUPS=[
     {k:'animalBaseInterval', t:'Seconds between animals (new pilot)', min:3, max:120,step:1},
     {k:'animalMinInterval',  t:'…once he is experienced',             min:2, max:90, step:1},
     {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
+    {k:'distanceCallSeconds',t:'Seconds between distance call-outs',  min:10,max:300,step:5},
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
     {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
     {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
@@ -6932,10 +7036,12 @@ const DASH_GROUPS=[
     {k:'boostSpeed',      t:'Boost speed',           min:0.8,max:3,  step:0.05},
     {k:'climbSpeed',      t:'Speed while climbing',  min:0.1,max:3,  step:0.05},
     {k:'sluggishFactor',  t:'Speed if the check is skipped', min:0.4,max:1,step:0.02},
-    {k:'cleanBoost',      t:'Speed bonus for a clean plane', min:0, max:1, step:0.05}
+    {k:'cleanBoost',      t:'Speed bonus for a clean plane', min:0, max:1, step:0.05},
+    {k:'altSpeedBonus',   t:'Extra speed for flying high',   min:0, max:1, step:0.05}
   ]},
   {id:'learn', em:'📚', name:'Learning', tab:'Learning', fields:[
     {k:'shareAskChance',  t:'How often an animal asks to share', min:0, max:1, step:0.05},
+    {k:'shareAskGap',     t:'Fewest rescues between share asks', min:0, max:20, step:1},
     {k:'donationKarmaPer',t:'Points shared per 1 karma',         min:5, max:100,step:5},
     {k:'sunnyMultiplier', t:'Sunny-weather reward (×)',          min:1, max:5, step:0.1},
     {k:'rareMultiplier',  t:'Rare-animal reward (×)',            min:1, max:5, step:0.5},
