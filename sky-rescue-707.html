@@ -1201,12 +1201,16 @@ const DEFAULT_CONFIG={
   shareAskGap:         4,    // fewest rescues between two share asks
   distanceCallSeconds:75,    // roughly how often "you are this far away" is said
   offCourseSeconds:    9,    // seconds off course before it says so out loud
-  vehicleFirstSeconds:35,    // the FIRST weather change comes early, so it is seen
+  vehicleFirstSeconds:70,    // seconds of flying before the FIRST weather change
   vehicleEverySeconds:95,    // roughly how often the weather changes after that
   vehicleLastsSeconds:70,    // how long a stretch in the car or on the skis lasts
   jumpRise:         150,     // how fast the car/skier leaps when you push up
   jumpFall:         110,     // how fast gravity brings them back down
   jumpHeight:        58,     // the top of a jump
+  jumpClears:        30,     // jump above this and you clear a building
+  groundPropSpacing:2.6,     // how much further apart solid scenery sits
+  groundAgility:    2.2,     // how much sharper a car/skier steers
+  structureWidth:   0.30,    // how wide a solid thing is, for bumping into
   maxHazardsAtOnce:  2,
 
   /* ── SAVED PROGRESS ──────────────────────────────────────────────────────
@@ -1232,6 +1236,135 @@ const CFG=(()=>{
 function praise(){return CFG.praise[Math.floor(Math.random()*CFG.praise.length)];}
 function notYetLine(){return CFG.notYet[Math.floor(Math.random()*CFG.notYet.length)];}
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   EVERY REPEATED LINE THE CHILD HEARS, IN ONE PLACE
+   ---------------------------------------------------------------------------
+   Grouped by where it is said. A grown-up can rewrite any of these — or ADD
+   to the lists — in sky-rescue-settings.js, and the game will use the new
+   wording straight away:
+
+       window.SKY_SETTINGS = {
+         text: {
+           nvc: { understood: ['Thank you for listening first. …'] },
+           calm:{ breathAsk:  ['I need to feel calm. Will you breathe with me?'] }
+         }
+       };
+
+   A list REPLACES the built-in list. To keep the built-ins and add to them,
+   write `addText: { … }` instead — those are appended.
+   {n} is the animal's name, {name} the pilot's, {place} the destination,
+   {miles} the miles left.                                                   */
+const DEFAULT_TEXT={
+  /* what an animal says at the end of any feelings exercise */
+  nvc:{
+    understood:[
+      'Thank you for listening first. A good friend understands me before they fix me. Being understood helps me most of all.',
+      'Thank you. You listened before you helped. Feeling understood helps me even more than mending the problem.',
+      'Thank you for hearing me. A good friend understands first. That helps more than fixing it.',
+      'Thank you. You understood me. That is the bit that helps most — more than fixing anything.'
+    ]
+  },
+  /* calming, grounding and breathing */
+  calm:{
+    breathAsk:[
+      'My tummy is all fluttery and I cannot settle. I need to feel calm and steady. Will you do belly breathing with me?',
+      'Everything feels too fast inside me. I need to be still for a moment. Will you do belly breathing with me?',
+      'I am all wound up and my heart is thumping. I need to feel grounded. Will you do belly breathing with me?',
+      'I feel wobbly and I cannot get quiet. I need calm. Will you do belly breathing with me?',
+      'My thoughts are jumping everywhere. I need to slow right down. Will you do belly breathing with me?'
+    ],
+    groundIntro:'{n} feels all wound up and fidgety. Wound-up bodies calm down one part at a time. Let us do it together.',
+    groundPalm:'Put your palms together with {n}. Feel how warm they are. Press them, then let go.',
+    groundFace:'Now your face, with {n}. Let your forehead go soft. Let your jaw go loose.',
+    groundLegs:'Now your legs, with {n}. Press your feet down. Feel how strong and steady they are.',
+    groundDone:'{n} is not fidgety any more — palms calm, face calm, legs calm. You did it together.',
+    resetKind:'That is okay. Getting it wrong means you are learning.',
+    resetBack:'You came all the way back.'
+  },
+  /* taking turns with Pip — kept to the bare minimum on purpose */
+  turns:{
+    pipTurn:'Pip’s turn. Please wait.',
+    yourTurn:'Your turn.'
+  },
+  /* the journey: how far, and which way */
+  journey:{
+    distance:'{place} is {miles} miles away.',
+    distanceClose:'Almost there! {place} is only {miles} miles away.',
+    offCourse:'You are going the wrong way. {place} is {miles} miles behind you now. Follow the red radar.',
+    offCourseFar:'You are flying away from {place}. Turn all the way around, and watch the red radar.',
+    highFly:'Up high the air is thin, so your plane flies faster. Down low it is slower.'
+  },
+  /* the weather changing what he travels in */
+  vehicle:{
+    toCar:'Severe lightning ahead! It is not safe to fly. Land, and drive the rescue car. Swerve left and right, and jump over the bumps.',
+    toSki:'A severe snow storm ahead! It is not safe to fly. Land, and put on the rescue skis. Swerve left and right, and jump over the bumps.',
+    toPlane:'The weather cleared. Back into the sky, and up high is faster again.',
+    carBump:'Careful — go around the buildings, or jump over them.'
+  },
+  /* reaching an animal */
+  rescue:{
+    call:'{n} needs help! Fly low. Put your wheels down.',
+    missTooHigh:'Too high! Fly lower next time 🛬',
+    missClose:'So close! One at a time — catch the next one 💛',
+    missSteer:'Steer closer next time ⬅️➡️',
+    turnedAway:'{n} You turned away from {name}. Another friend will come 💛'
+  },
+  /* sharing points */
+  share:{
+    thanks:'Thank you!',
+    notNow:'{n} smiles. "That is okay! Maybe another day."'
+  }
+};
+/* the parent's edits: `text` REPLACES a list, `addText` APPENDS to it */
+const TEXT=(()=>{
+  const t=JSON.parse(JSON.stringify(DEFAULT_TEXT));
+  const rep=RAW_SETTINGS.text||{}, add=RAW_SETTINGS.addText||{};
+  for(const grp in rep){
+    if(!t[grp])t[grp]={};
+    for(const k in rep[grp])t[grp][k]=rep[grp][k];
+  }
+  for(const grp in add){
+    if(!t[grp])t[grp]={};
+    for(const k in add[grp]){
+      const extra=add[grp][k];
+      if(Array.isArray(t[grp][k]))t[grp][k]=t[grp][k].concat(extra);
+      else t[grp][k]=[].concat(t[grp][k]||[],extra);
+    }
+  }
+  return t;
+})();
+/* fill {n} {name} {place} {miles} and hand back the finished line */
+function txFill(s,vars){
+  vars=vars||{};
+  const out=String(s)
+    .split('{n}').join(vars.n!=null?vars.n:(typeof rescue!=='undefined'&&rescue&&rescue.name?rescue.name:'your friend'))
+    .split('{name}').join(vars.name!=null?vars.name:(kidName||'Pilot'))
+    .split('{place}').join(vars.place!=null?vars.place:(typeof curMission!=='undefined'&&curMission?curMission.placeName:'the village'))
+    .split('{miles}').join(vars.miles!=null?vars.miles:'');
+  /* a line written as "{place} is {miles} miles away" would otherwise start
+     "the village is…" — capitalise the opening letter so hand-written wording
+     reads properly without the writer having to think about it */
+  return out.charAt(0).toUpperCase()+out.slice(1);
+}
+/* TX('journey.distance',{miles:12}) — one line, filled in.
+   A list gives a random member, so adding wordings adds variety for free. */
+function TX(path,vars){
+  const [grp,key]=String(path).split('.');
+  let v=(TEXT[grp]||{})[key];
+  if(v==null)return '';
+  if(Array.isArray(v)){
+    if(!v.length)return '';
+    v=v[Math.floor(Math.random()*v.length)];
+  }
+  return txFill(v,vars);
+}
+/* the whole list, filled in — for places that walk it in order */
+function TXlist(path){
+  const [grp,key]=String(path).split('.');
+  const v=(TEXT[grp]||{})[key];
+  return Array.isArray(v)?v.slice():(v==null?[]:[v]);
+}
+
 /* BUGFIX: these two were frozen into consts at load time, so the matching
    dashboard sliders ("How far the calm dial goes", "How fast the plane turns")
    did nothing at all. They are functions now, so a change takes effect at once. */
@@ -1247,7 +1380,12 @@ function animalGap(){
   return gapStatic(cfgNum('animalBaseInterval',13,1),cfgNum('animalMinInterval',6,1))
          + Math.random()*4;
 }
-function turnRate(){ const n=+CFG.turnRate; return (n>0)?n:0.85; }
+function turnRate(){
+  const n=+CFG.turnRate; const base=(n>0)?n:0.85;
+  /* a car and a pair of skis change direction far more sharply than an
+     airliner — they need to, because down here the scenery is solid */
+  return (typeof VEH==='function'&&VEH().ground)?base*cfgNum('groundAgility',2.2,1):base;
+}
 
 /* ═══════════ AGE GROUPS ═══════════
    Inside the code the four age groups are short codes, but in the settings
@@ -1874,7 +2012,7 @@ const VEHICLES={
     emergencySay:'Only one engine left! Land now. Fly low and put your wheels down.',
     crashLine:'All the engines stopped!',
     breakLine:'An engine broke!',
-    switchSay:null
+    switchKey:null
   },
   car:{
     id:'car', name:'the rescue car', the:'your car', em:'🚙', ground:true,
@@ -1887,7 +2025,7 @@ const VEHICLES={
     emergencySay:'Only one good tyre left! Stop now. Slow down and open the door.',
     crashLine:'All the tyres burst!',
     breakLine:'A tyre burst!',
-    switchSay:'Severe lightning ahead! It is not safe to fly. Land, and drive the rescue car. Swerve left and right, and jump over the bumps.'
+    switchKey:'vehicle.toCar'
   },
   ski:{
     id:'ski', name:'the rescue skis', the:'your skis', em:'⛷️', ground:true,
@@ -1900,7 +2038,7 @@ const VEHICLES={
     emergencySay:'Only one ski left! Stop now. Slow down and rest your poles.',
     crashLine:'Your skis and poles all broke!',
     breakLine:'A ski broke!',
-    switchSay:'A severe snow storm ahead! It is not safe to fly. Land, and put on the rescue skis. Swerve left and right, and jump over the bumps.'
+    switchKey:'vehicle.toSki'
   }
 };
 let vehicle='plane';
@@ -2060,7 +2198,7 @@ function highFlyHint(){
   if(highFlySaid||!started)return;
   if(altFrac()<0.85)return;
   highFlySaid=true;
-  speakNotice('Up high the air is thin, so your plane flies faster. Down low it is slower.');
+  speakNotice(TX('journey.highFly'));
 }
 
 /* ═══════════ "YOU ARE THIS FAR AWAY" ═══════════
@@ -2079,9 +2217,7 @@ function distanceCall(){
   markInterrupt();
   const where=cap1(curMission.placeName);
   banner(`🗺️ ${left} mi to ${curMission.placeName}`,2600,true);
-  speakNotice(left<=5
-    ? `Almost there! ${where} is only ${left} miles away.`
-    : `${where} is ${left} miles away.`);
+  speakNotice(TX(left<=5?'journey.distanceClose':'journey.distance',{place:where,miles:left}));
   distClock=distanceGap();
 }
 function distanceGap(){
@@ -2133,6 +2269,10 @@ function switchVehicle(to){
   hazards=[];animal=null;cargo=null;
   hazClock=Math.max(hazClock,6);animalClock=Math.max(animalClock,5);
   plane.wheels=false;plane.alt=back?62:6;input.boost=false;
+  /* POINT AT THE DESTINATION. On the ground he is on a road or a piste that
+     runs towards where he is going, so the change straightens him up rather
+     than leaving him driving sideways across the route. */
+  plane.heading=0;plane.x=0;plane.bank=0;
   markInterrupt();
   updateHUD();updateAlt();
   paused=true;engineUpdate();
@@ -2157,9 +2297,7 @@ function switchVehicle(to){
     <button class="cta" onclick="closeModal()">${back?'Back to the sky! ✈️':'Let us go! '+v.em}</button>
   `);
   if(autoRead){
-    const say=back
-      ? 'The weather cleared. Back into the sky, and up high is faster again.'
-      : v.switchSay;
+    const say=back ? TX('vehicle.toPlane') : TX(v.switchKey);
     setTimeout(()=>speakHL('vhH',()=>speakPlain(say)),250);
   }
   banner(title,2600,true);
@@ -2247,7 +2385,20 @@ function resize(){
 }
 window.addEventListener('resize',resize);resize();
 const lerp=(a,b,t)=>a+(b-a)*t;
-const zone=()=>ZONES[zoneIdx];
+/* ═══════════ WHAT THE GROUND LOOKS LIKE, PER VEHICLE ═══════════
+   On skis, everywhere is deep snow — including what would have been open
+   water, which freezes over. In the car there is no open water at all: a car
+   cannot drive on the sea, so that patch of map becomes fields instead. */
+const SNOW_ZONE={id:'snow',em:'❄️',name:'Snow fields',skyT:'#A8C8E6',skyB:'#EAF4FF',ground:'#EFF6FC',
+  props:['🌲','🌲','⛄','🏔️','🪵','🛷','🧊','🏚️','🎿','🌨️','⛷️','🗻'],
+  animals:['🦌','🐇','🦊','🐧','🦉']};
+function vehicleZone(z){
+  if(!z)return z;
+  if(vehicle==='ski')return SNOW_ZONE;
+  if(vehicle==='car'&&z.id==='lake')return ZONES.find(x=>x.id==='rural')||z;
+  return z;
+}
+const zone=()=>vehicleZone(ZONES[zoneIdx]);
 /* which zone the CURRENT position belongs to — a stable hash of a coarse
    world grid cell, so the same patch of world always looks the same,
    whichever direction you flew in from */
@@ -2267,7 +2418,7 @@ function rawZoneIndex(m,lat){
 function zoneIndexFor(m,lat){
   return (rawZoneIndex(m,lat)+zoneOffset)%ZONES.length;
 }
-const nextZone=()=>ZONES[zonePending!=null?zonePending:zoneIdx];
+const nextZone=()=>vehicleZone(ZONES[zonePending!=null?zonePending:zoneIdx]);
 function project(x,z){
   const t=Math.pow(1-z,1.9);
   const y=horizon+(H-horizon)*t;
@@ -2828,7 +2979,10 @@ function update(dt){
   /* new scenery arrives from the horizon when flying forward, and from under
      the plane when flying backwards — so a U-turn really does reverse the world */
   spawnClock-=Math.abs(zspeed)*dt;
-  if(spawnClock<=0){ spawnProp(fwd<0); spawnClock=0.30*0.20; }
+  /* on the ground the scenery is SOLID, so it is spaced out to leave real
+     room to steer between things; in the air it can be dense, because a plane
+     simply flies over it */
+  if(spawnClock<=0){ spawnProp(fwd<0); spawnClock=0.30*0.20*(VEH().ground?cfgNum('groundPropSpacing',2.6,1):1); }
   /* ...and while TURNING, it arrives from whichever side is swinging into
      view. Without this, flying side-on (where zspeed is 0, so the clock above
      never ticks) slowly emptied the landscape as everything slid away. */
@@ -2837,6 +2991,7 @@ function update(dt){
 
   props.forEach(p=>{ p.z-=zspeed*dt; p.x-=swing; });
   props=props.filter(p=>p.z>-0.08&&p.z<1.12&&p.x>-4.5&&p.x<4.5);
+  if(VEH().ground)checkStructureHit();
   /* clouds and kites are far off, so they swing at a gentler parallax */
   const skySlide=swingPx*0.5;
   clouds.forEach(c=>{
@@ -2871,10 +3026,10 @@ function update(dt){
            back (canInterrupt). Now the message is always true. */
         const linedUp=Math.abs(animal.x-plane.x)<0.36&&plane.alt<=26&&plane.wheels;
         toast(`${animal.em} `+(
-          plane.alt>26 ? VEH().missHigh
+          plane.alt>26 ? (vehicle==='plane'?TX('rescue.missTooHigh'):VEH().missHigh)
           : !plane.wheels ? VEH().missAct
-          : linedUp ? 'So close! One at a time — catch the next one 💛'
-          : 'Steer closer next time ⬅️➡️'));
+          : linedUp ? TX('rescue.missClose')
+          : TX('rescue.missSteer')));
       }
       if(animal.z<-0.1){animal=null;animalClock=animalGap();}
     }
@@ -3021,6 +3176,37 @@ function updateHazards(dt,worldSwing){
   if(hazards.length!==before)updateCalmBtn();
 }
 
+/* ═══════════ SOLID SCENERY, ON THE GROUND ═══════════
+   In the air the scenery is far below and he flies over it. On the ground it
+   is IN THE WAY: a car cannot drive through a house, and a skier cannot ski
+   through a tree. He has to steer around it — or jump it, if he is quick.
+   Only things at his own level count: get high enough in a jump and he
+   clears them, which is what makes the jump button worth pressing. */
+function structureHalfWidth(){ return cfgNum('structureWidth',0.30,0.05); }
+function checkStructureHit(){
+  if(invuln>0||paused||!started)return;
+  /* jumping clears it — anything above this height is over the roof */
+  const clears=cfgNum('jumpClears',30,5);
+  if(plane.alt>=clears)return;
+  for(const p of props){
+    /* only what is level with him right now, not the distant scenery */
+    if(p.z>0.16||p.z<0.02)continue;
+    if(Math.abs(p.x-plane.x)>structureHalfWidth())continue;
+    p.hit=true;
+    bumpStructure(p);
+    return;
+  }
+}
+function bumpStructure(p){
+  /* the same damage path as anything else that hits him, so calm power and
+     kindness shields protect him here exactly as they do in the air */
+  hitPlane({sx:W/2,sy:planeScreenY(),def:{em:p.em,nm:'a '+(vehicle==='car'?'building':'tree')}});
+  if(invuln>0){                       /* it landed — nudge him about steering */
+    speakNotice(TX('vehicle.carBump'));
+    /* shove the obstacle behind him so one bump cannot register twice */
+    p.z=-0.2;
+  }
+}
 function hitPlane(h){
   if(started)setTimeout(saveProgress,50);
 
@@ -3911,9 +4097,8 @@ function offCourseWatch(wrong,rel){
   const away=Math.abs(rel)>2.6;
   const where=cap1(curMission.placeName);
   banner('🧭 Wrong way! Look at the radar',2600,true);
-  speakNotice(away
-    ? `You are flying away from ${curMission.placeName}. Turn all the way around, and watch the red radar.`
-    : `You are going the wrong way. ${where} is ${Math.round(milesLeft())} miles behind you now. Follow the red radar.`);
+  speakNotice(TX(away?'journey.offCourseFar':'journey.offCourse',
+                 {place:away?curMission.placeName:where,miles:Math.round(milesLeft())}));
 }
 function updateDrawer(){
   updateCalmBtn();
@@ -4611,10 +4796,12 @@ function tryAns(i){
 }
 
 /* ═══════════ ADAPTIVE FLOW + KIND FAILURE ═══════════ */
-function streakUp(){
+function streakUp(quiet){
   streak++;failsThisChallenge=0;
   if(streak%3===0){flowAdj=Math.min(1.35,flowAdj+0.07);}
-  if(Math.random()<0.6)speakPlain(praise());
+  /* `quiet` is for games where a step happens many times over — sixteen
+     spoken "well done"s in one jigsaw is not encouragement, it is noise */
+  if(!quiet&&Math.random()<0.6)speakPlain(praise());
 }
 function flowMiss(el){
   streak=0;flowAdj=Math.max(0.75,flowAdj-0.1);failsThisChallenge++;
@@ -4655,10 +4842,10 @@ function showShakeItOff(){
          breaths:0, cycle:0, sense:0};
   renderReset();
   if(useBreath){
-    speakPlain('That is okay. Getting it wrong means you are learning. Let us breathe slowly together.');
+    speakPlain(TX('calm.resetKind')+' Let us breathe slowly together.');
     resetBreathLoop();
   }else{
-    speakPlain('That is okay. Getting it wrong means you are learning. Let us feel our body for a moment.',
+    speakPlain(TX('calm.resetKind')+' Let us feel our body for a moment.',
       ()=>speakPlain(RESET_SENSE[0].say));
   }
 }
@@ -4758,7 +4945,7 @@ function resetDone(){
   earnCalm(1,'you came back to yourself');
   addPoints(CFG.groundBonus);updateHUD();
   confettiBurst();fanfare();
-  speakPlain('You came all the way back. '+praise()+' Now let us try again.');
+  speakPlain(TX('calm.resetBack')+' '+praise()+' Now let us try again.');
   setTimeout(()=>{ modalEl.innerHTML=savedModalHTML; addSpeakers(); },1200);
 }
 
@@ -4907,12 +5094,9 @@ function showSolveOnly(){
    doing it together is what makes it work. One part per screen, never a
    list to remember. */
 const GROUND_STEPS=[
-  {em:'🤲', part:'PALM', t:'Feel your PALMS',
-   say:'Put your palms together with {n}. Feel how warm they are. Press them, then let go.'},
-  {em:'😌', part:'FACE', t:'Feel your FACE',
-   say:'Now your face, with {n}. Let your forehead go soft. Let your jaw go loose.'},
-  {em:'🦵', part:'LEGS', t:'Feel your LEGS',
-   say:'Now your legs, with {n}. Press your feet down. Feel how strong and steady they are.'}
+  {em:'🤲', part:'PALM', t:'Feel your PALMS', key:'calm.groundPalm'},
+  {em:'😌', part:'FACE', t:'Feel your FACE', key:'calm.groundFace'},
+  {em:'🦵', part:'LEGS', t:'Feel your LEGS', key:'calm.groundLegs'}
 ];
 let ground=null;
 function showGrounding(){
@@ -4921,8 +5105,8 @@ function showGrounding(){
   /* the opening line names what is happening, in the animal's words, so the
      exercise has a reason before it has instructions */
   if(autoRead)setTimeout(()=>speakPlain(
-    `${rescue.name} feels all wound up and fidgety. Wound-up bodies calm down one part at a time. Let us do it together.`,
-    ()=>speakPlain(GROUND_STEPS[0].say.split('{n}').join(rescue.name))),250);
+    TX('calm.groundIntro'),
+    ()=>speakPlain(TX(GROUND_STEPS[0].key))),250);
 }
 function renderGrounding(){
   const s=GROUND_STEPS[ground.step];
@@ -4942,7 +5126,7 @@ function renderGrounding(){
           <span class="stick">${i<ground.step?'✅':''}</span>
         </div>`).join('')}
     </div>
-    <p class="msub" id="gndQ">${s.say.split('{n}').join(esc(rescue.name))}</p>
+    <p class="msub" id="gndQ">${esc(TX(s.key))}</p>
     <button class="cta mint" onclick="groundNext()">Done — that part feels calmer 👍</button>
   `);
   /* the first screen is narrated by showGrounding()'s two-part intro */
@@ -4955,7 +5139,7 @@ function groundNext(){
   ground=null;
   earnCalm(1,'you calmed a wound-up body, one part at a time');
   challengeComplete(
-    `${esc(rescue.name)} is not fidgety any more — palms calm, face calm, legs calm. You did it together.`,
+    esc(TX('calm.groundDone')),
     null,0);
 }
 function showNeedStep(){
@@ -5088,18 +5272,14 @@ function feelDone(bonus){
    will reach for a fix long before he reaches for listening, so the animal
    keeps saying which one it actually wanted — not as a rule, as a thank you.
    Several wordings, so it lands as a real voice and not a slogan. */
-const UNDERSTOOD_LINES=[
-  'Thank you for listening first. A good friend understands me before they fix me. Being understood helps me most of all.',
-  'Thank you. You listened before you helped. Feeling understood helps me even more than mending the problem.',
-  'Thank you for hearing me. A good friend understands first. That helps more than fixing it.',
-  'Thank you. You understood me. That is the bit that helps most — more than fixing anything.'
-];
-let understoodIdx=Math.floor(Math.random()*UNDERSTOOD_LINES.length);
+let understoodIdx=0;
 function understoodLine(){
   /* walks the list rather than picking at random, so the same line never
-     comes round twice in a row */
-  understoodIdx=(understoodIdx+1)%UNDERSTOOD_LINES.length;
-  return UNDERSTOOD_LINES[understoodIdx];
+     comes round twice in a row. The list itself lives in the settings file. */
+  const list=TXlist('nvc.understood');
+  if(!list.length)return '';
+  understoodIdx=(understoodIdx+1)%list.length;
+  return txFill(list[understoodIdx]);
 }
 function understoodHTML(){
   return `<div class="hintline understood">💛 "${esc(understoodLine())}"</div>`;
@@ -5409,17 +5589,12 @@ const BREATH_SUB='Lie down. Put your teddy — or this phone — on your tummy. 
    feelings exercise — and he chooses to say yes. Being ASKED, and agreeing,
    is most of what makes it a kindness rather than a chore. Every animal
    asks; only the wording changes. */
-const BREATH_ASKS=[
-  'My tummy is all fluttery and I cannot settle. I need to feel calm and steady. Will you do belly breathing with me?',
-  'Everything feels too fast inside me. I need to be still for a moment. Will you do belly breathing with me?',
-  'I am all wound up and my heart is thumping. I need to feel grounded. Will you do belly breathing with me?',
-  'I feel wobbly and I cannot get quiet. I need calm. Will you do belly breathing with me?',
-  'My thoughts are jumping everywhere. I need to slow right down. Will you do belly breathing with me?'
-];
-let breathAskIdx=Math.floor(Math.random()*BREATH_ASKS.length);
+let breathAskIdx=0;
 function breathAskLine(){
-  breathAskIdx=(breathAskIdx+1)%BREATH_ASKS.length;
-  return BREATH_ASKS[breathAskIdx];
+  const list=TXlist('calm.breathAsk');
+  if(!list.length)return '';
+  breathAskIdx=(breathAskIdx+1)%list.length;
+  return txFill(list[breathAskIdx]);
 }
 function askForBreath(){
   const ask=breathAskLine();
@@ -5626,7 +5801,7 @@ function doShare(amt){
     /* no extra "thanks for sharing" card — the clap, the confetti and one
        short spoken line ARE the notification; then straight back to flying */
     clapSound();confettiBurst();
-    speakPlain('Thank you!');
+    speakPlain(TX('share.thanks'));
     /* closeModal() FIRST: challengeComplete() only knows how to close or
        replace the screen for the modes it lists — for an opportunistic
        ask (ctxMode 'sharing') it does nothing at all, and the screen used
@@ -6081,8 +6256,10 @@ function showArchery(){
     <button class="cta" id="arBtn" onclick="archShoot()">Shoot! 🏹</button>
   `);
   /* one path only — the old code could start the round twice */
-  if(autoRead&&!suppressAutoRead) autoReadIf('arQ',archStart);
-  else setTimeout(archStart,300);
+  /* NARRATION HERE IS DELIBERATELY BARE: only whose turn it is. The score,
+     the hits and the misses are all on screen already, and reading every one
+     of them aloud buried the one thing he actually needs to hear. */
+  setTimeout(archStart,300);
 }
 function archSetTurn(turn,note){
   if(!arch)return;
@@ -6144,8 +6321,7 @@ function archShoot(){
   const btn=document.getElementById('arBtn');
   if(btn){btn.disabled=true;btn.textContent=bullseye?'Bullseye! 🎯':hit?'2 points 🏹':'Missed 🏹';}
   arch.locked=true;
-  /* SHORT · KIND · RIGHT NOW — one line, said once */
-  speakPlain(hit?`${praise()} ${pts} points!`:'Missed. Now it is Pip’s turn.');
+  speakPlain(TX('turns.pipTurn'));
 
   /* ── THE HANDOVER: quick and easy to see. Pip stands up, shoots, sits back
      down — one spoken line for the whole swap, not three. ── */
@@ -6165,12 +6341,13 @@ function archShoot(){
       if(sc2)sc2.textContent=`You ${arch.you} · 🦊 Pip ${arch.pip}`;
       const n=document.getElementById('arNote');
       if(n)n.textContent=pipPts?`🦊 Pip got ${pipPts}!`:'🦊 Pip missed!';
-      speakPlain(pipPts?`Pip got ${pipPts}.`:'Pip missed.');
+      /* silent — the score line and the note already say it */
       arch.round++;
       setTimeout(()=>{
         if(!arch)return;
         if(arch.round>=cfgNum('archeryRounds',3,1)){ archFinish(); return; }
         archSetTurn('you',`Round ${arch.round+1} of ${cfgNum('archeryRounds',3,1)} — your turn!`);
+        speakPlain(TX('turns.yourTurn'));
         const b2=document.getElementById('arBtn');
         if(b2){b2.disabled=false;b2.className='cta';b2.textContent='Shoot! 🏹';}
         archStart();
@@ -6246,7 +6423,9 @@ function showBuild(){
     ${jigRefHTML(-1)}
     <button class="cta" onclick="jigBegin()">Start the jigsaw 🧩</button>
   `);
-  autoReadIf('bdQ',()=>speakPlain('Look at the whole picture first. Then find the piece that fits.'));
+  /* no narration here: the picture, the glowing hole and the marked
+     reference say it better than words, and reading them out every round
+     was just noise over a quiet, looking-and-thinking game */
 }
 function jigBegin(){ if(jig)jigTurn(); }
 /* the first hole still waiting for a piece */
@@ -6314,7 +6493,6 @@ function jigTurn(){
     ${jigBoard()}
     <p class="msub" id="bdY">Look at the glowing hole, and at the marked bit of the picture. Which piece is it? Tap it.</p>
   `);
-  autoReadIf('bdY');
 }
 function jigPlace(i){
   if(!jig||jig.busy)return;
@@ -6325,12 +6503,12 @@ function jigPlace(i){
     /* Trying a piece that turns out not to fit is how a jigsaw is DONE, so
        it costs nothing here — no strike, no reset, just put it back. */
     softMiss(document.getElementById('jp'+i));
-    speakNotice('Not that one. Look at the marked bit of the picture.');
+    /* silent: the piece shakes, which is answer enough */
     return;
   }
   jig.tray.splice(i,1);
   jig.slots[slot]=k;
-  streakUp();
+  streakUp(true);          /* silent: the click and the piece landing say it */
   tone(880,0.12,'triangle',0.1);
   if(jigNextSlot()<0){ jigDone(); return; }
   jigTurn();
@@ -7806,7 +7984,11 @@ const DASH_GROUPS=[
     {k:'altSpeedBonus',   t:'Extra speed for flying high',   min:0, max:1, step:0.05},
     {k:'jumpRise',        t:'How fast the car/skier jumps',  min:20,max:400,step:10},
     {k:'jumpFall',        t:'How fast they fall back down',  min:20,max:400,step:10},
-    {k:'jumpHeight',      t:'How high a jump goes',          min:15,max:100,step:1}
+    {k:'jumpHeight',      t:'How high a jump goes',          min:15,max:100,step:1},
+    {k:'jumpClears',      t:'Jump height that clears a building', min:5,max:100,step:1},
+    {k:'groundPropSpacing',t:'How far apart solid scenery sits',  min:1,max:8,  step:0.2},
+    {k:'groundAgility',   t:'How much sharper a car/skier steers',min:1,max:5,  step:0.1},
+    {k:'structureWidth',  t:'How wide a solid thing is',         min:0.05,max:1,step:0.05}
   ]},
   {id:'learn', em:'📚', name:'Learning', tab:'Learning', fields:[
     {k:'shareAskChance',  t:'How often an animal asks to share', min:0, max:1, step:0.05},
