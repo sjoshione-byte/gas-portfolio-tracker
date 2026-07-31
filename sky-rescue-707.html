@@ -1262,7 +1262,18 @@ const DEFAULT_TEXT={
       'Thank you. You listened before you helped. Feeling understood helps me even more than mending the problem.',
       'Thank you for hearing me. A good friend understands first. That helps more than fixing it.',
       'Thank you. You understood me. That is the bit that helps most — more than fixing anything.'
-    ]
+    ],
+    feelCalmTitle:'Help {n} feel calm!',
+    landedTitle:'You landed next to {n}!',
+    feelQ:'How does {n} feel?',
+    needQ:'What would {n} love to have?',
+    reqQ:'What will help {n}?',
+    ownIdeaBtn:'My OWN kind idea! (+{bonus} extra)',
+    ownIdeaTitle:'Make up your own idea!',
+    ownIdeaSub:'What is YOUR kind way to help {n}? Kind ideas are the best ideas.',
+    ownIdeaPlaceholder:'like: sing {n} a quiet song…',
+    ownIdeaCta:'That is my plan! 💡',
+    backToList:'← back to the list'
   },
   /* calming, grounding and breathing */
   calm:{
@@ -1292,7 +1303,9 @@ const DEFAULT_TEXT={
     distanceClose:'Almost there! {place} is only {miles} miles away.',
     offCourse:'You are going the wrong way. {place} is {miles} miles behind you now. Follow the red radar.',
     offCourseFar:'You are flying away from {place}. Turn all the way around, and watch the red radar.',
-    highFly:'Up high the air is thin, so your plane flies faster. Down low it is slower.'
+    highFly:'Up high the air is thin, so your plane flies faster. Down low it is slower.',
+    wrongWayBanner:'🧭 Wrong way! Look at the radar',
+    gpsSay:'{place} is {miles} miles away, {dir}. You have flown {flown} miles so far.'
   },
   /* the weather changing what he travels in */
   vehicle:{
@@ -1307,12 +1320,312 @@ const DEFAULT_TEXT={
     missTooHigh:'Too high! Fly lower next time 🛬',
     missClose:'So close! One at a time — catch the next one 💛',
     missSteer:'Steer closer next time ⬅️➡️',
-    turnedAway:'{n} You turned away from {name}. Another friend will come 💛'
+    turnedAway:'{n} You turned away from {name}. Another friend will come 💛',
+    flewAway:'{n} You flew away from {name}. Another friend will come 💛'
   },
   /* sharing points */
   share:{
     thanks:'Thank you!',
-    notNow:'{n} smiles. "That is okay! Maybe another day."'
+    notNow:'{n} smiles. "That is okay! Maybe another day."',
+    earnFirst:'Earn a few points first 💛',
+    earnFirstSay:'You have no points yet. Help an animal, then you can share.',
+    ask:'Do you want to share some points with {n}?',
+    keep:'You have {score}. You would keep {keep}.',
+    say:'Use plus and minus to pick how many. Then tap Share. Or tap Not now.',
+    shareCta:'💝 Share',
+    notNowCta:'Not now 🙂',
+    thankCard:'{n} says thank you! 💛'
+  },
+
+  /* hello, and picking a mission */
+  welcome:{
+    prefixAge:'You are {age} years old, and today ',
+    prefixNoAge:'Today ',
+    body:'you are flying a big plane. It is full of fuel. Now — where shall we fly?',
+    cta:'Choose my mission 🗺️'
+  },
+
+  /* the job briefing, once a mission is picked */
+  mission:{
+    sub:'Listen, Captain {name}. Here is your job:',
+    acceptCta:'Yes, I will do it! 🫡',
+    acceptSay:'Yes, I will do it!',
+    readyPrompt:'Now press: Yes, I will do it.',
+    newMissionBanner:'🗺️ New mission — {miles} miles',
+    goCta:'Let us go! 🛫',
+    keepFlyingCta:'Keep flying! ✈️'
+  },
+
+  /* the two always-there helpers, taught once before the first take-off */
+  orientation:{
+    title:'Two buttons you can press ANY time',
+    sub:'Captain, remember these two buttons. They are always there. You never have to ask.',
+    calmLabel:'press it any time, even when the sky is clear.',
+    calmSmall:'Breathe with your bear. It makes storms and dragons stop. It also fills up your CALM dial.',
+    hangarLabel:'press it any time to mend your engines and spend your points.',
+    hangarSmall:'A broken engine can only be mended in the hangar, with your repairs money.',
+    drawerLabel:'pull the tab on the right to see points, stars, and your money.',
+    drawerSmall:'CALM and HANGAR are in the drawer too, so you can always find them.',
+    cta:'Got it — let’s fly! 🛫',
+    ctaSay:'Got it. Let us fly!',
+    say:'Press CALM any time. Breathing makes storms stop, and it fills your calm dial. Press HANGAR any time to mend your engines and spend your points. Both buttons are at the bottom of the screen.',
+    readyPrompt:'When you are ready, press: Got it, let us fly.',
+    takeoffBanner:'🫡 Take off, Captain {name}!',
+    takeoffSay:'Off we go, Captain {name}. Everything is loaded. Let us fly.'
+  },
+
+  /* the plane check, before every first take-off */
+  preflight:{
+    title:'Check the plane',
+    sub:'Rub the dirty marks off the window. Then hammer the loose nails in.',
+    say:'Rub the dirty marks away. Then tap each nail three times to hammer it in.',
+    skipCta:'Skip it — fly now',
+    cleanLine:'All clean! A clean plane is a lighter plane, and a lighter plane flies faster. You get {pct} per cent more speed.',
+    cleanBanner:'✨ All clean — {pct}% faster!',
+    skipSay:'You skipped the check. The plane will feel heavy and slow.',
+    skipBanner:'⚠️ Skipped — the plane feels heavy'
+  },
+
+  /* CALM POWER — picking how to calm a troublemaker */
+  calmChooser:{
+    title:'CALM POWER!',
+    subTrouble:'Trouble in the sky: {list}. A calm brain is stronger than a storm. Pick your calm:',
+    subClear:'The sky is clear. This is a good time to practise being calm.',
+    breatheLabel:'Breathe with belly-bear',
+    breatheAll:' — calm the WHOLE sky, and get {amt} calm',
+    breathePractice:' — practise, and get {amt} calm',
+    feelingsLabel:'Listen to its feelings — calm one troublemaker',
+    codeLabel:'Crack the calm code — calm one troublemaker',
+    hint:'💛 Feelings and 🧮 calm codes wake up when trouble comes!',
+    backCta:'Back to flying! ✈️'
+  },
+  /* what happens after a calming exercise finishes */
+  calmResult:{
+    freezeOneTitle:'{n} is calm now!',
+    freezeAllTitle:'Everything went calm…',
+    freezeAllBody:'Your slow belly breaths spread all across the sky. The storms went quiet. The dragons yawned. That is how strong calm is.',
+    practiceTitle:'Calm practice done!',
+    practiceBody:'You practised being calm while the sky was clear. Now it will be easy to find when a storm comes.',
+    repairToast:'🧊 +{amt} calm · 🏅 +{pts} points',
+    repairSay:'Breathing gave you {amt} calm power, and {pts} points. Off to the hangar.',
+    backCta:'Back to the sky! ✈️'
+  },
+
+  /* a safe landing, and starting again after a crash */
+  landed:{
+    title:'Safe landing, Captain!',
+    sub:'Your plane is safe on the ground. The hangar can fix engines.',
+    hangarLabel:'Go to the HANGAR and fix the engines',
+    breatheLabel:'Breathe first, while you wait — earn +{pts} points',
+    keepLabel:'Keep flying like this'
+  },
+  crash:{
+    sub:'Your plane glided down and landed with a bump. Everyone is okay. You can pay the crew to fix it, or start again.',
+    payLabel:'Pay the crew {cost} points (you have {score})',
+    restartLabel:'Start a brand-new adventure (points and stars go back to zero)',
+    fixedBanner:'🛠️ All engines fixed!',
+    fixedSay:'All fixed! That cost {cost} points. You have {score} points left.',
+    freshBanner:'🛫 Fresh start!',
+    resetPrompt:'Tap again to start over.',
+    resetToast:'↻ Tap again to start over'
+  },
+
+  /* the two-way choice mid-flight */
+  fork:{
+    title:'Two ways to go!',
+    sub:'Which way will you fly, Captain?',
+    stormLabel:'The Storm Way',
+    stormDesc:'bumpy, but a very rare animal needs you (double points!)',
+    calmLabel:'The Calm Way',
+    calmDesc:'smooth sky, and some quiet breathing (+{pts})',
+    stormSay:'The Storm Way. Bumpy, but a very rare animal needs you. Double points.',
+    calmSay:'The Calm Way. Smooth sky, and some quiet breathing.',
+    stormBanner:'⛈️ Storm way — rare animal, double points!'
+  },
+
+  /* teaching the autopilot IF/THEN before a storm */
+  autopilot:{
+    title:'Teach the autopilot',
+    sub:'A storm is coming! Tell the plane what to do BEFORE it starts. Pick the kind, safe THEN for each IF.',
+    cta:'Start the autopilot! 🤖',
+    onBanner:'🤖 Autopilot on',
+    onSay:'{praise} The autopilot knows what to do. Planning first is what calm pilots do.',
+    notYetSay:'{notYet} {right} of {total} are right. Have another look.',
+    notYetToast:'🤖 {notYet} {right} of {total} are right.'
+  },
+
+  /* who is flying, adding a pilot, and resuming a saved flight */
+  profile:{
+    who:'Who is flying today?',
+    addNew:'Add a new pilot',
+    newPilotSub:'Age {age} — new pilot, first flight!',
+    addTitle:'Add a new pilot',
+    addSub:'What is their name, and how old are they? The game picks the right level by itself.',
+    addCta:'➕ Add this pilot',
+    backCta:'← Back',
+    addedToast:'✅ {name} added — age {age}, {band}',
+    addedSay:'{name} has been added. Age {age}.',
+    typeNameFirst:'Type a name first ✏️',
+    addDobOrAge:'Add a date of birth, or an age ✏️',
+    typeValidAge:'Type an age between 1 and 18 ✏️',
+    welcomeBack:'Welcome back, Captain {name}!',
+    resumeSub:'Here is exactly where you stopped.',
+    resumeSay:'You have {score} points, {calm} calm, and you have helped {rescues} animals. {place} is {miles} miles away. Shall we keep going?',
+    keepFlying:'Keep flying! ✈️',
+    settingsFirst:'Settings first ⚙️'
+  },
+
+  /* the hangar */
+  shop:{
+    title:'Hangar',
+    brokenHint:'⚠️ {count} engine{s} broken.',
+    cleanAgain:'Clean the plane again',
+    cleanDirty:'Clean the plane — it is dirty!',
+    withdrawLabel:'Take some out of savings',
+    shareCta:'💝 Share some points',
+    backCta:'Back to the sky! ✈️',
+    balancesSay:'You have {repairs} for repairs, {fun} for fun, and {savings} saved up. You need {goal} saved up for the golden plane.',
+    splitSay:'You have {repairs} for repairs, {fun} for fun, and {savings} saved up. Here is how it works. Every time you win points, they get shared out for you. {r10} bits out of 10 go to repairs, to mend your plane. {f10} bits go to fun, for paint and stickers. And {s10} bits get saved up for the golden plane.',
+    cantAffordToastSavings:'Not enough — but you have savings 🏦',
+    cantAffordTitle:'Not quite enough…',
+    cantAffordSub:'Your {pot} pot has {have}, and this costs {cost}. You need {short} more. But you have {vault} points saved up! You can take some out if you want to.',
+    takeOutCta:'Take some out of savings',
+    keepSavingCta:'Keep saving — I will earn it',
+    cantAffordToast:'Not enough points yet 💛',
+    cantAffordSay:'Not enough points yet. You need {cost} {pot}, and you have {have}. Help one more animal and you will get there.',
+    repairMendedSay:'Engine mended! That cost {cost} from your repairs money. You have {left} left.',
+    newEngineSay:'A new engine! That cost {cost} from your repairs money. You have {left} left. Your plane is stronger now!',
+    paintSay:'New paint! That cost {cost} from your fun money. You have {left} left.',
+    stickerSay:'A new sticker! That cost {cost} from your fun money. You have {left} left.',
+    vaultSay:'The GOLDEN 707! You saved up, and look what you built!'
+  },
+  withdraw:{
+    title:'Take some out of savings?',
+    sub:'You have {vault} points saved up. Your {pot} pot has {now}. How many shall we move across?',
+    toRepairs:'🔧 to repairs',
+    toFun:'🎉 to fun',
+    hint:'💡 Saved points grow by {pct}% every {mins} minutes. Points you take out stop growing.',
+    cta:'🏦 Take out',
+    leaveCta:'← Leave it saved',
+    chooseFirst:'Choose how many first ✏️',
+    movedSay:'{amt} points moved from savings to {pot}. You have {vault} still saved up.',
+    askSay:'You have {vault} points saved up. You can take some out for {pot} if you need to. Choose how many, then press Take it out.'
+  },
+
+  /* the mystery gift that floats by */
+  cargo:{
+    banner:'🎁 Gift ahead!',
+    say:'A surprise gift is floating ahead! Fly into it!',
+    title:'Surprise gift!',
+    backCta:'Back to the sky! ✈️',
+    bigShield:'A BIG shield! Nothing can hurt you for 15 seconds.',
+    sticker:'A special sticker! It is on your plane already.',
+    bagTitle:'A bag of {amt} points!',
+    bagSub:'Where do you want to put it, Captain?',
+    repairsLabel:'Repairs — to mend engines when they break',
+    funLabel:'Fun — for paint and stickers',
+    saveLabel:'Save it — it GROWS by {pct}% every {mins} minutes',
+    bagSay:'Repairs, to mend your engines. Fun, for paint and stickers. Or save it, and it grows all by itself every {mins} minutes.',
+    depositBanner:'💰 +{amt} → {pot}',
+    depositSavedSay:'{amt} points saved. Good thinking! Every {mins} minutes it grows a bit more, all by itself.',
+    depositOtherSay:'{amt} points into your {pot} pot.'
+  },
+
+  /* interest paid on savings */
+  bank:{
+    noneSaved:'🏦 Save points to grow them!',
+    noneSavedSay:'Savers get a surprise. You have nothing saved yet. Save some points, and they grow all by themselves.',
+    grewBanner:'🏦 Savings grew +{amt}!',
+    grewSay:'Good news! You saved your points, so the bank gave you {amt} more.'
+  },
+  /* the calm glow and kindness rings that soak up a hit */
+  glow:{
+    kindShieldToast:'💛 Kindness shield up!',
+    kindShieldSay:'The kindness you gave away came back to keep you safe.',
+    calmStatus:'🧊 Calm {calm} of {max} — the glow keeps you safe',
+    calmGain:'🧊 +{n} CALM POWER{why}! Now you have {calm}.'
+  },
+  /* shared kindness returning as a surprise */
+  karma:{
+    repairBanner:'💛 A repair crew came! Engine fixed.',
+    repairSay:'The animals you shared with sent a crew to fix your engine!',
+    shieldBanner:'💛 A gift shield!',
+    shieldSay:'The animals you shared with sent a shield to keep you safe!'
+  },
+  /* hazards arriving, warning, leaving and returning */
+  hazard:{
+    animalBanner:'🆘 {name} ahead — {hint}',
+    lookOut:'Look out! {nm} is coming!',
+    rocketBanner:'⚠️ ROCKET! Go up or go down! 🚀',
+    rocketSay:'A rocket is coming! Go up high, or dive down low!',
+    sunBanner:'🌞 HOT SUN! GO DOWN ⬇️',
+    sunSay:'Hot sun! Dive down low, quickly!',
+    arriving:'{em} {nm} is coming!',
+    floatedAway:'{em} {nm} floated away.',
+    comingBack:'{em} {nm} is coming back!'
+  },
+  /* taking a hit */
+  hit:{
+    calmTook:'🧊 Your calm took the hit! ({calm} left)',
+    kindTook:'💛 Kindness took the hit! ({kind} left)',
+    bumpWarn:'💥 Bump! One more and an engine breaks ({strike}/{need})',
+    bumpWarnSay:'Careful! One more bump and an engine breaks.',
+    engineBreak:'💥 {breakLine} {engines}/{engineSlots} left',
+    engineBreakSay:'{breakLine} The hangar can fix it, with points.'
+  },
+  /* the autopilot rule actually firing */
+  autopilotEvt:{
+    saved:'🤖 Autopilot saved you!',
+    savedSay:'Autopilot dived low, just like you planned!',
+    flareDodged:'🌞 Great dive! The hot sun went over you!'
+  },
+  /* looking at the view, and boost being locked */
+  view:{
+    cockpitOn:'🧑‍✈️ Inside the plane — watch your dials, captain!',
+    cockpitOff:'✈️ Behind the plane'
+  },
+  boost:{
+    locked:'🛞 Wheels are down — no boost',
+    lockedSay:'Your {act} are down. Boost does not work now.'
+  },
+  /* the reset exercise after three misses */
+  reset:{
+    breatheIntro:'Let us breathe slowly together.',
+    bodyIntro:'Let us feel our body for a moment.',
+    breatheIn:'Breathe in.',
+    breatheOut:'And out.',
+    oneMoreRound:'Good. One more time around. Feet again.'
+  },
+  /* small games: memory, piano, tic-tac-toe, and the drawing game */
+  minigame:{
+    memoryHint:'Tap two cards. Find the two that match.',
+    pianoYourTurn:'Your turn. Follow the note names.',
+    listenAgain:'Listen again.',
+    drawFirst:'✏️ Draw something first!',
+    tttIntro:'Tic tac toe with Pip. You are the crosses. You go first.',
+    tttWin:'You won! Well played, friend, says Pip.',
+    tttLose:'Pip won this one. Good game! Every game makes you a bit better.',
+    tttDraw:'A draw! That was a fair game, says Pip.'
+  },
+  /* the belly-breathing exercise with the teddy */
+  teddyBreath:{
+    ready:'Lie back. Put your teddy, or this phone, on your tummy. I will help you breathe. Ready?',
+    in:'Breathe in… let your tummy go up… the bear goes up too…',
+    out:'Breathe out… slowly… the bear rides down…',
+    lovely:'Lovely. Keep going, just like that.',
+    realBonusToast:'📱 Real tummy breaths! +{amt}'
+  },
+  /* leaving the destination, and picking the next one */
+  arrival:{
+    newMissionCta:'Fly a NEW mission 🛫',
+    stayCta:'Stay a bit longer ✈️',
+    thanksSay:'Thank you, Captain. Thank you for not giving up.'
+  },
+  missionPicker:{
+    title:'Pick your mission, Captain',
+    sub:'Where will you fly today?',
+    cta:'Pick a mission, then take off 🛫',
+    ctaChosen:'Take off on this mission! 🛫'
   }
 };
 /* the parent's edits: `text` REPLACES a list, `addText` APPENDS to it */
@@ -1336,11 +1649,19 @@ const TEXT=(()=>{
 /* fill {n} {name} {place} {miles} and hand back the finished line */
 function txFill(s,vars){
   vars=vars||{};
-  const out=String(s)
-    .split('{n}').join(vars.n!=null?vars.n:(typeof rescue!=='undefined'&&rescue&&rescue.name?rescue.name:'your friend'))
-    .split('{name}').join(vars.name!=null?vars.name:(kidName||'Pilot'))
-    .split('{place}').join(vars.place!=null?vars.place:(typeof curMission!=='undefined'&&curMission?curMission.placeName:'the village'))
-    .split('{miles}').join(vars.miles!=null?vars.miles:'');
+  /* {n} {name} {place} {miles} always have a sensible fallback, drawn from
+     whatever is happening right now, so most lines need no vars at all.
+     Any OTHER {token} a line uses is filled from vars alone — this is how
+     screens.* wire in their own numbers (points, ages, percentages…)
+     without txFill needing to know about every one of them in advance. */
+  const withDefaults=Object.assign({
+    n:(typeof rescue!=='undefined'&&rescue&&rescue.name)?rescue.name:'your friend',
+    name:kidName||'Pilot',
+    place:(typeof curMission!=='undefined'&&curMission)?curMission.placeName:'the village',
+    miles:''
+  },vars);
+  let out=String(s);
+  for(const k in withDefaults)out=out.split('{'+k+'}').join(withDefaults[k]);
   /* a line written as "{place} is {miles} miles away" would otherwise start
      "the village is…" — capitalise the opening letter so hand-written wording
      reads properly without the writer having to think about it */
@@ -1363,6 +1684,54 @@ function TXlist(path){
   const [grp,key]=String(path).split('.');
   const v=(TEXT[grp]||{})[key];
   return Array.isArray(v)?v.slice():(v==null?[]:[v]);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GAME CONTENT, THE SAME WAY: content REPLACES, addContent APPENDS
+   ---------------------------------------------------------------------------
+   Every list of situations, puzzles, questions and quiz topics below wraps
+   its built-in array in one of these three, so it works exactly like `text`
+   does: a parent can rewrite the whole thing in settings.content.<name>, or
+   keep the built-ins and add more in settings.addContent.<name>.           */
+function mergeArr(name,builtin){
+  const rep=(RAW_SETTINGS.content||{})[name];
+  const add=(RAW_SETTINGS.addContent||{})[name];
+  let out=Array.isArray(rep)?rep.slice():builtin.slice();
+  if(Array.isArray(add))out=out.concat(add);
+  return out;
+}
+/* band-keyed lists: {t:[...], y:[...], m:[...], o:[...]} — spelling words,
+   say-it-right words */
+function mergeBands(name,builtin){
+  const rep=(RAW_SETTINGS.content||{})[name]||{};
+  const add=(RAW_SETTINGS.addContent||{})[name]||{};
+  const out={};
+  ['t','y','m','o'].forEach(b=>{
+    out[b]=Array.isArray(rep[b])?rep[b].slice():(builtin[b]||[]).slice();
+    if(Array.isArray(add[b]))out[b]=out[b].concat(add[b]);
+  });
+  return out;
+}
+/* two-level tables: {category:{t:[...],y:[...],m:[...],o:[...]}} — the
+   feeling and need vocabulary */
+function mergeSynTable(name,builtin){
+  const rep=(RAW_SETTINGS.content||{})[name]||{};
+  const add=(RAW_SETTINGS.addContent||{})[name]||{};
+  const bandsOf=src=>{
+    const o={}; ['t','y','m','o'].forEach(b=>{ o[b]=Array.isArray(src&&src[b])?src[b].slice():[]; });
+    return o;
+  };
+  const out={};
+  for(const cat in builtin)out[cat]=bandsOf(builtin[cat]);
+  for(const cat in rep){
+    if(!out[cat])out[cat]=bandsOf(null);
+    ['t','y','m','o'].forEach(b=>{ if(Array.isArray(rep[cat][b]))out[cat][b]=rep[cat][b].slice(); });
+  }
+  for(const cat in add){
+    if(!out[cat])out[cat]=bandsOf(null);
+    ['t','y','m','o'].forEach(b=>{ if(Array.isArray(add[cat][b]))out[cat][b]=out[cat][b].concat(add[cat][b]); });
+  }
+  return out;
 }
 
 /* BUGFIX: these two were frozen into consts at load time, so the matching
@@ -1512,7 +1881,7 @@ const BANDS = {t:'Ages 3–4', y:'Ages 5–7', m:'Ages 8–10', o:'Ages 11+'};
    ═════════════════════════════════════════════════════════════════════════ */
 
 /* ---------- FEELING CATEGORIES → synonyms, per age group ---------- */
-let FEELING_SYNS = {
+let FEELING_SYNS = mergeSynTable('feelingSyns', {
   sad: {
     t:[['😢','Sad'],['😢','Teary'],['🥺','Upset'],['😞','Left out']],
     y:[['😢','Sad'],['😢','Teary'],['🥺','Upset'],['😞','Left out'],['😔','Hurt inside'],['💧','Like crying'],['😿','Very sad'],['🫤','Not happy']],
@@ -1549,10 +1918,10 @@ let FEELING_SYNS = {
     m:[['😀','Happy'],['🥰','Grateful'],['🎉','Thrilled'],['😌','Content'],['✨','Proud'],['🤗','Joyful'],['😊','Glad'],['🌈','Hopeful']],
     o:[['😀','Happy'],['🥰','Grateful'],['🎉','Elated'],['😌','Content'],['✨','Proud'],['🌈','Hopeful'],['😊','Fulfilled'],['🙏','Thankful']]
   }
-};
+});
 
 /* ---------- NEED CATEGORIES → synonyms, per age group ---------- */
-let NEED_SYNS = {
+let NEED_SYNS = mergeSynTable('needSyns', {
   comfort: {
     t:[['🤗','a hug'],['🧸','a cuddle'],['💛','someone kind nearby']],
     y:[['🤗','a hug'],['🧸','a cuddle'],['💛','a kind friend'],['🫂','someone to sit close'],['🍪','something cosy'],['🛋️','a soft place to sit']],
@@ -1613,10 +1982,10 @@ let NEED_SYNS = {
     m:[['💪','encouragement'],['🌟','recognition'],['🚀','courage'],['🙌','belief in me'],['👏','acknowledgement']],
     o:[['💪','encouragement'],['🌟','recognition'],['🚀','courage'],['🙌','confidence'],['👏','acknowledgement']]
   }
-};
+});
 
 /* ---------- generic unkind options, used when a situation lists none ---------- */
-let RESOLUTION_WRONG = [
+let RESOLUTION_WRONG = mergeArr('resolutionWrong', [
   ['😜','Laugh and walk away'],
   ['🙉','Pretend you did not hear'],
   ['📱','Keep looking at your screen'],
@@ -1625,10 +1994,10 @@ let RESOLUTION_WRONG = [
   ['🤨','Say it is their own fault'],
   ['🙄','Say "that is no big deal"'],
   ['🚪','Walk off without a word']
-];
+]);
 
 /* ---------- THE SITUATIONS ---------- */
-let SITUATIONS = [
+let SITUATIONS = mergeArr('situations', [
   {tx:'{N} lost a favourite toy in the tall grass.', feeling:'sad', need:'comfort', resolution:'Give a hug and help look for it'},
   {tx:'{N}’s best friend moved far away.', feeling:'sad', need:'connection', resolution:'Sit close and be their friend today'},
   {tx:'Nobody saved {N} a seat at snack time.', feeling:'sad', need:'connection', resolution:'Save them a seat next to you'},
@@ -1667,7 +2036,7 @@ let SITUATIONS = [
 
   {tx:'{N} learned to fly today, after trying all week!', feeling:'happy', need:'encouragement', resolution:'Cheer, and say how hard they worked'},
   {tx:'{N} made a brand-new friend today.', feeling:'happy', need:'connection', resolution:'Be happy with them and hear all about it'}
-];
+]);
 
 const ANIMAL_NAMES = {'🐶':'Milo','🐱':'Luna','🐄':'Clover','🐑':'Wooly','🐖':'Pippin','🐴':'Chestnut','🦌':'Fern','🦊':'Rusty','🐿️':'Pip','🦉':'Sage','🐻':'Bruno','🦆':'Puddles','🐢':'Tuck','🦩':'Rosie','🐈':'Mochi','🐦':'Chirp','🐐':'Billy','🐬':'Splash'};
 const ANIMAL_SOUND = {'🐶':'dog','🐱':'cat','🐈':'cat','🐦':'bird','🦉':'bird','🦩':'bird','🦆':'duck','🐄':'moo','🐑':'moo','🐐':'moo','🐴':'moo','🐖':'moo','🐻':'moo'};
@@ -1675,7 +2044,7 @@ const ANIMAL_SOUND = {'🐶':'dog','🐱':'cat','🐈':'cat','🐦':'bird','🦉
 /* ═══════════ HAZARDS — obstacles that unlock by level ═══════════
    Every one has a name, a feeling and a short story, because in this game you
    calm trouble the way you calm a person. Stories kept short for a 6-year-old. */
-const HAZDEFS=[
+const HAZDEFS=mergeArr('hazDefs', [
   {id:'eagle',    em:'🦅', lvl:1, size:45, kind:'homing',  spd:55,  nm:'Skye the eagle',       fam:'tired',  story:'Skye the eagle has been flying all day. She is worn out and grumpy.'},
   {id:'storm',    em:'⛈️', lvl:2, size:72, kind:'storm',   spd:22,  nm:'Rumbles the storm',    fam:'mad',    story:'Rumbles the storm cloud is booming, because nobody ever wants it around.'},
   {id:'dragon',   em:'🐉', lvl:3, size:62, kind:'homing',  spd:70,  nm:'Ember the dragon',     fam:'mad',    story:'Ember the dragon is puffing fire. Someone took his shiny treasure without asking!'},
@@ -1685,7 +2054,7 @@ const HAZDEFS=[
   {id:'sat',      em:'🛰️', lvl:7, size:48, kind:'fall',    spd:65,  nm:'Beep the satellite',   fam:'tired',  story:'Beep worked for years with no break at all. Now she is tumbling down.'},
   {id:'missile',  em:'🚀', lvl:8, size:45, kind:'straight',spd:175, nm:'Zoomer the rocket',    fam:'scared', story:'Zoomer cannot slow down, and going so fast makes him scared.'},
   {id:'flare',    em:'🌞', lvl:9, size:94, kind:'flare',   spd:0,   nm:'Sunny the solar flare',fam:'mad',    story:'Sunny is burning hot with big feelings, and nowhere to put them.'}
-];
+]);
 
 /* what a troubled hazard needs, and what will help it */
 const HAZ_NEED={sad:'comfort',mad:'being_heard',scared:'safety',tired:'rest',mixed:'understanding'};
@@ -2117,19 +2486,19 @@ function payInterest(){
   const pct=(CFG.interestPercent!=null?CFG.interestPercent/100:0.10);
   const grew=Math.round(wVault*pct);
   if(grew<=0){
-    banner('🏦 Save points to grow them!',2600,true);
+    banner(TX('bank.noneSaved'),2600,true);
     /* say the lesson twice, then stop nagging — the banner still shows */
     interestNags++;
-    if(interestNags<=2)speakNotice('Savers get a surprise. You have nothing saved yet. Save some points, and they grow all by themselves.');
+    if(interestNags<=2)speakNotice(TX('bank.noneSavedSay'));
     return;
   }
   wVault+=grew;score+=grew;
   flyChip(grew);updateHUD();
   tone(700,0.1,'triangle',0.09);tone(950,0.12,'triangle',0.08,0.1);tone(1200,0.16,'triangle',0.07,0.22);
-  banner(`🏦 Savings grew +${grew}!`,3000,true);
+  banner(TX('bank.grewBanner',{amt:grew}),3000,true);
   /* SIMPLIFIED: "earned interest because you did not do wasteful spending"
      is not a sentence a six-year-old can hold. */
-  speakNotice(`Good news! You saved your points, so the bank gave you ${grew} more.`);
+  speakNotice(TX('bank.grewSay',{amt:grew}));
   saveProgress();
 }
 
@@ -2168,11 +2537,11 @@ function tapPlane(){
     shield=Math.max(shield,CFG.kindShieldSeconds||14);
     shieldKind='kind';
     fanfare();updateHUD();
-    toast('💛 Kindness shield up!',true);
-    speakPlain('The kindness you gave away came back to keep you safe.');
+    toast(TX('glow.kindShieldToast'),true);
+    speakPlain(TX('glow.kindShieldSay'));
     return;
   }
-  toast(`🧊 Calm ${Math.round(calmPower)} of ${calmMax()} — the glow keeps you safe`,true);
+  toast(TX('glow.calmStatus',{calm:Math.round(calmPower),max:calmMax()}),true);
 }
 function earnCalm(n,why){
   if(started)setTimeout(saveProgress,50);
@@ -2180,7 +2549,7 @@ function earnCalm(n,why){
   calmPower=Math.min(calmMax(),calmPower+n);
   calmEarnedTotal+=n;
   updateHUD();
-  toast('🧊 +'+n+' CALM POWER'+(why?' — '+why:'')+'! Now you have '+Math.round(calmPower)+'.');
+  toast(TX('glow.calmGain',{n,why:why?' — '+why:'',calm:Math.round(calmPower)}));
   tone(700,0.1,'sine',0.09);tone(950,0.14,'sine',0.08,0.1);
 }
 
@@ -2534,7 +2903,7 @@ function hazardWarn(def,line){
      single spoken warning. The banners that mirror this are silent. */
   hazardSound(def);
   setTimeout(klaxon,420);
-  if(autoRead)setTimeout(()=>speakPlain(line||`Look out! ${def.nm} is coming!`),950);
+  if(autoRead)setTimeout(()=>speakPlain(line||TX('hazard.lookOut',{nm:def.nm})),950);
 }
 function toggleSound(){
   audioInit();soundOn=!soundOn;
@@ -2732,7 +3101,7 @@ function spawnAnimal(){
   animal={em,name:ANIMAL_NAMES[em]||'Buddy',x:(Math.random()*1.2-0.6),z:1,missed:false,called:false};
   hazClock=Math.max(hazClock,gapStatic(12,6));
   cargoClock=Math.max(cargoClock,gapStatic(14,8));
-  banner(`🆘 ${animal.name} ahead — ${VEH().helpHint}`,3000,true);
+  banner(TX('hazard.animalBanner',{name:animal.name,hint:VEH().helpHint}),3000,true);
   animalCall(em);
   /* BUGFIX: capture the name now — the animal may be rescued (and set to null)
      before this delayed announcement fires. */
@@ -2774,7 +3143,7 @@ function spawnHazard(){
     hz.sy=def.kind==='straight'?py+(Math.random()*60-30):60+Math.random()*(H*0.5);
     hz.vx=(fromRight?-1:1)*def.spd*spdMul;
     hz.vy=0;
-    if(def.id==='missile'){alarmSound();banner('⚠️ ROCKET! Go up or go down! 🚀',2200,true);}
+    if(def.id==='missile'){alarmSound();banner(TX('hazard.rocketBanner'),2200,true);}
   }else if(def.kind==='fall'){
     hz.sx=W*0.25+Math.random()*W*0.5;
     hz.sy=-50;hz.vx=(Math.random()*30-15);hz.vy=def.spd*spdMul;
@@ -2786,16 +3155,16 @@ function spawnHazard(){
     hz.vx=(hz.sx<0?1:-1)*def.spd*spdMul;hz.vy=0;
   }else if(def.kind==='flare'){
     hz.timer=Math.max(1.6, 3.4 - lv*0.16);
-    banner('🌞 HOT SUN! GO DOWN ⬇️',2400,true);
+    banner(TX('hazard.sunBanner'),2400,true);
     alarmSound();
   }
   hazards.push(hz);
   /* the special hazards speak the INSTRUCTION, not just their name */
-  const warnLine = def.id==='missile' ? 'A rocket is coming! Go up high, or dive down low!'
-                 : def.kind==='flare' ? 'Hot sun! Dive down low, quickly!'
+  const warnLine = def.id==='missile' ? TX('hazard.rocketSay')
+                 : def.kind==='flare' ? TX('hazard.sunSay')
                  : null;
   hazardWarn(def,warnLine);
-  if(def.kind!=='flare'&&def.id!=='missile') banner(`${def.em} ${def.nm.split(' ')[0]} is coming!`,2400,true);
+  if(def.kind!=='flare'&&def.id!=='missile') banner(TX('hazard.arriving',{em:def.em,nm:def.nm.split(' ')[0]}),2400,true);
   updateCalmBtn();
 }
 
@@ -2933,13 +3302,13 @@ function update(dt){
     karma--;
     if(engines<engineSlots){
       engines++;
-      banner('💛 A repair crew came! Engine fixed.',2600,true);
-      if(autoRead)speakPlain('The animals you shared with sent a crew to fix your engine!');
+      banner(TX('karma.repairBanner'),2600,true);
+      if(autoRead)speakPlain(TX('karma.repairSay'));
     }else{
       shield=Math.max(shield,12);
       shieldKind='kind';
-      banner('💛 A gift shield!',2400,true);
-      if(autoRead)speakPlain('The animals you shared with sent a shield to keep you safe!');
+      banner(TX('karma.shieldBanner'),2400,true);
+      if(autoRead)speakPlain(TX('karma.shieldSay'));
     }
     fanfare();updateHUD();
   }
@@ -3036,11 +3405,11 @@ function update(dt){
     /* turned away from it? Let it go, and send another along. Without this the
        animal drifted off for ever and no new one could ever spawn. */
     if(animal&&Math.abs(animal.x)>3.2){
-      if(!animal.missed)toast(`${animal.em} You turned away from ${animal.name}. Another friend will come 💛`);
+      if(!animal.missed)toast(TX('rescue.turnedAway',{n:animal.em,name:animal.name}));
       animal=null;animalClock=animalGap();
     }
     if(animal&&animal.z>1.1){
-      if(!animal.missed)toast(`${animal.em} You flew away from ${animal.name}. Another friend will come 💛`);
+      if(!animal.missed)toast(TX('rescue.flewAway',{n:animal.em,name:animal.name}));
       animal=null;animalClock=animalGap();
     }
   }
@@ -3102,7 +3471,7 @@ function updateHazards(dt,worldSwing){
       if(h.life>22){
         h.leaving=true;
         h.sy-=26*dt;                       /* rises and fades away */
-        if(h.life>26){h.dead=true;toast(`${h.def.em} ${h.def.nm} floated away.`);}
+        if(h.life>26){h.dead=true;toast(TX('hazard.floatedAway',{em:h.def.em,nm:h.def.nm}));}
       }
     }
     if(h.def.kind!=='flare'){h.sx-=dxShift;}
@@ -3126,8 +3495,8 @@ function updateHazards(dt,worldSwing){
         /* AUTOPILOT: the rule the child programmed actually fires */
         if(autopilotOn&&Math.abs(pxc-h.sx)<70){
           shield=Math.max(shield,3);shieldKind='calm';apUsed++;
-          toast('🤖 Autopilot saved you!',true);
-          if(apUsed===1)speakPlain('Autopilot dived low, just like you planned!');
+          toast(TX('autopilotEvt.saved'),true);
+          if(apUsed===1)speakPlain(TX('autopilotEvt.savedSay'));
         }
       }
       if(h.bolt>0){
@@ -3139,7 +3508,7 @@ function updateHazards(dt,worldSwing){
       h.timer-=dt;
       if(h.timer<=0){
         if(plane.alt>42&&invuln<=0&&shield<=0)hitPlane(h);
-        else{toast('🌞 Great dive! The hot sun went over you!');addPoints(CFG.flareDodgePoints||25);updateHUD();}
+        else{toast(TX('autopilotEvt.flareDodged'));addPoints(CFG.flareDodgePoints||25);updateHUD();}
         h.dead=true;
       }
     }
@@ -3167,7 +3536,7 @@ function updateHazards(dt,worldSwing){
           h.sy=Math.max(50,py+(Math.random()*80-40));
         }
         hazardSound(h.def);
-        toast(`${h.def.em} ${h.def.nm} is coming back!`,true);
+        toast(TX('hazard.comingBack',{em:h.def.em,nm:h.def.nm}),true);
       }else h.dead=true;
     }
   }
@@ -3218,9 +3587,9 @@ function hitPlane(h){
     iceFx.push({x:(h&&h.sx)||W/2,y:(h&&h.sy)||120,t:0});
     freezeSound();
     if(soaked==='calm'){
-      toast(`🧊 Your calm took the hit! (${Math.round(calmPower)} left)`,true);
+      toast(TX('hit.calmTook',{calm:Math.round(calmPower)}),true);
     }else{
-      toast(`💛 Kindness took the hit! (${kindness} left)`,true);
+      toast(TX('hit.kindTook',{kind:kindness}),true);
     }
     updateHUD();updateCalmBtn();
     return;                                /* the hazard stays — it can strike again */
@@ -3235,8 +3604,8 @@ function hitPlane(h){
   const need=(CFG.strikesPerEngine||2);
 
   if(strikeCount<need){
-    toast(`💥 Bump! One more and an engine breaks (${strikeCount}/${need})`,true);
-    if(autoRead)speakPlain('Careful! One more bump and an engine breaks.');
+    toast(TX('hit.bumpWarn',{strike:strikeCount,need}),true);
+    if(autoRead)speakPlain(TX('hit.bumpWarnSay'));
     updateHUD();updateCalmBtn();
     return;
   }
@@ -3251,8 +3620,8 @@ function hitPlane(h){
   }else if(engines===1){
     enterEmergency();
   }else{
-    toast(`💥 ${VEH().breakLine} ${engines}/${engineSlots} left`,true);
-    if(autoRead)speakPlain(`${VEH().breakLine} The hangar can fix it, with points.`);
+    toast(TX('hit.engineBreak',{breakLine:VEH().breakLine,engines,engineSlots}),true);
+    if(autoRead)speakPlain(TX('hit.engineBreakSay',{breakLine:VEH().breakLine}));
   }
 }
 
@@ -3918,7 +4287,7 @@ function toggleView(){
   document.getElementById('altwrap').style.display=viewMode==='cockpit'?'none':'block';
   const tap=document.getElementById('planetap');
   if(tap&&viewMode==='cockpit')tap.classList.remove('show');
-  toast(viewMode==='cockpit'?'🧑‍✈️ Inside the plane — watch your dials, captain!':'✈️ Behind the plane');
+  toast(viewMode==='cockpit'?TX('view.cockpitOn'):TX('view.cockpitOff'));
   updatePanel(true);
 }
 
@@ -4026,7 +4395,7 @@ function sayGps(){
   if(Math.abs(rel)>2.2) dir='behind you. Turn all the way around';
   else if(rel>0.5) dir='over to your right';
   else if(rel<-0.5) dir='over to your left';
-  speakPlain(`${cap1(curMission.placeName)} is ${Math.round(milesLeft())} miles away, ${dir}. You have flown ${Math.round(miles)} miles so far.`);
+  speakPlain(TX('journey.gpsSay',{place:cap1(curMission.placeName),miles:Math.round(milesLeft()),dir,flown:Math.round(miles)}));
 }
 function updateGps(){
   const c=document.getElementById('compass');
@@ -4096,7 +4465,7 @@ function offCourseWatch(wrong,rel){
   markInterrupt();
   const away=Math.abs(rel)>2.6;
   const where=cap1(curMission.placeName);
-  banner('🧭 Wrong way! Look at the radar',2600,true);
+  banner(TX('journey.wrongWayBanner'),2600,true);
   speakNotice(TX(away?'journey.offCourseFar':'journey.offCourse',
                  {place:away?curMission.placeName:where,miles:Math.round(milesLeft())}));
 }
@@ -4255,8 +4624,8 @@ function tryBoost(on){
   if(on&&plane.wheels){
     input.boost=false;
     if(btn)btn.classList.add('locked');
-    toast('🛞 Wheels are down — no boost',true);
-    speakPlain(`Your ${VEH().actLabel} are down. Boost does not work now.`);
+    toast(TX('boost.locked'),true);
+    speakPlain(TX('boost.lockedSay',{act:VEH().actLabel}));
     return;
   }
   if(btn)btn.classList.remove('locked');
@@ -4478,17 +4847,17 @@ function openCalmChooser(){
   const list=hazards.map(h=>h.def.em).join(' ');
   openModal(`
     <div class="bigem">🧊</div>
-    <h2>CALM POWER!</h2>
+    <h2>${esc(TX('calmChooser.title'))}</h2>
     <p class="msub" id="calmsub">${hasHaz
-      ?`Trouble in the sky: ${list}. A calm brain is stronger than a storm. Pick your calm:`
-      :`The sky is clear. This is a good time to practise being calm.`}</p>
+      ?esc(TX('calmChooser.subTrouble',{list}))
+      :esc(TX('calmChooser.subClear'))}</p>
     <div class="stack">
-      <button class="rowcard icec" onclick="startFreeze('breathe')"><span class="em">🧸</span><b>Breathe with belly-bear</b>${hasHaz?` — calm the WHOLE sky, and get ${CFG.calmPerFreezeAll} calm`:` — practise, and get ${CFG.calmPerPractice} calm`}</button>
-      ${hasHaz?`<button class="rowcard" onclick="startFreeze('feelings')"><span class="em">💛</span>Listen to its feelings — calm one troublemaker</button>
-      <button class="rowcard" onclick="startFreeze('math')"><span class="em">🧮</span>Crack the calm code — calm one troublemaker</button>`
-      :`<div class="hintline">💛 Feelings and 🧮 calm codes wake up when trouble comes!</div>`}
+      <button class="rowcard icec" onclick="startFreeze('breathe')"><span class="em">🧸</span><b>${esc(TX('calmChooser.breatheLabel'))}</b>${hasHaz?esc(TX('calmChooser.breatheAll',{amt:CFG.calmPerFreezeAll})):esc(TX('calmChooser.breathePractice',{amt:CFG.calmPerPractice}))}</button>
+      ${hasHaz?`<button class="rowcard" onclick="startFreeze('feelings')"><span class="em">💛</span>${esc(TX('calmChooser.feelingsLabel'))}</button>
+      <button class="rowcard" onclick="startFreeze('math')"><span class="em">🧮</span>${esc(TX('calmChooser.codeLabel'))}</button>`
+      :`<div class="hintline">${esc(TX('calmChooser.hint'))}</div>`}
     </div>
-    <button class="cta ghost" onclick="closeModal()">Back to flying! ✈️</button>
+    <button class="cta ghost" onclick="closeModal()">${esc(TX('calmChooser.backCta'))}</button>
   `);
   autoReadIf('calmsub');
 }
@@ -4535,12 +4904,12 @@ function landedForRepair(){
   emergencyMode=false;
   openModal(`
     <div class="bigem">🛬</div>
-    <h2>Safe landing, Captain!</h2>
-    <p class="msub" id="emQ">Your plane is safe on the ground. The hangar can fix engines.</p>
+    <h2>${esc(TX('landed.title'))}</h2>
+    <p class="msub" id="emQ">${esc(TX('landed.sub'))}</p>
     <div class="stack">
-      <button class="rowcard" style="background:#FFE9B8" onclick="closeModal();openShop()"><span class="em">🏗️</span><b>Go to the HANGAR</b> and fix the engines</button>
-      <button class="rowcard icec" onclick="closeModal();ctxMode='repair';showBreath('repair')"><span class="em">🧸</span>Breathe first, while you wait — earn +${CFG.repairBreathPoints} points</button>
-      <button class="rowcard" onclick="closeModal()"><span class="em">✈️</span>Keep flying like this</button>
+      <button class="rowcard" style="background:#FFE9B8" onclick="closeModal();openShop()"><span class="em">🏗️</span>${esc(TX('landed.hangarLabel'))}</button>
+      <button class="rowcard icec" onclick="closeModal();ctxMode='repair';showBreath('repair')"><span class="em">🧸</span>${esc(TX('landed.breatheLabel',{pts:CFG.repairBreathPoints}))}</button>
+      <button class="rowcard" onclick="closeModal()"><span class="em">✈️</span>${esc(TX('landed.keepLabel'))}</button>
     </div>
   `);
   autoReadIf('emQ');
@@ -4557,11 +4926,11 @@ function crash(){
   openModal(`
     <div class="bigem">💥🛬</div>
     <h2>${VEH().crashLine}</h2>
-    <p class="msub" id="crQ">Your plane glided down and landed with a bump. Everyone is okay. You can pay the crew to fix it, or start again.</p>
+    <p class="msub" id="crQ">${esc(TX('crash.sub'))}</p>
     <div class="stack">
       <button class="rowcard${canPay?'':' cantafford'}" onclick="${canPay?'payRepair()':`cantAfford('points',${CFG.crashRepairCost})`}">
-        <span class="em">💰</span>Pay the crew ${CFG.crashRepairCost} points (you have ${score})</button>
-      <button class="rowcard" onclick="fullRestart()"><span class="em">🔄</span>Start a brand-new adventure (points and stars go back to zero)</button>
+        <span class="em">💰</span>${esc(TX('crash.payLabel',{cost:CFG.crashRepairCost,score}))}</button>
+      <button class="rowcard" onclick="fullRestart()"><span class="em">🔄</span>${esc(TX('crash.restartLabel'))}</button>
     </div>
   `);
   autoReadIf('crQ');
@@ -4570,8 +4939,8 @@ function payRepair(){
   if(score<CFG.crashRepairCost){cantAfford('points',CFG.crashRepairCost);return;}
   losePoints(CFG.crashRepairCost);engines=engineSlots;strikeCount=0;emergencyMode=false;
   updateHUD();fanfare();closeModal();
-  banner('🛠️ All engines fixed!',2400,true);
-  speakPlain(`All fixed! That cost ${CFG.crashRepairCost} points. You have ${score} points left.`);
+  banner(esc(TX('crash.fixedBanner')),2400,true);
+  speakPlain(TX('crash.fixedSay',{cost:CFG.crashRepairCost,score}));
 }
 function fullRestart(){restartAfterCrash();}
 function restartAfterCrash(){
@@ -4592,7 +4961,7 @@ function restartAfterCrash(){
   distClock=distanceGap();lastDistSaid=null;highFlySaid=false;lastShareAskAt=-99;
   vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
   updateHUD();closeModal();
-  banner('🛫 Fresh start!',2400);
+  banner(esc(TX('crash.freshBanner')),2400);
 }
 /* reset button: double-tap to fully restart (in case anything freezes) */
 let resetArm=0;
@@ -4602,8 +4971,8 @@ function resetTap(){
     try{location.reload();}catch(e){restartAfterCrash();started=true;paused=false;}
   }else{
     resetArm=now;
-    toast('↻ Tap again to start over',true);
-    speakPlain('Tap again to start over.');
+    toast(TX('crash.resetToast'),true);
+    speakPlain(TX('crash.resetPrompt'));
   }
 }
 
@@ -4623,11 +4992,11 @@ function challengeComplete(msg,sentence,bonus,isImg){
     applyFreezeOne();addPoints(pts);earnCalm(CFG.calmPerFreezeOne,'you calmed a troublemaker');updateHUD();
     openModal(`
       <div class="bigem">${rescue.em}❄️</div>
-      <h2>${esc(rescue.name)} is calm now!</h2>
+      <h2>${esc(TX('calmResult.freezeOneTitle'))}</h2>
       <div class="scoreline">+${pts} points 🏅 · You have ${score}</div>
       <p class="msub" id="frzmsg">${msg||''}</p>
       ${sentence?(isImg?sentence:`<div class="sentence">${sentence}</div>`):''}
-      <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
+      <button class="cta" onclick="closeModal()">${esc(TX('calmResult.backCta'))}</button>
     `);
     autoReadIf('frzmsg');fanfare();
     return;
@@ -4637,10 +5006,10 @@ function challengeComplete(msg,sentence,bonus,isImg){
     applyFreezeAll();addPoints(pts);earnCalm(CFG.calmPerFreezeAll,'you calmed the whole sky');updateHUD();
     openModal(`
       <div class="bigem">🧸✨</div>
-      <h2>Everything went calm…</h2>
+      <h2>${esc(TX('calmResult.freezeAllTitle'))}</h2>
       <div class="scoreline">+${pts} points 🏅 · You have ${score} · 🛡️ shield 20s</div>
-      <p class="msub" id="frzmsg">Your slow belly breaths spread all across the sky. The storms went quiet. The dragons yawned. That is how strong calm is.</p>
-      <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
+      <p class="msub" id="frzmsg">${esc(TX('calmResult.freezeAllBody'))}</p>
+      <button class="cta" onclick="closeModal()">${esc(TX('calmResult.backCta'))}</button>
     `);
     autoReadIf('frzmsg');fanfare();
     return;
@@ -4653,8 +5022,8 @@ function challengeComplete(msg,sentence,bonus,isImg){
     addPoints(CFG.repairBreathPoints);
     shield=8;shieldKind='calm';updateHUD();
     closeModal();
-    toast(`🧊 +${CFG.calmPerFreezeAll} calm · 🏅 +${CFG.repairBreathPoints} points`,true);
-    speakPlain(`Breathing gave you ${CFG.calmPerFreezeAll} calm power, and ${CFG.repairBreathPoints} points. Off to the hangar.`);
+    toast(TX('calmResult.repairToast',{amt:CFG.calmPerFreezeAll,pts:CFG.repairBreathPoints}),true);
+    speakPlain(TX('calmResult.repairSay',{amt:CFG.calmPerFreezeAll,pts:CFG.repairBreathPoints}));
     setTimeout(openShop,1400);
     return;
   }
@@ -4664,10 +5033,10 @@ function challengeComplete(msg,sentence,bonus,isImg){
     earnCalm(CFG.calmPerPractice,'calm practice');updateHUD();
     openModal(`
       <div class="bigem">🧸✨</div>
-      <h2>Calm practice done!</h2>
+      <h2>${esc(TX('calmResult.practiceTitle'))}</h2>
       <div class="scoreline">+${pts} points 🏅 · You have ${score} · 🛡️ small shield 8s</div>
-      <p class="msub" id="frzmsg">You practised being calm while the sky was clear. Now it will be easy to find when a storm comes.</p>
-      <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
+      <p class="msub" id="frzmsg">${esc(TX('calmResult.practiceBody'))}</p>
+      <button class="cta" onclick="closeModal()">${esc(TX('calmResult.backCta'))}</button>
     `);
     autoReadIf('frzmsg');fanfare();
     return;
@@ -4676,11 +5045,11 @@ function challengeComplete(msg,sentence,bonus,isImg){
 }
 
 /* ═══════════ 1) VAULT / CALM-CODE MATH ═══════════ */
-const VAULT_REWARDS=[
+const VAULT_REWARDS=mergeArr('vaultRewards', [
   ['pudding','🍰','a slice of berry cake'],['pudding','🍦','a swirly ice cream'],['pudding','🧁','a rainbow cupcake'],
   ['food','🍎','a basket of crunchy apples'],['food','🥕','a bunch of sweet carrots'],['food','🍯','a jar of golden honey'],
   ['party','🎀','a fancy bow for their home'],['party','🎈','party balloons'],['party','🪅','a piñata for their den']
-];
+]);
 let mathProb=null,vaultReward=null;
 /* Maths mix:
      • addition:       1–3 digits (scaled by age band)
@@ -4842,10 +5211,10 @@ function showShakeItOff(){
          breaths:0, cycle:0, sense:0};
   renderReset();
   if(useBreath){
-    speakPlain(TX('calm.resetKind')+' Let us breathe slowly together.');
+    speakPlain(TX('calm.resetKind')+' '+TX('reset.breatheIntro'));
     resetBreathLoop();
   }else{
-    speakPlain(TX('calm.resetKind')+' Let us feel our body for a moment.',
+    speakPlain(TX('calm.resetKind')+' '+TX('reset.bodyIntro'),
       ()=>speakPlain(RESET_SENSE[0].say));
   }
 }
@@ -4902,13 +5271,13 @@ function resetBreathLoop(){
     if(inB&&phase!=='in'){
       phase='in';
       const p=document.getElementById('rPhase'); if(p)p.textContent='Breathe in… belly goes up';
-      if(reset.breaths<3)speakPlain('Breathe in.');
+      if(reset.breaths<3)speakPlain(TX('reset.breatheIn'));
       tone(300,3.6,'sine',0.05,0,430);
     }else if(!inB&&phase!=='out'){
       phase='out';
       reset.breaths++;
       const p=document.getElementById('rPhase'); if(p)p.textContent='Breathe out… belly goes down';
-      if(reset.breaths<=3)speakPlain('And out.');
+      if(reset.breaths<=3)speakPlain(TX('reset.breatheOut'));
       tone(430,3.8,'sine',0.05,0,260);
       if(reset.breaths>=3){ resetDone(); return; }
       renderReset();
@@ -4934,7 +5303,7 @@ function resetFelt(){
   if(reset.cycle<2){
     reset.sense=0;
     renderReset();
-    speakPlain('Good. One more time around. Feet again.');
+    speakPlain(TX('reset.oneMoreRound'));
     return;
   }
   resetDone();
@@ -5008,9 +5377,9 @@ function showFeelStep(){
   const freeze=ctxMode==='freezeOne';
   openModal(`
     <div class="bigem">${rescue.em}</div>
-    <h2>${freeze?`Help ${esc(rescue.name)} feel calm!`:`You landed next to ${esc(rescue.name)}!`}</h2>
+    <h2>${esc(freeze?TX('nvc.feelCalmTitle'):TX('nvc.landedTitle'))}</h2>
     <div class="speech" id="sitText">${esc(situationText())}</div>
-    <p class="msub" id="feelQ">How does ${esc(rescue.name)} feel?</p>
+    <p class="msub" id="feelQ">${esc(TX('nvc.feelQ'))}</p>
     <div class="chips">
       ${quiz.feel.opts.map(([em,w],i)=>`<button class="chip" id="fq${i}" onclick="pickWord(${i})"><span class="em">${em}</span>${w}</button>`).join('')}
     </div>
@@ -5150,7 +5519,7 @@ function showNeedStep(){
     <div class="bigem">${rescue.wordEm||'💛'}</div>
     <h2>${esc(rescue.name)}${feltAs?` feels ${esc(feltAs)}`:''}.</h2>
     ${recapCard()}
-    <p class="msub" id="needQ">What would ${esc(rescue.name)} love to have?</p>
+    <p class="msub" id="needQ">${esc(TX('nvc.needQ'))}</p>
     <div class="stack">
       ${quiz.need.opts.map(([em,n],i)=>`<button class="rowcard" id="nq${i}" onclick="pickNeed(${i})"><span class="em">${em}</span>${n}</button>`).join('')}
     </div>
@@ -5179,11 +5548,11 @@ function showReqStep(){
   quiz.req.correct=quiz.req.opts.indexOf(correct);
   openModal(`
     <div class="bigem">${rescue.needEm||'💛'}</div>
-    <h2 id="reqQ">What will help ${esc(rescue.name)}?</h2>
+    <h2 id="reqQ">${esc(TX('nvc.reqQ'))}</h2>
     ${recapCard()}
     <div class="stack">
       ${quiz.req.opts.map(([em,r],i)=>`<button class="rowcard" id="rq${i}" onclick="pickReq(${i})"><span class="em">${em}</span>${r}</button>`).join('')}
-      <button class="rowcard idea" onclick="showOwnIdea()"><span class="em">💡</span>My OWN kind idea! (+${CFG.ideaBonus} extra)</button>
+      <button class="rowcard idea" onclick="showOwnIdea()"><span class="em">💡</span>${esc(TX('nvc.ownIdeaBtn',{bonus:CFG.ideaBonus}))}</button>
     </div>
   `);
   if(autoRead) setTimeout(()=>nvcNarrate('req'),250);
@@ -5197,11 +5566,11 @@ function pickReq(i){
 function showOwnIdea(){
   openModal(`
     <div class="bigem">💡</div>
-    <h2>Make up your own idea!</h2>
-    <p class="msub" id="ownQ">What is YOUR kind way to help ${esc(rescue.name)}? Kind ideas are the best ideas.</p>
-    <textarea id="ideabox" maxlength="120" placeholder="like: sing ${esc(rescue.name)} a quiet song…"></textarea>
-    <button class="cta mint" onclick="saveOwn()">That is my plan! 💡</button>
-    <button class="cta ghost" onclick="showReqStep()">← back to the list</button>
+    <h2>${esc(TX('nvc.ownIdeaTitle'))}</h2>
+    <p class="msub" id="ownQ">${esc(TX('nvc.ownIdeaSub'))}</p>
+    <textarea id="ideabox" maxlength="120" placeholder="${esc(TX('nvc.ownIdeaPlaceholder'))}"></textarea>
+    <button class="cta mint" onclick="saveOwn()">${esc(TX('nvc.ownIdeaCta'))}</button>
+    <button class="cta ghost" onclick="showReqStep()">${esc(TX('nvc.backToList'))}</button>
   `);
   autoReadIf('ownQ');
   setTimeout(()=>{const b=document.getElementById('ideabox');if(b)b.focus();},400);
@@ -5458,7 +5827,7 @@ function artClear(){
   drawTraceGuide();artDrawn=false;
 }
 function giveArt(){
-  if(!artDrawn){toast('✏️ Draw something first!',true);return;}
+  if(!artDrawn){toast(TX('minigame.drawFirst'),true);return;}
   stats.arts++;stopSpeak();
   const c=document.getElementById('artcv');
   const img=c?`<img src="${c.toDataURL()}" style="width:70%;max-width:240px;border:3px solid var(--ink);border-radius:14px;display:block;margin:0 auto 10px">`:'';
@@ -5622,7 +5991,7 @@ function showBreath(purpose){
   breath={active:true,purpose,left:cfg.secs,min:cfg.minSecs,phase:'in',pt:0,count:0,total:cfg.secs,verified:0,hasMotion:false,sensor:0,sensorBase:null,cycMin:99,cycMax:-99};
   startMotion();
   /* voice-guided intro; the first 3 breaths are led by voice, not text */
-  if(soundOn)setTimeout(()=>speakPlain('Lie back. Put your teddy, or this phone, on your tummy. I will help you breathe. Ready?'),300);
+  if(soundOn)setTimeout(()=>speakPlain(TX('teddyBreath.ready')),300);
   openModal(`
     <div class="bigem">🧸</div>
     <h2>${cfg.title}</h2>
@@ -5686,14 +6055,14 @@ function breathLoop(){
       tone(300,3.6,'sine',0.05,0,430);
       const p=document.getElementById('brPhase');if(p)p.textContent='Breathe IN… tummy goes up 🌬️';
       /* voice-guided for the first 3 breaths (after the intro finishes) */
-      if(breath.count<3&&breath.pt>6&&soundOn){stopSpeak();speakPlain('Breathe in… let your tummy go up… the bear goes up too…');}
+      if(breath.count<3&&breath.pt>6&&soundOn){stopSpeak();speakPlain(TX('teddyBreath.in'));}
     }else if(!inPhase&&breath.phase!=='out'){
       breath.phase='out';breath.count++;
       tone(430,3.8,'sine',0.05,0,260);
       const p=document.getElementById('brPhase');if(p)p.textContent='Breathe OUT… tummy goes down 😌';
       const c=document.getElementById('brCount');if(c)c.textContent=breath.count;
-      if(breath.count<=3&&breath.pt>6&&soundOn){stopSpeak();speakPlain('Breathe out… slowly… the bear rides down…');}
-      if(breath.count===3&&soundOn)setTimeout(()=>speakPlain('Lovely. Keep going, just like that.'),4200);
+      if(breath.count<=3&&breath.pt>6&&soundOn){stopSpeak();speakPlain(TX('teddyBreath.out'));}
+      if(breath.count===3&&soundOn)setTimeout(()=>speakPlain(TX('teddyBreath.lovely')),4200);
       /* verify a real belly breath from the phone sensor this cycle */
       if(breath.hasMotion){
         if((breath.cycMax-breath.cycMin)>0.30){
@@ -5737,7 +6106,7 @@ function finishBreath(){
   const purpose=breath.purpose;
   const verBonus=breath.verified>=3?CFG.realBreathBonus:0;
   stopBreath();stopSpeak();
-  if(verBonus){addPoints(verBonus);updateHUD();toast(`📱 Real tummy breaths! +${verBonus}`,true);}
+  if(verBonus){addPoints(verBonus);updateHUD();toast(TX('teddyBreath.realBonusToast',{amt:verBonus}),true);}
   if(purpose==='rescue'){
     stats.zens++;
     challengeComplete(`${esc(rescue.name)} is calm now, just like you. Calm is catching — and you gave yours away! 🧸💛`,null,0);
@@ -5753,8 +6122,8 @@ let shareAmt=10;
    ask. Generosity should be something he can choose, not only answer. */
 function shareAnyTime(){
   if(score<1){
-    toast('Earn a few points first 💛',true);
-    speakPlain('You have no points yet. Help an animal, then you can share.');
+    toast(TX('share.earnFirst'),true);
+    speakPlain(TX('share.earnFirstSay'));
     return;
   }
   paused=true;engineUpdate();
@@ -5782,7 +6151,7 @@ function showSharing(){
     <button class="cta mint" id="shrGo" onclick="doShare(shareAmt)">💝 Share <span id="shrGoN">${shareAmt}</span></button>
     <button class="cta ghost" onclick="doShare(0)">Not now 🙂</button>
   `);
-  autoReadIf('shrQ',()=>speakPlain('Use plus and minus to pick how many. Then tap Share. Or tap Not now.'));
+  autoReadIf('shrQ',()=>speakPlain(TX('share.say')));
 }
 function shareSpin(d){
   shareAmt=Math.max(0,Math.min(score,shareAmt+d));
@@ -5816,7 +6185,7 @@ function doShare(amt){
 
 /* ═══════════ 7) KIND WORDS (Please / Sorry / Thank you) ═══════════ */
 let talkRound=0;
-const TALK_ROUNDS=[
+const TALK_ROUNDS=mergeArr('talkRounds', [
   {q:n=>`${n} needs help with a hard puzzle. What should ${n} say to the teacher?`,
    ok:['🙏','"Please can you help me?"'],
    wrong:[['😤','"HELP ME RIGHT NOW!"'],['🤐','…say nothing and hide the puzzle'],['😒','"This puzzle is silly!"']]},
@@ -5826,7 +6195,7 @@ const TALK_ROUNDS=[
   {q:n=>`Oh no — ${n} bumped a friend’s tower by mistake. What should ${n} say?`,
    ok:['🥺','"Sorry! Can I help you build it again?"'],
    wrong:[['🙈','"That was not me!"'],['🤷','"It was a wobbly tower anyway."']]}
-];
+]);
 function showTalk(){
   talkRound=0;
   talkStep();
@@ -5898,7 +6267,7 @@ function showMemory(){
   const deck=shuffle([...set,...set]).map((em,i)=>({em,i,up:false,done:false}));
   mem={deck,openIdx:[],pairs:0,busy:false};
   renderMemory();
-  if(autoRead)speakPlain('Tap two cards. Find the two that match.');
+  if(autoRead)speakPlain(TX('minigame.memoryHint'));
 }
 function renderMemory(){
   openModal(`
@@ -5974,7 +6343,7 @@ const WHITE_IDX=PIANO_KEYS.map((k,i)=>k.white?i:-1).filter(i=>i>=0);
 /* Tunes he will recognise, plus two that exist to TEACH something specific:
    walking up the scale, and finding the black keys. Each carries a one-line
    lesson, said and shown before he plays it. */
-const PIANO_TUNES=[
+const PIANO_TUNES=mergeArr('pianoTunes', [
   {name:'Twinkle Twinkle',       notes:[0,0,7,7,9,9,7],
    tip:'C C G G A A G. Start on C — the white key just left of the TWO black keys.'},
   {name:'Mary Had a Little Lamb',notes:[4,2,0,2,4,4,4],
@@ -5993,7 +6362,7 @@ const PIANO_TUNES=[
    tip:'C D E F G A B C. Every white key in a row — this is the C scale.'},
   {name:'Black Key Song',        notes:[1,3,1,3,6,8],
    tip:'The BLACK keys! Two together, then three together. Find the two first.'}
-];
+]);
 let piano=null;
 function showPattern(){
   const t=PIANO_TUNES[Math.floor(Math.random()*PIANO_TUNES.length)];
@@ -6076,7 +6445,7 @@ function pipPlays(){
     if(i>=piano.notes.length){
       piano.busy=false;
       renderPiano('Now you play it. Follow the notes above the keys.','you');
-      speakPlain('Your turn. Follow the note names.');
+      speakPlain(TX('minigame.pianoYourTurn'));
       return;
     }
     const k=PIANO_KEYS[piano.notes[i]];
@@ -6142,7 +6511,7 @@ const TRIZ_TOOLS={
   flip:{em:'🔄',title:'Turn It Around!',
     intro:'"When you are stuck," says Pip, "flip it! Try it the other way round."'}
 };
-const TRIZ_PUZZLES=[
+const TRIZ_PUZZLES=mergeArr('trizPuzzles', [
  {tool:'both', tx:'{N} needs a bridge that is STRONG so it holds everyone, and LIGHT so we can carry it. Strong means heavy. Light means weak. We want both!',
   ok:'Use hollow tubes — the air inside makes them light, and the round shape keeps them strong',
   wrong:['Use heavy stone — nobody can lift it','Use paper — it is light, but it snaps']},
@@ -6179,7 +6548,7 @@ const TRIZ_PUZZLES=[
  {tool:'flip', tx:'{N} keeps losing at tag by RUNNING AWAY from everyone. Turn it around!',
   ok:'Stand still near base and jump aside at the last moment — let the chaser get tired',
   wrong:['Run faster and faster until you fall over','Never play tag again']}
-];
+]);
 let trz=null;
 function showTriz(){
   const p=TRIZ_PUZZLES[Math.floor(Math.random()*TRIZ_PUZZLES.length)];
@@ -6394,7 +6763,7 @@ function archConcede(){
    how a child works a real puzzle.
    You and Pip put it together TAKING TURNS: he places one, you place one.
    ═══════════════════════════════════════════════════════════════════════════ */
-const JIGSAWS=[
+const JIGSAWS=mergeArr('jigsaws', [
   {id:'rocket',    name:'a rocket',    em:'🚀'},
   {id:'sunflower', name:'a sunflower', em:'🌻'},
   {id:'butterfly', name:'a butterfly', em:'🦋'},
@@ -6405,7 +6774,7 @@ const JIGSAWS=[
   {id:'castle',    name:'a castle',    em:'🏰'},
   {id:'world',     name:'the whole world', em:'🌍'},
   {id:'tiger',     name:'a tiger',     em:'🐯'}
-];
+]);
 /* how big the assembled picture is drawn, and how it is cut */
 const JIG_SIZE=188;
 function jigGrid(){ return {c:4,r:4}; }   /* sixteen pieces, every time */
@@ -6531,7 +6900,7 @@ function jigDone(){
    Only ONE says it properly — the others are close but wrong. He taps the one
    that sounded right. Short, common words for a six-year-old.
    ═══════════════════════════════════════════════════════════════════════════ */
-const SAY_WORDS={
+const SAY_WORDS=mergeBands('sayWords', {
   y:[ {w:'cat',   pic:'🐱', wrong:['cot','kite']},
       {w:'dog',   pic:'🐶', wrong:['dug','dock']},
       {w:'fish',  pic:'🐟', wrong:['fush','fist']},
@@ -6569,7 +6938,7 @@ const SAY_WORDS={
       {w:'temperature',  pic:'🌡️', wrong:['tempature','temp-rah-ture']},
       {w:'necessary',    pic:'✅', wrong:['nessecary','neccessary']},
       {w:'mischievous',  pic:'😈', wrong:['mischievious','mis-cheev-ee-us']} ]
-};
+});
 let say=null;
 function showSayIt(){
   const pool=SAY_WORDS[band]||SAY_WORDS.y;
@@ -6637,7 +7006,7 @@ function pickSay(i){
     setTimeout(()=>{
       if(!say)return;
       const right=say.opts.findIndex(o=>o.ok);
-      speakPlain('Listen again.',()=>saySample(right));
+      speakPlain(TX('minigame.listenAgain'),()=>saySample(right));
     },1400);
     return;
   }
@@ -6665,7 +7034,7 @@ function tttWinner(b){
 function showTicTac(){
   ttt={board:Array(9).fill(''), turn:'you', over:false, note:'You are ❌. Pip is ⭕. You go first!'};
   renderTtt();
-  speakPlain('Tic tac toe with Pip. You are the crosses. You go first.');
+  speakPlain(TX('minigame.tttIntro'));
 }
 function renderTtt(){
   if(!ttt)return;
@@ -6703,7 +7072,7 @@ function tttPlay(i){
   ttt.turn='pip';
   ttt.note='🦊 Pip is thinking… wait for your turn 🤫';
   renderTtt();
-  speakPlain('Now it is Pip’s turn. Please wait.');
+  speakPlain(TX('turns.pipTurn'));
   setTimeout(tttPipMove, 1500 + Math.random()*900);
 }
 function tttPipMove(){
@@ -6741,14 +7110,14 @@ function tttEnd(r){
   ttt.over=true;
   if(r.who==='❌'){
     ttt.note='🏆 You won! "Well played, friend!" says Pip.';
-    speakPlain('You won! Well played, friend, says Pip.');
+    speakPlain(TX('minigame.tttWin'));
     fanfare();confettiBurst();
   }else if(r.who==='⭕'){
     ttt.note='🦊 Pip won this one. "Good game! Shall we play again?"';
-    speakPlain('Pip won this one. Good game! Every game makes you a bit better.');
+    speakPlain(TX('minigame.tttLose'));
   }else{
     ttt.note='🤝 A draw! "That was a fair game," says Pip.';
-    speakPlain('A draw! That was a fair game, says Pip.');
+    speakPlain(TX('minigame.tttDraw'));
     fanfare();
   }
   renderTtt();
@@ -6786,8 +7155,8 @@ function openShop(){
 
   openModal(`
     <div class="bigem">🏗️</div>
-    <h2>Hangar</h2>
-    ${engines<engineSlots?`<div class="hintline" style="background:#FFD6CE">⚠️ <b>${engineSlots-engines} engine${engineSlots-engines>1?'s':''} broken.</b></div>`:''}
+    <h2>${TX('shop.title')}</h2>
+    ${engines<engineSlots?`<div class="hintline" style="background:#FFD6CE">${TX('shop.brokenHint',{count:engineSlots-engines,s:engineSlots-engines>1?'s':''})}</div>`:''}
 
     <div class="accounts" id="acctBox">
       <div class="acctrow"><span>🔧 Repairs money</span><b>${wNeeds}</b></div>
@@ -6800,7 +7169,7 @@ function openShop(){
     <div class="stack">
       <button class="rowcard${preflightOK?'':' idea'}" onclick="closeModal();showPreflight()">
         <span class="em">🧽</span>
-        <span class="shopname">${preflightOK?'Clean the plane again':'Clean the plane — it is dirty!'}</span>
+        <span class="shopname">${preflightOK?TX('shop.cleanAgain'):TX('shop.cleanDirty')}</span>
         <span class="shopcost ok">FREE<small>✓</small></span>
       </button>
       ${engines<engineSlots?row(wNeeds>=CFG.engineCostRepair,'buyRepair()','🔧','Mend an engine',CFG.engineCostRepair,'repairs'):''}
@@ -6811,11 +7180,11 @@ function openShop(){
     </div>
 
     ${canWithdraw()?`<button class="rowcard" onclick="offerWithdraw('repairs')">
-      <span class="em">🏦</span><span class="shopname">Take some out of savings</span>
+      <span class="em">🏦</span><span class="shopname">${TX('shop.withdrawLabel')}</span>
       <span class="shopcost ok">${wVault}<small>✓</small></span></button>`:''}
     <div class="hintline">🏆 Kind helpers: ${rank.map((r,i)=>`${i+1}. ${r.me?'<b>':''}${r.n} — ${r.k}${r.me?'</b>':''}`).join(' · ')}</div>
-    <button class="cta mint" onclick="closeModal();shareAnyTime()">💝 Share some points</button>
-    <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
+    <button class="cta mint" onclick="closeModal();shareAnyTime()">${TX('shop.shareCta')}</button>
+    <button class="cta" onclick="closeModal()">${TX('shop.backCta')}</button>
   `);
   document.querySelectorAll('#acctBox .rspk').forEach(e=>{if(!e.innerHTML)e.innerHTML=SPK;});
   /* the balances are read aloud automatically */
@@ -6823,19 +7192,14 @@ function openShop(){
 }
 /* just the balances — spoken whenever the hangar opens */
 function sayBalances(){
-  speakPlain(`You have ${wNeeds} for repairs, ${wWants} for fun, and ${wVault} saved up. You need ${CFG.vaultGoal} saved up for the golden plane.`);
+  speakPlain(TX('shop.balancesSay',{repairs:wNeeds,fun:wWants,savings:wVault,goal:CFG.vaultGoal}));
 }
 /* tapping the speaker ALSO explains how every reward is shared out.
    The numbers come straight from CFG, so the words match the code. */
 function sayHowSplit(){
   stopSpeak();
   const tenths=n=>Math.round(n*10);
-  speakPlain(
-    `You have ${wNeeds} for repairs, ${wWants} for fun, and ${wVault} saved up. `+
-    `Here is how it works. Every time you win points, they get shared out for you. `+
-    `${tenths(CFG.splitRepairs)} bits out of 10 go to repairs, to mend your plane. `+
-    `${tenths(CFG.splitFun)} bits go to fun, for paint and stickers. `+
-    `And ${tenths(CFG.splitSavings)} bits get saved up for the golden plane.`);
+  speakPlain(TX('shop.splitSay',{repairs:wNeeds,fun:wWants,savings:wVault,r10:tenths(CFG.splitRepairs),f10:tenths(CFG.splitFun),s10:tenths(CFG.splitSavings)}));
 }
 /* ═══════════ TAKING MONEY BACK OUT OF SAVINGS ═══════════
    Saving is the habit being taught, so the savings pot is deliberately a
@@ -6847,29 +7211,27 @@ function offerWithdraw(acct){
   wdTo=(acct==='fun')?'fun':'repairs';
   wdAmt=Math.min(wVault,50);
   renderWithdraw();
-  if(autoRead)setTimeout(()=>speakPlain(
-    `You have ${wVault} points saved up. You can take some out for ${wdTo==='fun'?'fun':'repairs'} if you need to. Choose how many, then press Take it out.`),350);
+  if(autoRead)setTimeout(()=>speakPlain(TX('withdraw.askSay',{vault:wVault,pot:wdTo==='fun'?'fun':'repairs'})),350);
 }
 function renderWithdraw(){
   const potName=wdTo==='fun'?'fun':'repairs';
   const potNow =wdTo==='fun'?wWants:wNeeds;
   openModal(`
     <div class="bigem">🏦➡️${wdTo==='fun'?'🎉':'🔧'}</div>
-    <h2>Take some out of savings?</h2>
-    <p class="msub" id="wdQ">You have <b>${wVault}</b> points saved up.
-      Your ${potName} pot has <b>${potNow}</b>. How many shall we move across?</p>
+    <h2>${TX('withdraw.title')}</h2>
+    <p class="msub" id="wdQ">${TX('withdraw.sub',{vault:wVault,pot:potName,now:potNow})}</p>
     <div class="spinwrap">
       <button class="spinbtn" onclick="wdSpin(-10)">−</button>
       <div class="spinval" id="wdVal">${wdAmt}</div>
       <button class="spinbtn" onclick="wdSpin(10)">+</button>
     </div>
     <div class="seg">
-      <div class="sopt ${wdTo==='repairs'?'sel':''}" onclick="wdWhere('repairs')">🔧 to repairs</div>
-      <div class="sopt ${wdTo==='fun'?'sel':''}" onclick="wdWhere('fun')">🎉 to fun</div>
+      <div class="sopt ${wdTo==='repairs'?'sel':''}" onclick="wdWhere('repairs')">${TX('withdraw.toRepairs')}</div>
+      <div class="sopt ${wdTo==='fun'?'sel':''}" onclick="wdWhere('fun')">${TX('withdraw.toFun')}</div>
     </div>
-    <div class="hintline">💡 Saved points grow by ${CFG.interestPercent}% every ${CFG.interestEveryMinutes} minutes. Points you take out stop growing.</div>
-    <button class="cta mint" onclick="doWithdraw()">🏦 Take out <b id="wdGoN">${wdAmt}</b></button>
-    <button class="cta ghost" onclick="closeModal();openShop()">← Leave it saved</button>
+    <div class="hintline">${TX('withdraw.hint',{pct:CFG.interestPercent,mins:CFG.interestEveryMinutes})}</div>
+    <button class="cta mint" onclick="doWithdraw()">${TX('withdraw.cta')} <b id="wdGoN">${wdAmt}</b></button>
+    <button class="cta ghost" onclick="closeModal();openShop()">${TX('withdraw.leaveCta')}</button>
   `);
 }
 function wdSpin(d){
@@ -6881,12 +7243,12 @@ function wdSpin(d){
 function wdWhere(where){ wdTo=where; renderWithdraw(); }
 function doWithdraw(){
   const amt=Math.max(0,Math.min(wVault,wdAmt));
-  if(amt<=0){toast('Choose how many first ✏️',true);return;}
+  if(amt<=0){toast(TX('withdraw.chooseFirst'),true);return;}
   wVault-=amt;
   if(wdTo==='fun')wWants+=amt; else wNeeds+=amt;
   flyChip(amt);fanfare();updateHUD();saveProgress();
   closeModal();openShop();
-  speakPlain(`${amt} points moved from savings to ${wdTo==='fun'?'fun':'repairs'}. You have ${wVault} still saved up.`);
+  speakPlain(TX('withdraw.movedSay',{amt,pot:wdTo==='fun'?'fun':'repairs',vault:wVault}));
 }
 
 /* kind refusal when he cannot afford something — and a way out if he has
@@ -6898,33 +7260,31 @@ function cantAfford(acct,cost){
   const short=cost-have;
   /* if the savings pot could cover it, say so and offer the choice */
   if(acct!=='savings'&&canWithdraw()){
-    toast('Not enough — but you have savings 🏦',true);
+    toast(TX('shop.cantAffordToastSavings'),true);
     openModal(`
       <div class="bigem">🏦</div>
-      <h2>Not quite enough…</h2>
-      <p class="msub" id="caQ">Your ${nice} pot has <b>${have}</b>, and this costs <b>${cost}</b>.
-        You need <b>${short}</b> more. But you have <b>${wVault}</b> points saved up!
-        You can take some out if you want to.</p>
+      <h2>${TX('shop.cantAffordTitle')}</h2>
+      <p class="msub" id="caQ">${TX('shop.cantAffordSub',{pot:nice,have,cost,short,vault:wVault})}</p>
       <div class="stack">
-        <button class="rowcard idea" onclick="offerWithdraw('${acct}')"><span class="em">🏦</span><b>Take some out of savings</b></button>
-        <button class="rowcard" onclick="closeModal();openShop()"><span class="em">💪</span>Keep saving — I will earn it</button>
+        <button class="rowcard idea" onclick="offerWithdraw('${acct}')"><span class="em">🏦</span><b>${TX('shop.takeOutCta')}</b></button>
+        <button class="rowcard" onclick="closeModal();openShop()"><span class="em">💪</span>${TX('shop.keepSavingCta')}</button>
       </div>
     `);
     autoReadIf('caQ');
     return;
   }
-  toast('Not enough points yet 💛',true);
-  speakPlain(`Not enough points yet. You need ${cost} ${nice}, and you have ${have}. Help one more animal and you will get there.`);
+  toast(TX('shop.cantAffordToast'),true);
+  speakPlain(TX('shop.cantAffordSay',{cost,pot:nice,have}));
 }
 function buyRepair(){
   if(wNeeds<CFG.engineCostRepair||engines>=engineSlots)return;
   wNeeds-=CFG.engineCostRepair;flyChip(-CFG.engineCostRepair);engines++;fanfare();updateHUD();saveProgress();openShop();
-  speakPlain(`Engine mended! That cost ${CFG.engineCostRepair} from your repairs money. You have ${wNeeds} left.`);
+  speakPlain(TX('shop.repairMendedSay',{cost:CFG.engineCostRepair,left:wNeeds}));
 }
 function buyEngine(){
   if(wNeeds<CFG.engineCostNew||engineSlots>=CFG.maxEngines)return;
   wNeeds-=CFG.engineCostNew;flyChip(-CFG.engineCostNew);engineSlots++;engines++;fanfare();updateHUD();saveProgress();openShop();
-  speakPlain(`A new engine! That cost ${CFG.engineCostNew} from your repairs money. You have ${wNeeds} left. Your plane is stronger now!`);
+  speakPlain(TX('shop.newEngineSay',{cost:CFG.engineCostNew,left:wNeeds}));
 }
 const PAINTS=['#E8564A','#3D8BE8','#3FA45C','#B455D8','#E88A2E'];
 function buyPaint(){
@@ -6933,12 +7293,12 @@ function buyPaint(){
   const other=PAINTS.filter(p=>p!==paint);
   paint=other[Math.floor(Math.random()*other.length)];
   fanfare();updateHUD();saveProgress();openShop();
-  speakPlain(`New paint! That cost ${CFG.paintCost} from your fun money. You have ${wWants} left.`);
+  speakPlain(TX('shop.paintSay',{cost:CFG.paintCost,left:wWants}));
 }
 function buySticker(){
   if(wWants<CFG.stickerCost||stickers>=5)return;
   wWants-=CFG.stickerCost;flyChip(-CFG.stickerCost);stickers++;fanfare();updateHUD();saveProgress();openShop();
-  speakPlain(`A new sticker! That cost ${CFG.stickerCost} from your fun money. You have ${wWants} left.`);
+  speakPlain(TX('shop.stickerSay',{cost:CFG.stickerCost,left:wWants}));
 }
 function unlockVault(){
   /* GUARD: this used to run with no check at all, so anything that called it
@@ -6947,7 +7307,7 @@ function unlockVault(){
   vaultUnlocked=true;wVault-=CFG.vaultGoal;paint='#E8B923';
   engineSlots=Math.min(CFG.maxEngines,engineSlots+1);engines=engineSlots;
   confettiBurst();fanfare();updateHUD();saveProgress();openShop();
-  speakPlain('The GOLDEN 707! You saved up, and look what you built!');
+  speakPlain(TX('shop.vaultSay'));
 }
 
 /* ═══════════ SURPRISE GIFT + GOLDEN SEED ═══════════
@@ -6955,9 +7315,9 @@ function unlockVault(){
    world state — they used to be re-declared down here as well)          */
 function spawnCargo(){
   cargo={sx:W+60,sy:horizon+30+Math.random()*(H*0.35),v:26+Math.random()*18};
-  banner('🎁 Gift ahead!',2400,true);
+  banner(TX('cargo.banner'),2400,true);
   fanfare();
-  if(autoRead)setTimeout(()=>speakPlain('A surprise gift is floating ahead! Fly into it!'),300);
+  if(autoRead)setTimeout(()=>speakPlain(TX('cargo.say')),300);
 }
 function drawCargo(time){
   if(!cargo)return;
@@ -6981,24 +7341,24 @@ function collectCargo(){
     cargoModal('🎉',`${pts} points! ${praise()}`);
   }else if(roll<0.45){
     shield=Math.max(shield,15);shieldKind='calm';updateHUD();
-    cargoModal('🛡️','A BIG shield! Nothing can hurt you for 15 seconds.');
+    cargoModal('🛡️',TX('cargo.bigShield'));
   }else if(roll<0.6&&stickers<5){
     stickers++;updateHUD();saveProgress();
-    cargoModal('⭐','A special sticker! It is on your plane already.');
+    cargoModal('⭐',TX('cargo.sticker'));
   }else{
     /* a bag of gold: HE decides which pot it goes into */
     depositAmt=50+Math.floor(Math.random()*6)*25;   /* 50..175 */
     openModal(`
       <div class="bigem">💰</div>
-      <h2>A bag of ${depositAmt} points!</h2>
-      <p class="msub" id="dpQ">Where do you want to put it, Captain?</p>
+      <h2>${TX('cargo.bagTitle',{amt:depositAmt})}</h2>
+      <p class="msub" id="dpQ">${TX('cargo.bagSub')}</p>
       <div class="stack">
-        <button class="rowcard" onclick="deposit('repairs')"><span class="em">🔧</span><b>Repairs</b> — to mend engines when they break</button>
-        <button class="rowcard" onclick="deposit('fun')"><span class="em">🎉</span><b>Fun</b> — for paint and stickers</button>
-        <button class="rowcard idea" onclick="deposit('savings')"><span class="em">🏦</span><b>Save it</b> — it GROWS by ${CFG.interestPercent}% every ${CFG.interestEveryMinutes} minutes</button>
+        <button class="rowcard" onclick="deposit('repairs')"><span class="em">🔧</span>${TX('cargo.repairsLabel')}</button>
+        <button class="rowcard" onclick="deposit('fun')"><span class="em">🎉</span>${TX('cargo.funLabel')}</button>
+        <button class="rowcard idea" onclick="deposit('savings')"><span class="em">🏦</span>${TX('cargo.saveLabel',{pct:CFG.interestPercent,mins:CFG.interestEveryMinutes})}</button>
       </div>
     `);
-    autoReadIf('dpQ',()=>speakPlain(`Repairs, to mend your engines. Fun, for paint and stickers. Or save it, and it grows all by itself every ${CFG.interestEveryMinutes} minutes.`));
+    autoReadIf('dpQ',()=>speakPlain(TX('cargo.bagSay',{mins:CFG.interestEveryMinutes})));
   }
 }
 function deposit(acct){
@@ -7010,20 +7370,20 @@ function deposit(acct){
   flyChip(depositAmt);updateHUD();fanfare();
   const names={repairs:'repairs',fun:'fun',savings:'savings'};
   closeModal();
-  banner(`💰 +${depositAmt} → ${names[acct]}`,2400,true);
+  banner(TX('cargo.depositBanner',{amt:depositAmt,pot:names[acct]}),2400,true);
   if(acct==='savings'){
-    speakPlain(`${depositAmt} points saved. Good thinking! Every ${CFG.interestEveryMinutes} minutes it grows a bit more, all by itself.`);
+    speakPlain(TX('cargo.depositSavedSay',{amt:depositAmt,mins:CFG.interestEveryMinutes}));
   }else{
-    speakPlain(`${depositAmt} points into your ${names[acct]} pot.`);
+    speakPlain(TX('cargo.depositOtherSay',{amt:depositAmt,pot:names[acct]}));
   }
   saveProgress();
 }
 function cargoModal(em,msg){
   openModal(`
     <div class="bigem">${em}</div>
-    <h2>Surprise gift!</h2>
+    <h2>${TX('cargo.title')}</h2>
     <p class="msub" id="cgQ">${msg}</p>
-    <button class="cta" onclick="closeModal()">Back to the sky! ✈️</button>
+    <button class="cta" onclick="closeModal()">${TX('cargo.backCta')}</button>
   `);
   autoReadIf('cgQ');
 }
@@ -7036,7 +7396,7 @@ function cargoModal(em,msg){
    wrong ones, so the same topic never looks the same twice and the child
    cannot learn the position of the answer.
    ═══════════════════════════════════════════════════════════════════════════ */
-const MCQ_TOPICS=[
+const MCQ_TOPICS=mergeArr('mcqTopics', [
   {
     id:'focus', em:'📖', ask:'What helps you focus?',
     right:[
@@ -7102,7 +7462,7 @@ const MCQ_TOPICS=[
       'Keep it all and never help anyone'
     ]
   }
-];
+]);
 let mcq=null;
 function showMCQ(){
   const t=MCQ_TOPICS[Math.floor(Math.random()*MCQ_TOPICS.length)];
@@ -7139,18 +7499,18 @@ function pickMCQ(i){
 /* ═══════════ AUTOPILOT — IF / THEN planning ═══════════
    Before a storm, the child programs the plane's autopilot with IF / THEN
    blocks. Getting all three right gives real protection in the air.      */
-const AP_RULES=[
+const AP_RULES=mergeArr('apRules', [
   {ifTxt:'IF ⚡ lightning flashes', ok:'THEN 🛬 go down low', opts:['THEN 🛬 go down low','THEN 🚀 fly straight at it','THEN 😴 do nothing']},
   {ifTxt:'IF 🆘 an animal needs help', ok:'THEN 🛞 wheels DOWN', opts:['THEN 🛞 wheels DOWN','THEN ⬆️ climb away fast','THEN 🚀 fly straight past']},
   {ifTxt:'IF 😤 I start to feel cross', ok:'THEN 🧸 breathe with my bear', opts:['THEN 🧸 breathe with my bear','THEN 📣 shout louder','THEN 💥 bump into something']}
-];
+]);
 let apPicks={};
 function showAutopilot(next){
   apPicks={};
   openModal(`
     <div class="bigem">🤖</div>
-    <h2>Teach the autopilot</h2>
-    <p class="msub" id="apQ">A storm is coming! Tell the plane what to do BEFORE it starts. Pick the kind, safe THEN for each IF.</p>
+    <h2>${esc(TX('autopilot.title'))}</h2>
+    <p class="msub" id="apQ">${esc(TX('autopilot.sub'))}</p>
     <div class="stack">
       ${AP_RULES.map((r,ri)=>{
         /* the option index is passed, not the text — the old version spliced
@@ -7162,7 +7522,7 @@ function showAutopilot(next){
         </div>`;
       }).join('')}
     </div>
-    <button class="cta" id="apBtn" onclick="apRun()">Start the autopilot! 🤖</button>
+    <button class="cta" id="apBtn" onclick="apRun()">${esc(TX('autopilot.cta'))}</button>
   `);
   autoReadIf('apQ');
   window._apNext=next||null;
@@ -7182,12 +7542,12 @@ function apRun(){
   if(right===AP_RULES.length){
     autopilotOn=true;
     closeModal();fanfare();
-    banner('🤖 Autopilot on',2200,true);
-    speakPlain(`${praise()} The autopilot knows what to do. Planning first is what calm pilots do.`);
+    banner(esc(TX('autopilot.onBanner')),2200,true);
+    speakPlain(TX('autopilot.onSay',{praise:praise()}));
     if(window._apNext){const n=window._apNext;window._apNext=null;n();}
   }else{
-    toast('🤖 '+notYetLine()+` ${right} of ${AP_RULES.length} are right.`,true);
-    speakPlain(`${notYetLine()} ${right} of ${AP_RULES.length} are right. Have another look.`);
+    toast(TX('autopilot.notYetToast',{notYet:notYetLine(),right,total:AP_RULES.length}),true);
+    speakPlain(TX('autopilot.notYetSay',{notYet:notYetLine(),right,total:AP_RULES.length}));
   }
 }
 
@@ -7208,8 +7568,8 @@ function showPreflight(){
   }).join('');
   openModal(`
     <div class="bigem">🧽🔨</div>
-    <h2>Check the plane</h2>
-    <p class="msub" id="pfQ">Rub the dirty marks off the window. Then hammer the loose nails in.</p>
+    <h2>${esc(TX('preflight.title'))}</h2>
+    <p class="msub" id="pfQ">${esc(TX('preflight.sub'))}</p>
     <div id="pffield" ontouchmove="pfTouchWipe(event)">
       <div class="pfglass">
         ${stains}
@@ -7221,9 +7581,9 @@ function showPreflight(){
       </div>
     </div>
     <div class="tinynote" id="pflbl">🧽 marks: <b>5</b> &nbsp;·&nbsp; 🔨 nails: <b>3</b> (tap each one 3 times)</div>
-    <button class="cta ghost" onclick="pfSkip()">Skip it — fly now</button>
+    <button class="cta ghost" onclick="pfSkip()">${esc(TX('preflight.skipCta'))}</button>
   `);
-  autoReadIf('pfQ',()=>speakPlain('Rub the dirty marks away. Then tap each nail three times to hammer it in.'));
+  autoReadIf('pfQ',()=>speakPlain(TX('preflight.say')));
 }
 function pfLbl(){
   if(!pfState)return;
@@ -7285,14 +7645,14 @@ function pfComplete(){
   addPoints(CFG.preflightPoints);updateHUD();fanfare();confettiBurst();saveProgress();
   setTimeout(()=>{
     const pct=Math.round(cfgNum('cleanBoost',0.10,0)*100);
-    const line=`All clean! A clean plane is a lighter plane, and a lighter plane flies faster. You get ${pct} per cent more speed.`;
+    const line=TX('preflight.cleanLine',{pct});
     if(!started){
       speakPlain(praise()+' '+line);
       showOrientation();   /* last stop before take-off: the two helpers */
     }else{
       introReading(false);
       closeModal();
-      banner(`✨ All clean — ${pct}% faster!`,2600,true);
+      banner(esc(TX('preflight.cleanBanner',{pct})),2600,true);
       speakPlain(line);
     }
   },900);
@@ -7302,12 +7662,12 @@ function pfSkip(){
   preflightOK=false;preflightDue=false;
   stopSpeak();
   if(!started){
-    speakPlain('You skipped the check. The plane will feel heavy and slow.');
+    speakPlain(TX('preflight.skipSay'));
     showOrientation();
   }else{
     introReading(false);
     closeModal();
-    banner('⚠️ Skipped — the plane feels heavy',2600);
+    banner(esc(TX('preflight.skipBanner')),2600);
   }
 }
 
@@ -7329,14 +7689,14 @@ function maybeFork(){
   paused=true;engineUpdate();
   openModal(`
     <div class="bigem">🛤️</div>
-    <h2>Two ways to go!</h2>
-    <p class="msub" id="fkQ">Which way will you fly, Captain?</p>
+    <h2>${esc(TX('fork.title'))}</h2>
+    <p class="msub" id="fkQ">${esc(TX('fork.sub'))}</p>
     <div class="stack">
-      <button class="rowcard" onclick="forkStorm()"><span class="em">⛈️</span><b>The Storm Way</b> — bumpy, but a very rare animal needs you (double points!)</button>
-      <button class="rowcard icec" onclick="forkCalm()"><span class="em">😌</span><b>The Calm Way</b> — smooth sky, and some quiet breathing (+${CFG.practicePoints})</button>
+      <button class="rowcard" onclick="forkStorm()"><span class="em">⛈️</span><b>${esc(TX('fork.stormLabel'))}</b> — ${esc(TX('fork.stormDesc'))}</button>
+      <button class="rowcard icec" onclick="forkCalm()"><span class="em">😌</span><b>${esc(TX('fork.calmLabel'))}</b> — ${esc(TX('fork.calmDesc',{pts:CFG.practicePoints}))}</button>
     </div>
   `);
-  autoReadIf('fkQ',()=>readChoices(['The Storm Way. Bumpy, but a very rare animal needs you. Double points.','The Calm Way. Smooth sky, and some quiet breathing.']));
+  autoReadIf('fkQ',()=>readChoices([TX('fork.stormSay'),TX('fork.calmSay')]));
 }
 function forkStorm(){
   /* plan BEFORE the storm — thinking ahead, and feeling ahead */
@@ -7348,7 +7708,7 @@ function forkStorm(){
       hazards.push(hz);updateCalmBtn();
     }
     animalClock=Math.min(animalClock,3);
-    banner('⛈️ Storm way — rare animal, double points!',2600);
+    banner(esc(TX('fork.stormBanner')),2600);
   });
 }
 function forkCalm(){
@@ -7472,7 +7832,7 @@ function showProfilePicker(){
   const ids=Object.keys(CFG.profiles||{});
   openModal(`
     <div class="bigem">🧑‍✈️</div>
-    <h2 id="ppQ">Who is flying today?</h2>
+    <h2 id="ppQ">${TX('profile.who')}</h2>
     <div class="stack">
       ${ids.map(id=>{
         const p=CFG.profiles[id];
@@ -7481,12 +7841,12 @@ function showProfilePicker(){
         const sub=sv
           ? `🏅 ${sv.score||0} pts · ⭐ ${Math.max(0,((sv.starList||[]).length-(sv.starsSpent||0)))} · 🏆 ${(sv.stats&&sv.stats.rescues)||0} helped · 🗺️ ${Math.round(sv.miles||0)} mi
              <br>🔧 ${sv.wNeeds||0} · 🎉 ${sv.wWants||0} · 🏦 ${sv.wVault||0} saved`
-          : `Age ${age} — new pilot, first flight!`;
+          : TX('profile.newPilotSub',{age});
         return `<button class="rowcard" onclick="pickProfile('${id}')">
           <span class="em">${sv?'🛩️':'✨'}</span>
           <span><b>${esc(p.name)}</b><br><small style="font-weight:700;opacity:.65">${sub}</small></span></button>`;
       }).join('')}
-      <button class="rowcard idea" onclick="showAddPilot()"><span class="em">➕</span><b>Add a new pilot</b></button>
+      <button class="rowcard idea" onclick="showAddPilot()"><span class="em">➕</span><b>${TX('profile.addNew')}</b></button>
     </div>
   `);
   autoReadIf('ppQ',()=>speakPlain(ids.map(id=>CFG.profiles[id].name).join(', or ')+'? Or add a new pilot.'));
@@ -7497,8 +7857,8 @@ function showAddPilot(){
   /* the id here used to be 'apQ', the SAME id the autopilot screen uses */
   openModal(`
     <div class="bigem">➕🧑‍✈️</div>
-    <h2>Add a new pilot</h2>
-    <p class="msub" id="npQ">What is their name, and how old are they? The game picks the right level by itself.</p>
+    <h2>${TX('profile.addTitle')}</h2>
+    <p class="msub" id="npQ">${TX('profile.addSub')}</p>
     <label class="fieldlbl">Pilot’s name</label>
     <input type="text" id="apName" maxlength="24" placeholder="e.g. Maya">
     <label class="fieldlbl">Date of birth (best — the level grows with them)</label>
@@ -7507,8 +7867,8 @@ function showAddPilot(){
     <input type="text" id="apAge" maxlength="2" placeholder="e.g. 6" inputmode="numeric">
     <label class="fieldlbl">How should the name be said aloud? (optional)</label>
     <input type="text" id="apSay" maxlength="24" placeholder="e.g. Aaries is said Ahrees">
-    <button class="cta mint" onclick="addPilot()">➕ Add this pilot</button>
-    <button class="cta ghost" onclick="showProfilePicker()">← Back</button>
+    <button class="cta mint" onclick="addPilot()">${TX('profile.addCta')}</button>
+    <button class="cta ghost" onclick="showProfilePicker()">${TX('profile.backCta')}</button>
   `);
   autoReadIf('npQ');
 }
@@ -7517,13 +7877,13 @@ function addPilot(){
   const dob =(document.getElementById('apDob') ||{}).value||'';
   const age =(document.getElementById('apAge') ||{}).value||'';
   const say =(document.getElementById('apSay') ||{}).value||'';
-  if(!name.trim()){toast('Type a name first ✏️');return;}
-  if(!dob && !age){toast('Add a date of birth, or an age ✏️');return;}
+  if(!name.trim()){toast(TX('profile.typeNameFirst'));return;}
+  if(!dob && !age){toast(TX('profile.addDobOrAge'));return;}
 
   let useDob=dob;
   if(!useDob && age){                    /* turn a plain age into a date of birth */
     const n=parseInt(age,10);
-    if(isNaN(n)||n<1||n>18){toast('Type an age between 1 and 18 ✏️');return;}
+    if(isNaN(n)||n<1||n>18){toast(TX('profile.typeValidAge'));return;}
     useDob=`${new Date().getFullYear()-n}-01-01`;
   }
   const id=name.trim().toLowerCase().replace(/[^a-z0-9]/g,'')||('pilot'+Date.now());
@@ -7538,8 +7898,8 @@ function addPilot(){
   }catch(e){}
 
   const a=pilotAge(useDob);
-  toast(`✅ ${name.trim()} added — age ${a}, ${BANDS[bandForAge(a)]}`);
-  speakPlain(`${name.trim()} has been added. Age ${a}.`);
+  toast(TX('profile.addedToast',{name:name.trim(),age:a,band:BANDS[bandForAge(a)]}));
+  speakPlain(TX('profile.addedSay',{name:name.trim(),age:a}));
   showProfilePicker();
 }
 function pickProfile(id){
@@ -7548,8 +7908,8 @@ function pickProfile(id){
   if(returning&&(miles>0||score>0||calmPower>0)){
     openModal(`
       <div class="bigem">🛩️💛</div>
-      <h2 id="wbQ">Welcome back, Captain ${esc(kidName)}!</h2>
-      <p class="msub" id="wbS">Here is exactly where you stopped.</p>
+      <h2 id="wbQ">${TX('profile.welcomeBack',{name:esc(kidName)})}</h2>
+      <p class="msub" id="wbS">${TX('profile.resumeSub')}</p>
       <div class="resumegrid">
         <div class="rcard"><span class="rem">🏅</span><b>${score}</b><small>points</small></div>
         <div class="rcard"><span class="rem">🧊</span><b>${Math.round(calmPower)}</b><small>calm</small></div>
@@ -7560,12 +7920,10 @@ function pickProfile(id){
       </div>
       <div class="hintline">🔧 ${wNeeds} repairs &nbsp;·&nbsp; 🎉 ${wWants} fun &nbsp;·&nbsp; 🏦 ${wVault} saved</div>
       <div class="hintline" style="background:#B9E8D8">🗺️ ${Math.round(milesLeft())} miles still to go</div>
-      <button class="cta" onclick="resumeFlight()">Keep flying! ✈️</button>
-      <button class="cta ghost" onclick="openSettings()">Settings first ⚙️</button>
+      <button class="cta" onclick="resumeFlight()">${TX('profile.keepFlying')}</button>
+      <button class="cta ghost" onclick="openSettings()">${TX('profile.settingsFirst')}</button>
     `);
-    autoReadIf('wbQ',()=>speakPlain(
-      `You have ${score} points, ${Math.round(calmPower)} calm, and you have helped ${stats.rescues} animals. `+
-      `${cap1(curMission.placeName)} is ${Math.round(milesLeft())} miles away. Shall we keep going?`));
+    autoReadIf('wbQ',()=>speakPlain(TX('profile.resumeSay',{score,calm:Math.round(calmPower),rescues:stats.rescues,place:cap1(curMission.placeName),miles:Math.round(milesLeft())})));
   }else{
     openSettings();
   }
@@ -7647,10 +8005,10 @@ function arriveAtVillage(){
     </div>
     <p class="msub" id="arrQ">${m.arrivalBlurb}</p>
     <div class="hintline" style="background:#B9E8D8">🗺️ ${flown} miles flown &nbsp;·&nbsp; 🏅 +${bonus} &nbsp;·&nbsp; 🏆 ${stats.rescues} animals helped on the way</div>
-    <button class="cta" onclick="nextJourney()">Fly a NEW mission 🛫</button>
-    <button class="cta ghost" onclick="closeModal()">Stay a bit longer ✈️</button>
+    <button class="cta" onclick="nextJourney()">${TX('arrival.newMissionCta')}</button>
+    <button class="cta ghost" onclick="closeModal()">${TX('arrival.stayCta')}</button>
   `);
-  autoReadIf('arrH',()=>speakHL('arrQ',()=>speakPlain('Thank you, Captain. Thank you for not giving up.')));
+  autoReadIf('arrH',()=>speakHL('arrQ',()=>speakPlain(TX('arrival.thanksSay'))));
   saveProgress();
 }
 function nextJourney(){
@@ -7667,7 +8025,7 @@ function beginNextMission(){
   vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
   closeModal();
   updateGps();updateHUD();
-  banner(`🗺️ New mission — ${CFG.missionDistance} miles`,2600);
+  banner(TX('mission.newMissionBanner',{miles:CFG.missionDistance}),2600);
   saveProgress();
 }
 
@@ -7742,7 +8100,7 @@ function showDestination(next){
     ${destSceneHTML()}
     <p class="msub" id="dsQ">${esc(m.destBlurb)} You have flown
       <b>${Math.round(miles)}</b> miles. It is <b>${Math.max(0,Math.round(milesLeft()))}</b> more miles to go.</p>
-    <button class="cta" onclick="${next?'closeModal();'+next:'closeModal()'}">${next?'Let us go! 🛫':'Keep flying! ✈️'}</button>
+    <button class="cta" onclick="${next?'closeModal();'+next:'closeModal()'}">${next?TX('mission.goCta'):TX('mission.keepFlyingCta')}</button>
   `);
   autoReadIf('dsQ');
 }
@@ -7755,11 +8113,11 @@ function showMission(){
   openModal(`
     <div class="bigem">🚁${m.cargoEm}</div>
     <h2 id="msTitle">${esc(m.jobTitle)}</h2>
-    <p class="msub" id="msSub">Listen, Captain ${esc(kidName||'Pilot')}. Here is your job:</p>
+    <p class="msub" id="msSub">${esc(TX('mission.sub'))}</p>
     <ul class="misslist" id="msList">
       ${m.briefing.map(([em,t],i)=>`<li id="ms${i}"><span class="mi">${em}</span><span>${t}</span></li>`).join('')}
     </ul>
-    <button class="cta" id="msBtn" onclick="missionAccepted()">Yes, I will do it! 🫡 <span class="spk-mini" onclick="event.stopPropagation();speakPlain('Yes, I will do it!')">▶</span></button>
+    <button class="cta" id="msBtn" onclick="missionAccepted()">${esc(TX('mission.acceptCta'))} <span class="spk-mini" onclick="event.stopPropagation();speakPlain(TX('mission.acceptSay'))">▶</span></button>
   `);
   /* read the whole briefing aloud, line by line, highlighting each one */
   if(autoRead){
@@ -7771,7 +8129,7 @@ function readMissionLine(i){
   if(!missionReading)return;
   if(i>=curMission.briefing.length){
     missionReading=false;skipBtn(false);
-    speakPlain('Now press: Yes, I will do it.');
+    speakPlain(TX('mission.readyPrompt'));
     const b=document.getElementById('msBtn');
     if(b){b.classList.add('pulseme');}
     return;
@@ -7799,32 +8157,32 @@ function showOrientation(){
   introReading(true);
   openModal(`
     <div class="bigem">🧊🛠️</div>
-    <h2>Two buttons you can press ANY time</h2>
-    <p class="msub" id="orQ">Captain, remember these two buttons. They are always there. You never have to ask.</p>
+    <h2>${esc(TX('orientation.title'))}</h2>
+    <p class="msub" id="orQ">${esc(TX('orientation.sub'))}</p>
     <div class="stack">
       <div class="rowcard icec" style="animation:pulseBig 1.6s infinite">
         <span class="em" style="font-size:30px">🧊</span>
-        <span><b>CALM</b> — press it any time, even when the sky is clear.<br>
-        <small>Breathe with your bear. It makes storms and dragons stop. It also fills up your <b>CALM dial</b>.</small></span>
+        <span><b>CALM</b> — ${esc(TX('orientation.calmLabel'))}<br>
+        <small>${esc(TX('orientation.calmSmall'))}</small></span>
       </div>
       <div class="rowcard" style="background:#FFE9B8;animation:pulseBig 1.6s infinite;animation-delay:.4s">
         <span class="em" style="font-size:30px">🛠️</span>
-        <span><b>HANGAR</b> — press it any time to <b>mend your engines</b> and spend your points.<br>
-        <small>A broken engine can only be mended in the hangar, with your repairs money.</small></span>
+        <span><b>HANGAR</b> — ${esc(TX('orientation.hangarLabel'))}<br>
+        <small>${esc(TX('orientation.hangarSmall'))}</small></span>
       </div>
       <div class="rowcard" style="background:#F3F1FB">
         <span class="em" style="font-size:30px">🏅</span>
-        <span><b>The drawer</b> — pull the tab on the right to see points, stars, and your money.<br>
-        <small>🧊 CALM and 🛠️ HANGAR are in the drawer too, so you can always find them.</small></span>
+        <span><b>The drawer</b> — ${esc(TX('orientation.drawerLabel'))}<br>
+        <small>${esc(TX('orientation.drawerSmall'))}</small></span>
       </div>
     </div>
-    <button class="cta" id="orBtn" onclick="orientationDone()">Got it — let’s fly! 🛫 <span class="spk-mini" onclick="event.stopPropagation();speakPlain('Got it. Let us fly!')">▶</span></button>
+    <button class="cta" id="orBtn" onclick="orientationDone()">${esc(TX('orientation.cta'))} <span class="spk-mini" onclick="event.stopPropagation();speakPlain(TX('orientation.ctaSay'))">▶</span></button>
   `);
   if(autoRead){
     setTimeout(()=>speakHL('orQ',()=>{
-      speakPlain('Press CALM any time. Breathing makes storms stop, and it fills your calm dial. Press HANGAR any time to mend your engines and spend your points. Both buttons are at the bottom of the screen.',()=>{
+      speakPlain(TX('orientation.say'),()=>{
         flashLifelines();
-        speakPlain('When you are ready, press: Got it, let us fly.');
+        speakPlain(TX('orientation.readyPrompt'));
         const b=document.getElementById('orBtn');
         if(b)b.classList.add('pulseme');
       });
@@ -7850,8 +8208,8 @@ function orientationDone(){
   paused=false;
   updateHUD();
   saveProgress();
-  banner(`🫡 Take off, Captain ${esc(kidName||'Pilot')}!`,3000,true);
-  speakPlain(`Off we go, Captain ${kidName||'Pilot'}. Everything is loaded. Let us fly.`);
+  banner(esc(TX('orientation.takeoffBanner')),3000,true);
+  speakPlain(TX('orientation.takeoffSay'));
   setTimeout(flashLifelines,1000);
 }
 
@@ -7867,13 +8225,13 @@ function showMissionPicker(returning){
   missionPickId=null;
   openModal(`
     <div class="bigem">🗺️</div>
-    <h2>Pick your mission, Captain</h2>
-    <p class="msub" id="rpQ">Where will you fly today?</p>
+    <h2>${TX('missionPicker.title')}</h2>
+    <p class="msub" id="rpQ">${TX('missionPicker.sub')}</p>
     <div class="routegrid">
       ${MISSIONS.map(m=>`<button class="routecard" id="rt-${m.id}" onclick="pickMission('${m.id}')">
         <span class="rem">${m.odoEm}</span><span><b>${esc(m.title)}</b><small>${esc(m.jobTitle)}</small></span></button>`).join('')}
     </div>
-    <button class="cta" id="rpGo" disabled onclick="takeOffMission()">Pick a mission, then take off 🛫</button>
+    <button class="cta" id="rpGo" disabled onclick="takeOffMission()">${TX('missionPicker.cta')}</button>
   `);
   autoReadIf('rpQ',()=>speakPlain('Pick your mission. '+MISSIONS.map(m=>m.title).join('. ')+'.'));
 }
@@ -7883,7 +8241,7 @@ function pickMission(id){
   const m=MISSIONS.find(x=>x.id===id);
   if(m)speakPlain(m.title);
   const b=document.getElementById('rpGo');
-  if(b){b.disabled=false;b.textContent='Take off on this mission! 🛫';}
+  if(b){b.disabled=false;b.textContent=TX('missionPicker.ctaChosen');}
 }
 function takeOffMission(){
   if(!missionPickId)return;
@@ -8418,12 +8776,12 @@ function startGame(){
 function showWelcome(){
   introReading(true);
   const age=pilotAge(kidDOB);
-  const ageBit=(age&&!isNaN(age))?`You are ${age} years old, and today `:'Today ';
+  const ageBit=(age&&!isNaN(age))?TX('welcome.prefixAge',{age}):TX('welcome.prefixNoAge');
   openModal(`
     <div class="bigem">🧑‍✈️✈️</div>
     <h2 id="wlTitle">Hello, Captain ${esc(kidName||'Pilot')}!</h2>
-    <p class="msub" id="wlSub">${ageBit}you are flying a big plane. It is full of fuel. Now — where shall we fly?</p>
-    <button class="cta" onclick="showMissionPicker(false)">Choose my mission 🗺️</button>
+    <p class="msub" id="wlSub">${esc(ageBit)}${esc(TX('welcome.body'))}</p>
+    <button class="cta" onclick="showMissionPicker(false)">${esc(TX('welcome.cta'))}</button>
   `);
   if(autoRead){
     setTimeout(()=>speakHL('wlTitle',()=>speakHL('wlSub')),300);
