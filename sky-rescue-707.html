@@ -1037,7 +1037,7 @@
                🤍 name the need · 💡 think of a kind idea ·
                🤲 calm down together · 🎨 trace & paint · 🔤 word builder ·
                🧸 belly-bear breathing · 🤝 sharing · 💬 kind words ·
-               🏹 archery vs Pip · 📝 parent questions · 🧩 jigsaw with Pip ·
+               🏹 archery vs Pip · 📝 parent questions · 🧩 jigsaw puzzle ·
                🔊 say it right · ⭕ tic-tac-toe · 🧠 thinking questions (MCQ) ·
                🔀 inventor puzzles · 🧠 memory · 🎹 piano with Pip.
                Every one of them is also playable ANY TIME from 🎮 PLAY A GAME.
@@ -1126,7 +1126,7 @@ const DEFAULT_CONFIG={
   arrivalBonus:      120,    // delivering the mission cargo
   flareDodgePoints:   25,    // diving under a solar flare
   realBreathBonus:    20,    // 3+ real tummy breaths, checked by the phone
-  teamBonus:          40,    // finishing the jigsaw with Pip, taking turns
+  teamBonus:          40,    // finishing the whole 16-piece jigsaw
   groundBonus:        10,    // feeling the body / helping an animal feel grounded
   nvcBonus:            6,    // extra, on top of the base points, for any feelings exercise
   calmBonus:            5,    // extra, on top of the base points, for choosing to breathe
@@ -1141,6 +1141,9 @@ const DEFAULT_CONFIG={
   vaultGoal:        1000,    // SAVINGS target → the GOLDEN 707
 
   /* ── PACING ──────────────────────────────────────────────────────────────*/
+  hazardPassesFrom2:   3,    // from this level trouble comes back for a 2nd go
+  hazardPassesFrom3:   6,    // …a 3rd
+  hazardPassesFrom4:   9,    // …and sometimes a 4th
   hazardSpeedPerLevel:0.15,  // hazards get 15% faster each level...
   hazardSpeedCap:     2.6,   // ...up to 2.6x the starting speed
   hazardBaseInterval: 20,    // seconds between hazards for a NEW pilot
@@ -1197,6 +1200,7 @@ const DEFAULT_CONFIG={
                              // so it stays a treat and not a toll on every win
   shareAskGap:         4,    // fewest rescues between two share asks
   distanceCallSeconds:75,    // roughly how often "you are this far away" is said
+  offCourseSeconds:    9,    // seconds off course before it says so out loud
   vehicleEverySeconds:95,    // roughly how often the weather changes the machine
   vehicleLastsSeconds:70,    // how long a stretch in the car or on the skis lasts
   jumpRise:         150,     // how fast the car/skier leaps when you push up
@@ -2575,6 +2579,22 @@ function spawnAnimal(){
   if(autoRead)setTimeout(()=>speakPlain(`${callName} needs help! Fly low. Put your wheels down.`),500);
 }
 
+/* ═══════════ HOW STUBBORN IS THE TROUBLE? ═══════════
+   At the very start a hazard makes ONE pass and gives up — a beginner has
+   enough to think about without something circling back at him. As he gets
+   good it starts coming back for a second go, then a third, and eventually a
+   fourth. Stepped by LEVEL, so it tracks how much he has actually played
+   rather than how long the tab has been open. */
+function hazardPasses(){
+  const lv=level();
+  const first=cfgNum('hazardPassesFrom2',3,1);   /* level it starts coming back */
+  const third=cfgNum('hazardPassesFrom3',6,1);
+  const fourth=cfgNum('hazardPassesFrom4',9,1);
+  if(lv<first)return 1;                          /* one pass, then it leaves */
+  if(lv<third) return 2;
+  if(lv<fourth)return 2+(Math.random()<0.7?1:0); /* mostly 3 */
+  return 3+(Math.random()<0.5?1:0);              /* 3 or 4 */
+}
 function spawnHazard(){
   const lv=level();
   let avail=HAZDEFS.filter(h=>h.lvl<=lv);
@@ -2585,9 +2605,7 @@ function spawnHazard(){
      LV1 ×1.00 · LV5 ×1.60 · LV10 ×2.35 · capped so it stays flyable. */
   const spdMul=Math.min(CFG.hazardSpeedCap||2.6, 1+(lv-1)*(CFG.hazardSpeedPerLevel||0.15))*flowAdj;
   const hz={def,t:0,frozen:false,struck:false};
-  /* a hazard is persistent: it makes 2–3 attack runs before it finally
-     gives up and flies away — one lazy pass is never the whole story */
-  hz.passes=0; hz.maxPasses=2+(Math.random()<0.55?1:0);
+  hz.passes=0; hz.maxPasses=hazardPasses();
   const py=planeScreenY();
   if(def.kind==='homing'||def.kind==='straight'){
     const fromRight=Math.random()<0.7;
@@ -3855,6 +3873,37 @@ function updateGps(){
      pointed well away from the village AND still has real distance to cover. */
   const wrong = Math.abs(rel)>1.75 && distToDest()>3 && started;
   c.classList.toggle('wrongway',wrong);
+  offCourseWatch(wrong,rel);
+}
+/* ═══════════ WHEN THE RED RADAR IS NOT ENOUGH ═══════════
+   The pulsing radar is the first, quiet warning and usually the only one he
+   needs. But if he keeps going the wrong way long after it started flashing,
+   a picture he is not looking at helps nobody — so it says so out loud, once,
+   and then leaves a long gap before it will say it again. Never nagging: one
+   sentence per stretch of going the wrong way. */
+let offCourseT=0, offCourseSaid=0;
+function offCourseWatch(wrong,rel){
+  if(!wrong||paused){
+    /* back on course — forget it, so the next wander starts from scratch */
+    if(!wrong){offCourseT=0;offCourseSaid=0;}
+    return;
+  }
+  const now=performance.now()/1000;
+  if(!offCourseT){offCourseT=now;return;}
+  const secs=now-offCourseT;
+  const first=cfgNum('offCourseSeconds',9,2);
+  /* the second reminder waits three times as long as the first */
+  const due=offCourseSaid===0?first:first*3*offCourseSaid;
+  if(secs<due||offCourseSaid>=3)return;
+  if(!canInterrupt())return;
+  offCourseSaid++;
+  markInterrupt();
+  const away=Math.abs(rel)>2.6;
+  const where=cap1(curMission.placeName);
+  banner('🧭 Wrong way! Look at the radar',2600,true);
+  speakNotice(away
+    ? `You are flying away from ${curMission.placeName}. Turn all the way around, and watch the red radar.`
+    : `You are going the wrong way. ${where} is ${Math.round(milesLeft())} miles behind you now. Follow the red radar.`);
 }
 function updateDrawer(){
   updateCalmBtn();
@@ -4125,12 +4174,12 @@ const CHALLENGE_TYPES=[
   {id:'ground',  em:'🤲', label:'Calm down together',  start:()=>showGrounding()},
   {id:'art',     em:'🎨', label:'Trace & paint',   start:()=>showArt()},
   {id:'spelling',em:'🔤', label:'Word builder',    start:()=>showSpelling()},
-  {id:'breathe', em:'🧸', label:'Belly-bear calm', start:()=>showBreath('rescue')},
+  {id:'breathe', em:'🧸', label:'Belly-bear calm', start:()=>askForBreath()},
   {id:'sharing', em:'🤝', label:'Sharing game',    start:()=>showSharing()},
   {id:'talk',    em:'💬', label:'Kind words',      start:()=>showTalk()},
   {id:'archery', em:'🏹', label:'Archery vs Pip',  start:()=>showArchery()},
   {id:'custom',  em:'📝', label:'My own questions',start:()=>showCustomQ()},
-  {id:'build',   em:'🧩', label:'Jigsaw with Pip',  start:()=>showBuild()},
+  {id:'build',   em:'🧩', label:'Jigsaw puzzle',    start:()=>showBuild()},
   {id:'sayit',   em:'🔊', label:'Say it right',    start:()=>showSayIt()},
   {id:'tictac',  em:'⭕', label:'Tic-tac-toe',     start:()=>showTicTac()},
   {id:'mcq',     em:'🧠', label:'Thinking questions', start:()=>showMCQ()},
@@ -5344,6 +5393,37 @@ function startMotion(){
 function stopMotion(){if(motionHandler){window.removeEventListener('devicemotion',motionHandler);motionHandler=null;}}
 
 const BREATH_SUB='Lie down. Put your teddy — or this phone — on your tummy. Then just listen. 🎧';
+/* ═══════════ THE ANIMAL ASKS FOR IT ═══════════
+   Belly breathing used to just begin. Now the animal asks — in its own
+   words, naming the feeling and the need first, exactly like every other
+   feelings exercise — and he chooses to say yes. Being ASKED, and agreeing,
+   is most of what makes it a kindness rather than a chore. Every animal
+   asks; only the wording changes. */
+const BREATH_ASKS=[
+  'My tummy is all fluttery and I cannot settle. I need to feel calm and steady. Will you do belly breathing with me?',
+  'Everything feels too fast inside me. I need to be still for a moment. Will you do belly breathing with me?',
+  'I am all wound up and my heart is thumping. I need to feel grounded. Will you do belly breathing with me?',
+  'I feel wobbly and I cannot get quiet. I need calm. Will you do belly breathing with me?',
+  'My thoughts are jumping everywhere. I need to slow right down. Will you do belly breathing with me?'
+];
+let breathAskIdx=Math.floor(Math.random()*BREATH_ASKS.length);
+function breathAskLine(){
+  breathAskIdx=(breathAskIdx+1)%BREATH_ASKS.length;
+  return BREATH_ASKS[breathAskIdx];
+}
+function askForBreath(){
+  const ask=breathAskLine();
+  openModal(`
+    <div class="bigem">${rescue.em}🧸</div>
+    <h2>${esc(rescue.name)} needs to feel calm</h2>
+    <div class="speech" id="baQ">${esc(ask)}</div>
+    <div class="stack">
+      <button class="rowcard idea" onclick="showBreath('rescue')"><span class="em">🧸</span><b>Yes — let us breathe together</b></button>
+      <button class="rowcard" onclick="showBreath('rescue')"><span class="em">💛</span>Of course I will help you</button>
+    </div>
+  `);
+  autoReadIf('baQ');
+}
 function showBreath(purpose){
   const CFGS={
     rescue:  {secs:48, minSecs:32, title:`Belly breathing with ${esc(rescue.name||'a friend')}`, sub:BREATH_SUB},
@@ -6140,23 +6220,23 @@ const JIGSAWS=[
   {id:'tiger',     name:'a tiger',     em:'🐯'}
 ];
 /* how big the assembled picture is drawn, and how it is cut */
-const JIG_SIZE=156;
-function jigGrid(){ return (band==='t')?{c:2,r:2}:(band==='y'?{c:3,r:2}:{c:3,r:3}); }
+const JIG_SIZE=188;
+function jigGrid(){ return {c:4,r:4}; }   /* sixteen pieces, every time */
 let jig=null;
 function showBuild(){
   const d=JIGSAWS[Math.floor(Math.random()*JIGSAWS.length)];
   const g=jigGrid(), n=g.c*g.r;
   /* piece k is the fragment of the picture at column k%c, row k/c */
   jig={def:d, grid:g, slots:Array(n).fill(null),
-       tray:shuffle([...Array(n).keys()]), turn:'pip', busy:false};
+       tray:shuffle([...Array(n).keys()]), busy:false};
   openModal(`
     <div class="bigem">${rescue.em}${d.em}</div>
-    <h2>A jigsaw with Pip!</h2>
-    <div class="speech" id="bdQ">${esc(rescue.name)} dropped a picture of ${d.name} and it broke into ${n} pieces. Pip the Fox will help you mend it. You take turns: Pip, then you, then Pip, then you.</div>
+    <h2>A ${n}-piece jigsaw!</h2>
+    <div class="speech" id="bdQ">${esc(rescue.name)} dropped a picture of ${d.name} and it broke into ${n} pieces. Can you mend it? Look at the whole picture, then find the piece that fits the glowing hole.</div>
     ${jigRefHTML(-1)}
     <button class="cta" onclick="jigBegin()">Start the jigsaw 🧩</button>
   `);
-  autoReadIf('bdQ',()=>speakPlain('Look at the whole picture first. Then we take turns. Pip goes first.'));
+  autoReadIf('bdQ',()=>speakPlain('Look at the whole picture first. Then find the piece that fits.'));
 }
 function jigBegin(){ if(jig)jigTurn(); }
 /* the first hole still waiting for a piece */
@@ -6180,7 +6260,7 @@ function jigArtSize(w,h){ return Math.max(w,h)*1.04; }
 /* the finished picture, with the hole he is filling marked on it */
 function jigRefHTML(wantSlot){
   const g=jig.grid;
-  const w=96, h=Math.round(96*g.r/g.c);
+  const w=104, h=Math.round(104*g.r/g.c);
   const size=jigArtSize(w,h);
   return `<div class="jigref" style="margin:0 auto 8px">
     <div class="jigrefbox" style="width:${w}px;height:${h}px">
@@ -6195,13 +6275,13 @@ function jigRefHTML(wantSlot){
 function jigBoard(){
   const next=jigNextSlot();
   const g=jig.grid;
-  const cw=Math.round(JIG_SIZE/g.c), ch=Math.round(JIG_SIZE/g.c); /* square pieces */
+  const cw=Math.round(JIG_SIZE/g.c), ch=cw;      /* square pieces */
   /* loose pieces are drawn a little smaller so a full tray still fits */
-  const tw=Math.round(cw*0.82), th=Math.round(ch*0.82);
+  const tw=Math.round(cw*0.86), th=tw;
+  const done=jig.slots.filter(s=>s!==null).length;
   return `<div class="buildwrap">
     <div class="jigwho">
-      <span class="tag ${jig.turn==='pip'?'on':''}">🦊 Pip</span>
-      <span class="tag ${jig.turn==='you'?'on':''}">🧑‍✈️ You</span>
+      <span class="tag on">🧩 ${done} of ${g.c*g.r} pieces in</span>
     </div>
     <div class="jigwrap">
       <div class="jigboard" style="grid-template-columns:repeat(${g.c},${cw}px)">
@@ -6211,7 +6291,7 @@ function jigBoard(){
       ${jigRefHTML(next)}
     </div>
     <div class="jigtray">
-      ${jig.tray.map((k,i)=>`<button class="jigpiece${jig.turn==='you'?'':' locked'}" id="jp${i}"
+      ${jig.tray.map((k,i)=>`<button class="jigpiece" id="jp${i}"
         style="width:${tw}px;height:${th}px" onclick="jigPlace(${i})">${jigFragHTML(k,tw,th)}</button>`).join('')}
     </div>
   </div>`;
@@ -6219,40 +6299,15 @@ function jigBoard(){
 function jigTurn(){
   if(!jig)return;
   if(jigNextSlot()<0){ jigDone(); return; }
-  if(jig.turn==='pip'){ jigPipTurn(); return; }
   openModal(`
-    <h2>Your turn! 🧩</h2>
+    <h2>Mend the picture 🧩</h2>
     ${jigBoard()}
     <p class="msub" id="bdY">Look at the glowing hole, and at the marked bit of the picture. Which piece is it? Tap it.</p>
   `);
   autoReadIf('bdY');
 }
-function jigPipTurn(){
-  jig.busy=true;
-  const slot=jigNextSlot();
-  openModal(`
-    <h2>Pip’s turn 🦊</h2>
-    ${jigBoard()}
-    <p class="msub" id="bdW">"My turn — I am looking for my piece," says Pip. "You wait, and then it is you."</p>
-  `);
-  autoReadIf('bdW');
-  tone(500,0.1,'triangle',0.08);
-  setTimeout(()=>{
-    if(!jig)return;
-    /* Pip finds the piece that fits and puts it in */
-    const ti=jig.tray.indexOf(slot);
-    if(ti>=0)jig.tray.splice(ti,1);
-    jig.slots[slot]=slot;
-    jig.busy=false;
-    tone(760,0.12,'triangle',0.1);
-    if(jigNextSlot()<0){ jigDone(); return; }
-    jig.turn='you';
-    jigTurn();
-    speakPlain('In it goes. Your turn now.');
-  },1900);
-}
 function jigPlace(i){
-  if(!jig||jig.busy||jig.turn!=='you')return;
+  if(!jig||jig.busy)return;
   const slot=jigNextSlot();
   if(slot<0)return;
   const k=jig.tray[i];
@@ -6267,18 +6322,16 @@ function jigPlace(i){
   jig.slots[slot]=k;
   streakUp();
   tone(880,0.12,'triangle',0.1);
-  kindActs++;
   if(jigNextSlot()<0){ jigDone(); return; }
-  jig.turn='pip';
   jigTurn();
 }
 function jigDone(){
-  const d=jig.def;
+  const d=jig.def, n=jig.grid.c*jig.grid.r;
   jig=null;
   confettiBurst();
   /* points go through challengeComplete so the card shows the real number */
   challengeComplete(
-    `${d.em} You and Pip mended the picture of ${d.name}! "We took turns," says Pip, "and it worked."`,
+    `${d.em} You mended the whole picture of ${d.name} — all ${n} pieces!`,
     null, CFG.teamBonus
   );
 }
@@ -7202,31 +7255,16 @@ function arcadeSuccess(msg,sentence,bonus,isImg){
   `);
 }
 /* closing a rescue may lead into a short, gentle sharing offer */
+/* ONE THING, THEN BACK TO THE SKY.
+   Finishing a rescue used to hand him straight into a second activity — a
+   sharing ask — before he had drawn breath. Nothing follows on by itself any
+   more: closing the card returns him to flying, and sharing or a game is
+   something he goes and chooses from the drawer when HE wants it. */
 function closeRescue(){
   stopSpeak();
-  /* showSharing() (opened a moment later by maybeAskShare) speaks its own
-     ask — a second spoken line here would just talk over it */
-  if(ctxMode==='rescue'&&maybeAskShare()){
-    overlay.classList.remove('show');
-    return;
-  }
   closeModal();
 }
-/* ---- ONCE IN A WHILE after a rescue, the animal simply asks. Short.
-   Skippable. Two guards keep it occasional: the dice, and a floor of
-   several rescues between asks — without the floor, an unlucky run of rolls
-   could ask three rescues in a row and it stops feeling like a gift.
-   He can always share on purpose from 💝 SHARE POINTS instead. ---- */
 let lastShareAskAt=-99;
-function maybeAskShare(){
-  if(score<10)return false;
-  if(stats.rescues-lastShareAskAt<cfgNum('shareAskGap',4,0))return false;
-  if(Math.random()>CFG.shareAskChance)return false;
-  lastShareAskAt=stats.rescues;
-  markInterrupt();
-  setTimeout(()=>{ ctxMode='sharing'; showSharing(); }, 900);
-  return true;
-}
 function confettiBurst(){
   const ems=['🎉','⭐','💛','🎈','🌈'];
   for(let i=0;i<16;i++){
@@ -7689,7 +7727,7 @@ const DASH_GROUPS=[
     {k:'freezeAllPoints', t:'Calming the whole sky',        min:0, max:200, step:5},
     {k:'practicePoints',  t:'Calm practice',                min:0, max:60,  step:1},
     {k:'preflightPoints', t:'The plane check',              min:0, max:60,  step:1},
-    {k:'teamBonus',       t:'Finishing the jigsaw with Pip', min:0, max:200, step:5},
+    {k:'teamBonus',       t:'Finishing the jigsaw',          min:0, max:200, step:5},
     {k:'realBreathBonus', t:'Real tummy breaths (sensor)',  min:0, max:100, step:5},
     {k:'flareDodgePoints',t:'Diving under a sun flare',     min:0, max:100, step:5},
     {k:'arrivalBonus',    t:'Delivering the mission cargo',  min:0, max:500, step:10},
@@ -7721,6 +7759,9 @@ const DASH_GROUPS=[
     {k:'hazardBaseInterval', t:'Seconds between hazards (new pilot)', min:5, max:90, step:1},
     {k:'hazardMinInterval',  t:'…once he is experienced',             min:3, max:60, step:1},
     {k:'hazardSpeedPerLevel',t:'Hazards speed up per level',          min:0, max:0.5,step:0.01},
+    {k:'hazardPassesFrom2',  t:'Level trouble starts coming back (2nd go)', min:1,max:30,step:1},
+    {k:'hazardPassesFrom3',  t:'Level it comes back a 3rd time',      min:1, max:40, step:1},
+    {k:'hazardPassesFrom4',  t:'Level it comes back a 4th time',      min:1, max:50, step:1},
     {k:'hazardSpeedCap',     t:'Fastest they may ever get (×)',       min:1, max:5,  step:0.1},
     {k:'maxHazardsAtOnce',   t:'Most hazards at once',                min:1, max:5,  step:1},
     {k:'hazardHitPenalty',   t:'Points lost on a hit',                min:0, max:100,step:1},
@@ -7733,6 +7774,7 @@ const DASH_GROUPS=[
     {k:'animalMinInterval',  t:'…once he is experienced',             min:2, max:90, step:1},
     {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
     {k:'distanceCallSeconds',t:'Seconds between distance call-outs',  min:10,max:300,step:5},
+    {k:'offCourseSeconds',   t:'Seconds off course before a warning',  min:2, max:120,step:1},
     {k:'vehicleEverySeconds',t:'Seconds between weather changes',     min:20,max:600,step:5},
     {k:'vehicleLastsSeconds',t:'Seconds in the car / on the skis',    min:15,max:300,step:5},
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
