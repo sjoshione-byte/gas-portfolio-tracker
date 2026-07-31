@@ -1201,7 +1201,8 @@ const DEFAULT_CONFIG={
   shareAskGap:         4,    // fewest rescues between two share asks
   distanceCallSeconds:75,    // roughly how often "you are this far away" is said
   offCourseSeconds:    9,    // seconds off course before it says so out loud
-  vehicleEverySeconds:95,    // roughly how often the weather changes the machine
+  vehicleFirstSeconds:35,    // the FIRST weather change comes early, so it is seen
+  vehicleEverySeconds:95,    // roughly how often the weather changes after that
   vehicleLastsSeconds:70,    // how long a stretch in the car or on the skis lasts
   jumpRise:         150,     // how fast the car/skier leaps when you push up
   jumpFall:         110,     // how fast gravity brings them back down
@@ -2093,10 +2094,16 @@ function distanceGap(){
    the sky is cleared of trouble, the machine changes, and a card explains
    the new controls before anything can hit him. */
 let vehClock=0, vehLeft=0, vehSwaps=0;
+/* NOTE: these clocks only run while the game is actually FLYING — every
+   challenge card, rescue and modal pauses update(), and the swap also has to
+   wait for a genuinely quiet moment. So the FIRST change is deliberately set
+   early: if it is not seen in the first couple of minutes of a short session,
+   as far as the child is concerned it does not exist. Later ones spread out. */
 function vehicleGap(){
   const base=cfgNum('vehicleEverySeconds',95,20);
   return base+Math.random()*base*0.5;
 }
+function vehicleFirstGap(){ return cfgNum('vehicleFirstSeconds',35,5); }
 function vehicleTick(dt){
   if(!started||!missionChosen)return;
   if(vehicle!=='plane'){
@@ -2107,8 +2114,11 @@ function vehicleTick(dt){
   }
   vehClock-=dt;
   if(vehClock>0)return;
-  if(!canInterrupt()){vehClock=6;return;}          /* wait for a quiet moment */
-  if(animal||cargo||hazards.length){vehClock=6;return;}
+  /* it is due — now find the first calm gap. Re-checking briskly matters:
+     when the sky is busy the quiet windows are short, and a lazy retry can
+     miss several of them in a row and push the change minutes further out. */
+  if(!canInterrupt()){vehClock=2;return;}
+  if(animal||cargo||hazards.length){vehClock=2;return;}
   if(milesLeft()<6){vehClock=20;return;}           /* not right at the end */
   switchVehicle(vehSwaps%2===0?'car':'ski');
 }
@@ -4395,7 +4405,7 @@ function restartAfterCrash(){
   shownLevel=1;
   animalClock=5;hazClock=16;cargo=null;cargoClock=95;
   distClock=distanceGap();lastDistSaid=null;highFlySaid=false;lastShareAskAt=-99;
-  vehicle='plane';vehClock=vehicleGap();vehLeft=0;vehSwaps=0;
+  vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
   updateHUD();closeModal();
   banner('🛫 Fresh start!',2400);
 }
@@ -7476,7 +7486,7 @@ function beginNextMission(){
   miles=0;latMiles=0;playMinutes=0;lastInterestMin=0;missionDone=false;
   plane.heading=0;
   distClock=distanceGap();lastDistSaid=null;
-  vehicle='plane';vehClock=vehicleGap();vehLeft=0;
+  vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
   closeModal();
   updateGps();updateHUD();
   banner(`🗺️ New mission — ${CFG.missionDistance} miles`,2600);
@@ -7657,6 +7667,7 @@ function orientationDone(){
   stopSpeak();
   started=true;          /* BUGFIX: must be true BEFORE closeModal, or the
                             game stays paused and the plane never flies */
+  vehClock=vehicleFirstGap();   /* the first weather change comes early */
   closeModal();
   paused=false;
   updateHUD();
@@ -7775,6 +7786,7 @@ const DASH_GROUPS=[
     {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
     {k:'distanceCallSeconds',t:'Seconds between distance call-outs',  min:10,max:300,step:5},
     {k:'offCourseSeconds',   t:'Seconds off course before a warning',  min:2, max:120,step:1},
+    {k:'vehicleFirstSeconds',t:'Seconds to the FIRST weather change', min:5, max:300,step:5},
     {k:'vehicleEverySeconds',t:'Seconds between weather changes',     min:20,max:600,step:5},
     {k:'vehicleLastsSeconds',t:'Seconds in the car / on the skis',    min:15,max:300,step:5},
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
