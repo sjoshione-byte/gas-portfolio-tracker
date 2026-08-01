@@ -500,11 +500,17 @@ window.SKY_SETTINGS = {
 
        bongoBeats      — the bongo rhythms (8 built in, including the martillo,
                           the first beat real bongo players are taught)
-                          { name:'Boom and Tap', notes:[0,1,0,1], hands:'LRLR',
+                          { name:'Boom and Tap', notes:[0,2,0,2], hands:'LRLR',
                             tip:'Big drum, small drum, over and over.' }
-                          notes: 0 = BOOM (big drum), 1 = TAP (small drum),
-                          2 = SLAP (the edge). hands is one letter per note,
-                          L or R, and MUST be the same length as notes.
+                          A pair of bongos is TWO drums, and on each of them
+                          the middle and the rim are different sounds, so the
+                          four numbers are:
+                            0 = BOOM  the big drum, in the middle
+                            1 = RIM   the big drum, on the rim
+                            2 = TAP   the small drum, in the middle
+                            3 = SLAP  the small drum, on the rim
+                          hands is one letter per note, L or R, and MUST be
+                          the same length as notes.
 
        trizPuzzles     — the pattern/thinking puzzles (12 built in)
 
@@ -538,8 +544,8 @@ window.SKY_SETTINGS = {
           story:'Blizzard wants to play, but blows too hard for anyone to join in.' }
       ],
       bongoBeats: [
-        { name:'Slap Happy', notes:[1,2,1,2], hands:'RLRL',
-          tip:'Tap then slap, tap then slap. Hands taking turns.' }
+        { name:'Slap Happy', notes:[2,3,2,3], hands:'RLRL',
+          tip:'Tap the middle, then slap the rim. Hands taking turns.' }
       ]
     }
   , content: {

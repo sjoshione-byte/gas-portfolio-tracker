@@ -480,30 +480,43 @@
     border:4px solid var(--ink);border-radius:16px;margin:8px 0 10px;
     background:linear-gradient(#7A5636,#4A3220);padding:12px 8px 10px;box-shadow:var(--shadow);
   }
-  .bongoset{display:flex;align-items:center;justify-content:center;gap:9px;touch-action:manipulation}
+  .bongoset{display:flex;align-items:center;justify-content:center;gap:11px;touch-action:manipulation}
+  /* TWO drums, as a real pair. The rim is not a third drum — it is the outer
+     ring of each drum, so each one is a full circle (the rim) with a smaller
+     circle sitting on top of it (the skin you hit in the middle). */
   .bdrum{
-    position:relative;border:4px solid var(--ink);border-radius:50%;cursor:pointer;padding:0;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-    font-family:'Fredoka';font-weight:700;color:#5C4526;line-height:1.1;
-    background:radial-gradient(circle at 38% 30%,#FFFBF0,#F0DCBB 60%,#D8BE93);
-    box-shadow:inset 0 -6px 0 rgba(92,69,38,.18),0 4px 0 rgba(51,48,94,.45);
+    position:relative;border:4px solid var(--ink);border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#E8CBA0,#D3AE7C 62%,#B98F5C);
+    box-shadow:inset 0 -6px 0 rgba(92,69,38,.22),0 4px 0 rgba(51,48,94,.45);
   }
-  .bdrum.big{width:104px;height:104px;font-size:14px}
-  .bdrum.small{width:84px;height:84px;font-size:13px}
-  .bdrum.slap{width:66px;height:66px;font-size:11px;
-    background:radial-gradient(circle at 38% 30%,#FFE9C9,#F3C98D 60%,#DCA95F)}
-  .bdrum .bhand{
+  .bdrum.big{width:120px;height:120px}
+  .bdrum.small{width:98px;height:98px}
+  .bzone{
+    position:absolute;padding:0;border:0;background:transparent;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    font-family:'Fredoka';font-weight:800;color:#5C4526;line-height:1.05;
+  }
+  .bzone.rim{
+    inset:0;border-radius:50%;justify-content:flex-start;padding-top:4px;
+    font-size:9px;letter-spacing:.6px;color:#6B4F2C;
+  }
+  .bzone.head{
+    border-radius:50%;border:3px solid rgba(92,69,38,.30);
+    background:radial-gradient(circle at 40% 32%,#FFFDF6,#F4E4C8 70%,#E8D3B0);
+    box-shadow:inset 0 -3px 0 rgba(92,69,38,.12);
+  }
+  .bdrum.big   .bzone.head{inset:23px;font-size:13px}
+  .bdrum.small .bzone.head{inset:20px;font-size:12px}
+  .bzone .bhand{
     width:19px;height:19px;border-radius:50%;background:#FFF;border:2.5px solid var(--ink);
-    font-family:'Nunito';font-weight:900;font-size:11px;color:var(--ink);line-height:15px;
+    font-family:'Nunito';font-weight:900;font-size:11px;color:var(--ink);line-height:14px;
   }
-  .bdrum .bem{font-size:19px;line-height:1}
-  .bdrum.lit{
-    background:radial-gradient(circle at 38% 30%,#FFE39A,#FFC94D 60%,#F0A62E);
-    transform:translateY(4px);box-shadow:inset 0 -3px 0 rgba(92,69,38,.25),0 1px 0 rgba(51,48,94,.45);
-  }
-  .bdrum.next{box-shadow:inset 0 0 0 4px #E8564A,0 4px 0 rgba(51,48,94,.45)}
-  .bdrum:disabled{cursor:default}
-  .bongoset.locked .bdrum{opacity:.85}
+  .bzone.head.lit{background:radial-gradient(circle at 40% 32%,#FFE39A,#FFC94D 70%,#F0A62E);transform:scale(.94)}
+  .bzone.rim.lit{background:radial-gradient(circle at 38% 30%,rgba(255,201,77,.85),rgba(240,166,46,.85) 62%,transparent 72%)}
+  .bzone.next{box-shadow:0 0 0 4px #E8564A}
+  .bzone.rim.next{box-shadow:inset 0 0 0 4px #E8564A}
+  .bzone:disabled{cursor:default}
+  .bongoset.locked .bdrum{opacity:.86}
   /* the beat written out, the same way the piano tune is */
   .bnote{
     min-width:44px;border:2px solid var(--ink);border-radius:8px;background:#FFF;
@@ -511,7 +524,8 @@
     line-height:1.15;
   }
   .bnote small{display:block;font-family:'Nunito';font-weight:900;font-size:9px;opacity:.65}
-  .bnote.boom{background:#E8D3B0}
+  .bnote.boom{background:#D3AE7C}
+  .bnote.rim{background:#E8CBA0}
   .bnote.slap{background:#F3C98D}
   .bnote.done{background:#8FE0B0}
   .bnote.now{background:var(--sun);animation:nowpulse 1.1s infinite}
@@ -6638,28 +6652,34 @@ function pianoFinish(){
    genuine — including the martillo, the first rhythm every bongo player is
    taught — each one shortened to what a small player can hold in mind.
    ═══════════════════════════════════════════════════════════════════════════ */
+/* A pair of bongos is TWO drums, not three. The big one (the hembra) booms,
+   the small one (the macho) sings — and on each of them the middle and the
+   rim are different sounds made by the same drum, which is exactly the thing
+   a beginner has to feel for. So: two drums, two places on each. */
 const BONGO_HITS=[
-  {id:'boom', n:'BOOM', say:'boom', em:'🥁', cls:'big',   where:'the big drum'},
-  {id:'tap',  n:'TAP',  say:'tap',  em:'🥁', cls:'small', where:'the small drum'},
-  {id:'slap', n:'SLAP', say:'slap', em:'✋', cls:'slap',  where:'the edge'}
+  {id:'boom', n:'BOOM', say:'boom', drum:0, zone:'head', where:'the middle of the big drum'},
+  {id:'rim',  n:'RIM',  say:'rim',  drum:0, zone:'rim',  where:'the rim of the big drum'},
+  {id:'tap',  n:'TAP',  say:'tap',  drum:1, zone:'head', where:'the middle of the small drum'},
+  {id:'slap', n:'SLAP', say:'slap', drum:1, zone:'rim',  where:'the rim of the small drum'}
 ];
+/* notes are positions in BONGO_HITS: 0 BOOM · 1 RIM · 2 TAP · 3 SLAP */
 const BONGO_BEATS=mergeArr('bongoBeats', [
-  {name:'Boom and Tap',      notes:[0,1,0,1],     hands:'LRLR',
+  {name:'Boom and Tap',      notes:[0,2,0,2],     hands:'LRLR',
    tip:'Big drum, small drum, over and over. Left hand booms, right hand taps.'},
-  {name:'The Martillo',      notes:[0,1,1,0,1,1], hands:'LRRLRR',
+  {name:'The Martillo',      notes:[0,2,2,0,2,2], hands:'LRRLRR',
    tip:'The first beat every bongo player learns. BOOM tap tap — then again.'},
-  {name:'Heartbeat',         notes:[0,0,1],       hands:'LLR',
+  {name:'Heartbeat',         notes:[0,0,2],       hands:'LLR',
    tip:'Two booms with the SAME hand, then a tap. Boom-boom, tap.'},
-  {name:'Two Taps, One Boom',notes:[1,1,0],       hands:'RRL',
-   tip:'Tap tap up on the small drum, then one big BOOM underneath.'},
-  {name:'Meet the Slap',     notes:[0,1,2],       hands:'LRR',
-   tip:'A SLAP is a sharp hit on the edge. Boom, tap, then slap it.'},
-  {name:'Rain on the Roof',  notes:[1,1,1,1],     hands:'RLRL',
-   tip:'Four soft taps, hands taking turns: right, left, right, left.'},
-  {name:'Cha Cha Cha',       notes:[0,1,1,0,1],   hands:'LRRLR',
-   tip:'Boom, tap-tap, boom, tap. Say it out loud while you play it.'},
-  {name:'The Train',         notes:[0,1,0,1,0,1], hands:'LRLRLR',
-   tip:'Hands taking turns all the way — a train leaving the station.'}
+  {name:'Two Taps, One Boom',notes:[2,2,0],       hands:'RRL',
+   tip:'Tap tap in the middle of the small drum, then one big BOOM underneath.'},
+  {name:'Meet the Slap',     notes:[0,2,3],       hands:'LRR',
+   tip:'A SLAP is a sharp hit on the RIM of the small drum. Boom, tap, slap.'},
+  {name:'Rain on the Roof',  notes:[2,2,2,2],     hands:'RLRL',
+   tip:'Four soft taps in the middle, hands taking turns: right, left, right, left.'},
+  {name:'Knock on the Rim',  notes:[1,0,1,0],     hands:'LLLL',
+   tip:'The same big drum twice over: knock the rim, then boom in the middle.'},
+  {name:'Cha Cha Cha',       notes:[0,2,2,0,3],   hands:'LRRLR',
+   tip:'Boom, tap-tap, boom, slap. Say it out loud while you play it.'}
 ]);
 let bongo=null;
 function showBongo(){
@@ -6672,27 +6692,49 @@ function showBongo(){
   if(autoRead&&!suppressAutoRead)setTimeout(()=>speakPlain(t.tip,()=>pipDrums()),300);
   else setTimeout(pipDrums,500);
 }
-/* each drum has its own voice: a long low boom, a short high tap, and a slap
-   that is mostly noise — the three sounds a real pair of bongos makes */
+/* Each place on each drum has its own voice. Every one LEADS with a bright
+   little burst of noise — the strike itself — because a phone speaker can
+   barely move air below about 300Hz, and a drum built only from its deep
+   body note comes out of a handset as very nearly silence. The pitched part
+   underneath gives it its size; the burst on top is what actually carries. */
 function bongoSound(i){
-  if(i===0){ tone(150,0.30,'sine',0.20,0,64);   noiseBurst(0.09,0.05,320,160); }
-  else if(i===1){ tone(300,0.17,'sine',0.17,0,190); noiseBurst(0.06,0.04,900,500); }
-  else { noiseBurst(0.13,0.10,2600,900); tone(520,0.07,'square',0.06,0,380); }
+  const id=(BONGO_HITS[i]||{}).id;
+  if(id==='boom'){                    /* big drum, middle — deep and round */
+    noiseBurst(0.05,0.11,1100,480);
+    tone(220,0.34,'sine',0.26,0,110);
+    tone(330,0.13,'triangle',0.10,0,180);
+  }else if(id==='rim'){               /* big drum, rim — a woody knock */
+    noiseBurst(0.05,0.12,1500,700);
+    tone(340,0.10,'square',0.13,0,240);
+  }else if(id==='tap'){               /* small drum, middle — high and singing */
+    noiseBurst(0.04,0.10,2000,900);
+    tone(430,0.20,'sine',0.24,0,300);
+    tone(650,0.09,'triangle',0.09,0,480);
+  }else{                              /* small drum, rim — a sharp crack */
+    noiseBurst(0.11,0.19,3200,1400);
+    tone(820,0.07,'square',0.13,0,560);
+  }
 }
 function bongoStrike(i){
   const b=document.getElementById('bd'+i);
   if(b){ b.classList.add('lit'); setTimeout(()=>b.classList.remove('lit'),160); }
   bongoSound(i);
 }
+/* two drums; each one is a rim you can hit and a middle you can hit */
 function bongoPadsHTML(who){
   const on=(who==='you');
-  return BONGO_HITS.map((h,i)=>{
-    const isNext=on&&bongo&&bongo.notes[bongo.input]===i;
-    const hand=isNext?bongo.hands.charAt(bongo.input):'';
-    return `<button class="bdrum ${h.cls}${isNext?' next':''}" id="bd${i}"
-      onclick="bongoPress(${i})"${on?'':' disabled'}>
-      <span class="bem">${h.em}</span>${h.n}
-      ${hand?`<span class="bhand">${hand}</span>`:''}</button>`;
+  const want=(on&&bongo)?bongo.notes[bongo.input]:-1;
+  const hand=(on&&bongo)?bongo.hands.charAt(bongo.input):'';
+  const zone=(d,z)=>BONGO_HITS.findIndex(h=>h.drum===d&&h.zone===z);
+  return [0,1].map(d=>{
+    const rim=zone(d,'rim'), head=zone(d,'head');
+    const pad=(i,cls)=>{
+      const isNext=(want===i);
+      return `<button class="bzone ${cls}${isNext?' next':''}" id="bd${i}"
+        onclick="bongoPress(${i})"${on?'':' disabled'}>${BONGO_HITS[i].n}${
+        isNext&&hand?`<span class="bhand">${hand}</span>`:''}</button>`;
+    };
+    return `<div class="bdrum ${d===0?'big':'small'}">${pad(rim,'rim')}${pad(head,'head')}</div>`;
   }).join('');
 }
 /* the beat written out — which drum, which hand, and where he is up to */
