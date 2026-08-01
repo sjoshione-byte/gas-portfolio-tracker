@@ -1667,11 +1667,32 @@ function txFill(s,vars){
      reads properly without the writer having to think about it */
   return out.charAt(0).toUpperCase()+out.slice(1);
 }
+/* ═══════════ WORDS REWRITTEN ON THIS DEVICE ═══════════
+   sky-rescue-settings.js is the way to change wording for good, on every
+   device. But a grown-up holding only a phone has no file to edit, so the
+   ⚙️ → 💬 Words tab writes here instead: same groups, same keys, saved per
+   pilot, and it wins over both the built-in wording and the settings file. */
+let TEXT_EDITS={};
+function textKey(){ return 'skyText_'+profileId; }
+function loadTextEdits(){
+  try{ TEXT_EDITS=JSON.parse(localStorage.getItem(textKey())||'{}'); }
+  catch(e){ TEXT_EDITS={}; }
+}
+function saveTextEdits(){
+  try{ localStorage.setItem(textKey(),JSON.stringify(TEXT_EDITS)); }catch(e){}
+}
+/* the wording actually in force for one key: this device first, then the
+   settings file, then the game's own words */
+function txRaw(grp,key){
+  const e=TEXT_EDITS[grp];
+  if(e&&e[key]!=null)return e[key];
+  return (TEXT[grp]||{})[key];
+}
 /* TX('journey.distance',{miles:12}) — one line, filled in.
    A list gives a random member, so adding wordings adds variety for free. */
 function TX(path,vars){
   const [grp,key]=String(path).split('.');
-  let v=(TEXT[grp]||{})[key];
+  let v=txRaw(grp,key);
   if(v==null)return '';
   if(Array.isArray(v)){
     if(!v.length)return '';
@@ -1682,7 +1703,7 @@ function TX(path,vars){
 /* the whole list, filled in — for places that walk it in order */
 function TXlist(path){
   const [grp,key]=String(path).split('.');
-  const v=(TEXT[grp]||{})[key];
+  const v=txRaw(grp,key);
   return Array.isArray(v)?v.slice():(v==null?[]:[v]);
 }
 
@@ -2279,6 +2300,7 @@ function loadProfile(id){
   profileId=id;
   profileChosen=true;
   loadDash();               /* this pilot's own settings */
+  loadTextEdits();          /* …and any words rewritten on this device */
   const p=(CFG.profiles||{})[id]||{};
   const saves=allSaves();
   if(saves[id]){
@@ -8431,9 +8453,11 @@ function openDashboard(){
       ${DASH_GROUPS.map(x=>`<button class="dtab ${x.id===dashTab?'on':''}" onclick="dashGo('${x.id}')">${x.em}<small>${x.tab||x.name}</small></button>`).join('')}
       <button class="dtab ${dashTab==='more'?'on':''}" onclick="dashGo('more')">🔧<small>More</small></button>
       <button class="dtab ${dashTab==='content'?'on':''}" onclick="dashGo('content')">📝<small>Content</small></button>
+      <button class="dtab ${dashTab==='text'?'on':''}" onclick="dashGo('text')">💬<small>Words</small></button>
     </div>
     <div id="dashbody">${
       dashTab==='content' ? dashContent()
+    : dashTab==='text'    ? dashWords()
     : dashTab==='more'    ? dashFields({em:'🔧',name:'Everything else',fields:extraFields()})
     : dashFields(g)}</div>
     <div class="tinynote">${nTunable()} settings in here — every number the game uses.</div>
@@ -8482,6 +8506,220 @@ function dashReset(){
     <p class="msub">This clears every setting you changed for ${esc(kidName||'this pilot')}. Their points and progress are NOT touched.</p>
     <button class="cta" onclick="resetDash()">Yes, reset the settings</button>
     <button class="cta ghost" onclick="openDashboard()">← No, keep them</button>
+  `);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💬 THE WORDS TAB — every line the game says, editable on the device
+   ---------------------------------------------------------------------------
+   Three ways in, because a phone is a poor place to retype 300 lines by hand:
+     ✏️ Edit       — one part of the game at a time, line by line
+     📤 Copy all   — the whole lot as "name = wording", to hand to an AI
+     📥 Paste back — the AI's rewrite, checked and applied in one go
+   The middle two are the point: rewriting everything to be warmer, or richer,
+   or in another voice, is a job for one paste — not three hundred taps.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const TEXT_GROUPS={
+  nvc:'💛 Feelings games',        calm:'🧘 Calming and grounding',
+  turns:'🔁 Taking turns',        journey:'🗺️ The journey',
+  vehicle:'🚗 Changing vehicle',  rescue:'🆘 Reaching an animal',
+  share:'💝 Sharing points',      welcome:'👋 Hello',
+  mission:'🎯 The job briefing',  orientation:'🧭 The two helper buttons',
+  preflight:'🧽 Checking the plane', calmChooser:'🧊 The calm-power menu',
+  calmResult:'✨ After calming',   landed:'🛬 Landing safely',
+  crash:'💥 Crashing and starting again', fork:'🔀 Two ways to go',
+  autopilot:'🤖 The autopilot lesson',    profile:'🧑‍✈️ Pilots',
+  shop:'🏗️ The hangar',          withdraw:'🏦 Taking out savings',
+  cargo:'🎁 The surprise gift',   bank:'💰 Savings growing',
+  glow:'🛡️ Calm glow and kindness', karma:'💛 Kindness coming back',
+  hazard:'⛈️ Trouble in the sky', hit:'💢 Taking a hit',
+  autopilotEvt:'🤖 The autopilot firing', view:'👀 The camera view',
+  boost:'🚀 Boost',               reset:'🌀 The reset exercise',
+  minigame:'🎲 The small games',  teddyBreath:'🧸 Belly breathing',
+  arrival:'🏁 Arriving',          missionPicker:'🗺️ Picking a mission'
+};
+let wordsGrp='nvc', wordsMode='edit';
+function wordsGo(m){ wordsMode=m; dashGo('text'); }
+function wordsTabs(){
+  const t=(id,em,lbl)=>`<div class="sopt ${wordsMode===id?'sel':''}" onclick="wordsGo('${id}')">${em} ${lbl}</div>`;
+  return `<div class="seg">${t('edit','✏️','Edit')}${t('export','📤','Copy all')}${t('import','📥','Paste back')}</div>`;
+}
+function wordsChangedCount(){
+  return Object.keys(TEXT_EDITS).reduce((s,g)=>s+Object.keys(TEXT_EDITS[g]||{}).length,0);
+}
+function dashWords(){
+  if(wordsMode==='export')return dashWordsExport();
+  if(wordsMode==='import')return dashWordsImport();
+  const grp=wordsGrp, n=wordsChangedCount();
+  return `
+    <div class="dashgrp">
+      <div class="dashgrpname">💬 Every word the game says</div>
+      ${wordsTabs()}
+      <label class="fieldlbl">Which part of the game?</label>
+      <select class="dsel" onchange="wordsGrp=this.value;dashGo('text')">
+        ${Object.keys(TEXT).map(g=>
+          `<option value="${g}" ${g===grp?'selected':''}>${esc(TEXT_GROUPS[g]||g)}</option>`).join('')}
+      </select>
+      ${Object.keys(TEXT[grp]||{}).map(key=>{
+        const v=txRaw(grp,key), lines=Array.isArray(v)?v:[v];
+        const isList=Array.isArray((TEXT[grp]||{})[key]);
+        const changed=TEXT_EDITS[grp]&&TEXT_EDITS[grp][key]!=null;
+        return `<div class="dfield">
+          <label>${esc(prettify(key))}${changed?' <b style="color:#2E7D52">• changed</b>':''}${
+            isList?' <small style="font-weight:700;opacity:.6">— one per line, the game picks one</small>':''}</label>
+          <textarea id="tx_${grp}_${key}" style="min-height:${lines.length>1?76:54}px">${esc(lines.join('\n'))}</textarea>
+        </div>`;
+      }).join('')}
+      <button class="cta mint" onclick="dashSaveGroup('${grp}')">💬 Save these words</button>
+      <p class="tinynote" style="text-align:left">Keep every {curly brace} exactly as it is — the game fills those in
+        with names and numbers as it plays. ${n?`<b>${n} line${n===1?'':'s'} changed on this device.</b>`:''}</p>
+      ${n?`<button class="cta ghost" onclick="dashWordsReset()">↺ Back to the original words</button>`:''}
+    </div>`;
+}
+function dashSaveGroup(grp){
+  TEXT_EDITS[grp]=TEXT_EDITS[grp]||{};
+  Object.keys(TEXT[grp]||{}).forEach(key=>{
+    const el=document.getElementById('tx_'+grp+'_'+key);
+    if(!el)return;
+    const orig=(TEXT[grp]||{})[key];
+    const lines=el.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    /* emptied out? fall back to the game's own wording rather than saying nothing */
+    if(!lines.length){ delete TEXT_EDITS[grp][key]; return; }
+    const val=Array.isArray(orig)?lines:(lines.length>1?lines:lines[0]);
+    if(JSON.stringify(val)===JSON.stringify(orig)) delete TEXT_EDITS[grp][key];
+    else TEXT_EDITS[grp][key]=val;
+  });
+  if(!Object.keys(TEXT_EDITS[grp]).length)delete TEXT_EDITS[grp];
+  saveTextEdits();
+  toast('💬 Words saved');
+  dashGo('text');
+}
+function dashWordsReset(){
+  TEXT_EDITS={};saveTextEdits();
+  toast('↺ The original words are back');
+  dashGo('text');
+}
+/* everything the game can say, as "name = wording", newest edits included */
+function textExportAll(){
+  const out=[
+    '# Sky Rescue 707 — every word the game says.',
+    '# Change ONLY the wording to the RIGHT of each "=".',
+    '# Keep the name on the left exactly as it is, or the game cannot find it.',
+    '# Keep every {curly brace} exactly as it is — the game fills those in.',
+    '# A name on more than one line is a list: the game picks one at random,',
+    '# so adding extra lines under a name simply adds variety.',
+    ''];
+  for(const grp of Object.keys(TEXT)){
+    out.push('# '+(TEXT_GROUPS[grp]||grp));
+    for(const key of Object.keys(TEXT[grp])){
+      const v=txRaw(grp,key);
+      (Array.isArray(v)?v:[v]).forEach(line=>out.push(grp+'.'+key+' = '+line));
+    }
+    out.push('');
+  }
+  return out.join('\n');
+}
+/* read back a "name = wording" block, keeping only names the game knows */
+function textImportParse(raw){
+  const got={}, unknown=[];
+  String(raw).split(/\r?\n/).forEach(line=>{
+    const t=line.trim();
+    if(!t||t.charAt(0)==='#')return;
+    const eq=t.indexOf('=');
+    if(eq<0)return;
+    const path=t.slice(0,eq).trim(), val=t.slice(eq+1).trim();
+    const dot=path.indexOf('.');
+    if(dot<0||!val)return;
+    const grp=path.slice(0,dot), key=path.slice(dot+1);
+    if(!TEXT[grp]||TEXT[grp][key]===undefined){ unknown.push(path); return; }
+    got[grp]=got[grp]||{};
+    (got[grp][key]=got[grp][key]||[]).push(val);
+  });
+  return {got,unknown};
+}
+function dashWordsExport(){
+  return `
+    <div class="dashgrp">
+      <div class="dashgrpname">📤 Copy every word</div>
+      ${wordsTabs()}
+      <p class="tinynote" style="text-align:left">Copy all of this and give it to an AI assistant with an instruction
+        such as <i>&ldquo;rewrite the wording after each = to be warmer and more respectful for a six-year-old,
+        keep the names and the {braces} exactly as they are&rdquo;</i> — then bring the answer back
+        with <b>📥 Paste back</b>.</p>
+      <textarea id="wdOut" readonly onclick="this.select()"
+        style="min-height:190px;font-family:monospace;font-size:11px">${esc(textExportAll())}</textarea>
+      <button class="cta mint" onclick="wordsCopy()">📋 Copy it all</button>
+      <button class="cta ghost" onclick="wordsSnippet()">📄 …or as settings-file text</button>
+    </div>`;
+}
+function dashWordsImport(){
+  return `
+    <div class="dashgrp">
+      <div class="dashgrpname">📥 Paste the new words back</div>
+      ${wordsTabs()}
+      <p class="tinynote" style="text-align:left">Paste the answer here. Lines that were left alone are fine to leave in,
+        and anything the game does not recognise is skipped and reported rather than guessed at.</p>
+      <textarea id="wdIn" style="min-height:170px;font-family:monospace;font-size:11px"
+        placeholder="nvc.feelQ = How is {n} feeling just now?"></textarea>
+      <button class="cta mint" onclick="wordsImport()">📥 Use these words</button>
+    </div>`;
+}
+function wordsCopy(){
+  const el=document.getElementById('wdOut');
+  if(!el)return;
+  el.select();
+  let ok=false;
+  try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(el.value).then(
+      ()=>toast('📋 Copied'),
+      ()=>toast(ok?'📋 Copied':'Press and hold the text, then choose Copy'));
+  }else toast(ok?'📋 Copied':'Press and hold the text, then choose Copy');
+}
+function wordsImport(){
+  const el=document.getElementById('wdIn');
+  if(!el||!el.value.trim()){ toast('Paste the words in first ✏️'); return; }
+  const parsed=textImportParse(el.value);
+  let lines=0, changed=0;
+  for(const grp in parsed.got){
+    TEXT_EDITS[grp]=TEXT_EDITS[grp]||{};
+    for(const key in parsed.got[grp]){
+      const got=parsed.got[grp][key], orig=(TEXT[grp]||{})[key];
+      const val=Array.isArray(orig)?got:(got.length>1?got:got[0]);
+      lines+=got.length;
+      if(JSON.stringify(val)===JSON.stringify(orig))delete TEXT_EDITS[grp][key];
+      else { TEXT_EDITS[grp][key]=val; changed++; }
+    }
+    if(!Object.keys(TEXT_EDITS[grp]).length)delete TEXT_EDITS[grp];
+  }
+  saveTextEdits();
+  const un=parsed.unknown;
+  openModal(`
+    <div class="bigem">${changed?'💬':'🤔'}</div>
+    <h2>${changed?'The new words are in':'Nothing changed'}</h2>
+    <p class="msub">${changed
+      ? `Read ${lines} line${lines===1?'':'s'}, and <b>${changed}</b> of them now say something different.`
+      : `Read ${lines} line${lines===1?'':'s'}, but every one already matched what the game says.`}
+      ${un.length?`<br><br><b>${un.length}</b> name${un.length===1?' was':'s were'} not recognised and ${un.length===1?'was':'were'} skipped:
+        <br><small style="opacity:.7">${esc(un.slice(0,6).join(', '))}${un.length>6?' …':''}</small>`:''}</p>
+    <button class="cta" onclick="wordsGo('edit')">← Back to the words</button>
+  `);
+}
+/* the same edits as a block to paste into sky-rescue-settings.js, so words
+   rewritten on a phone can be carried to every device */
+function wordsSnippet(){
+  const t={};
+  for(const grp in TEXT_EDITS)if(Object.keys(TEXT_EDITS[grp]).length)t[grp]=TEXT_EDITS[grp];
+  const snip=Object.keys(t).length
+    ? 'window.SKY_SETTINGS = {\n  text: '+JSON.stringify(t,null,2).split('\n').join('\n  ')+'\n};'
+    : '/* No words have been changed on this device yet. */';
+  openModal(`
+    <div class="bigem">📄</div>
+    <h2>For the settings file</h2>
+    <p class="msub">Paste this into <b>sky-rescue-settings.js</b> to use these words on every device, not just this one.</p>
+    <textarea readonly onclick="this.select()"
+      style="min-height:200px;font-size:10.5px;font-family:monospace">${esc(snip)}</textarea>
+    <button class="cta" onclick="wordsGo('export')">← Back</button>
   `);
 }
 

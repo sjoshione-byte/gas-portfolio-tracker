@@ -31,6 +31,14 @@
    so on) — the game always fills in every stand-in a line actually uses.
 
    After editing, reload the page. Nothing else to do.
+
+   NO FILE TO HAND? There is a second way in, for a phone or tablet: in the
+   game, open ⚙️ settings → 💬 Words. Every line below is in there too, and it
+   can copy the whole lot out as plain "name = wording" text to hand to an AI
+   assistant, then take the rewrite straight back. Those edits are saved on
+   that one device, and they WIN over this file — so if a line in the game
+   does not match what you wrote here, check the Words tab for a device edit,
+   or use its "↺ Back to the original words" button to clear them all.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 window.SKY_SETTINGS = {
