@@ -468,6 +468,53 @@
     background:#EAF1FF;border:2.5px dashed var(--ink);border-radius:12px;
     padding:6px 9px;font-size:12px;font-weight:800;line-height:1.45;margin-bottom:8px;
   }
+  /* which practice round he is on — the same chip on the piano and the bongos,
+     so "two rounds and you have it" reads the same in both games */
+  .roundchip{
+    display:inline-block;background:#FFE39A;border:2.5px solid var(--ink);border-radius:999px;
+    padding:2px 12px;font-size:11.5px;font-weight:900;margin-bottom:7px;letter-spacing:.3px;
+  }
+  .roundchip.extra{background:#B9E8D8}
+  /* ═══ BONGOS — a real pair: big drum, small drum, and a slap on the rim ═══ */
+  .bongocase{
+    border:4px solid var(--ink);border-radius:16px;margin:8px 0 10px;
+    background:linear-gradient(#7A5636,#4A3220);padding:12px 8px 10px;box-shadow:var(--shadow);
+  }
+  .bongoset{display:flex;align-items:center;justify-content:center;gap:9px;touch-action:manipulation}
+  .bdrum{
+    position:relative;border:4px solid var(--ink);border-radius:50%;cursor:pointer;padding:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    font-family:'Fredoka';font-weight:700;color:#5C4526;line-height:1.1;
+    background:radial-gradient(circle at 38% 30%,#FFFBF0,#F0DCBB 60%,#D8BE93);
+    box-shadow:inset 0 -6px 0 rgba(92,69,38,.18),0 4px 0 rgba(51,48,94,.45);
+  }
+  .bdrum.big{width:104px;height:104px;font-size:14px}
+  .bdrum.small{width:84px;height:84px;font-size:13px}
+  .bdrum.slap{width:66px;height:66px;font-size:11px;
+    background:radial-gradient(circle at 38% 30%,#FFE9C9,#F3C98D 60%,#DCA95F)}
+  .bdrum .bhand{
+    width:19px;height:19px;border-radius:50%;background:#FFF;border:2.5px solid var(--ink);
+    font-family:'Nunito';font-weight:900;font-size:11px;color:var(--ink);line-height:15px;
+  }
+  .bdrum .bem{font-size:19px;line-height:1}
+  .bdrum.lit{
+    background:radial-gradient(circle at 38% 30%,#FFE39A,#FFC94D 60%,#F0A62E);
+    transform:translateY(4px);box-shadow:inset 0 -3px 0 rgba(92,69,38,.25),0 1px 0 rgba(51,48,94,.45);
+  }
+  .bdrum.next{box-shadow:inset 0 0 0 4px #E8564A,0 4px 0 rgba(51,48,94,.45)}
+  .bdrum:disabled{cursor:default}
+  .bongoset.locked .bdrum{opacity:.85}
+  /* the beat written out, the same way the piano tune is */
+  .bnote{
+    min-width:44px;border:2px solid var(--ink);border-radius:8px;background:#FFF;
+    font-family:'Fredoka';font-weight:600;font-size:12px;text-align:center;padding:2px 4px;
+    line-height:1.15;
+  }
+  .bnote small{display:block;font-family:'Nunito';font-weight:900;font-size:9px;opacity:.65}
+  .bnote.boom{background:#E8D3B0}
+  .bnote.slap{background:#F3C98D}
+  .bnote.done{background:#8FE0B0}
+  .bnote.now{background:var(--sun);animation:nowpulse 1.1s infinite}
   .spinwrap{display:flex;align-items:center;justify-content:center;gap:18px;margin:14px 0}
   .spinbtn{width:52px;height:52px;border-radius:50%;border:3px solid var(--ink);background:#EAF1FF;
     font-size:28px;font-weight:900;cursor:pointer;line-height:1;color:var(--ink)}
@@ -1164,7 +1211,9 @@ const DEFAULT_CONFIG={
   calmPerFreezeOne:    1,    // ...by calming one troublemaker
   calmPerFreezeAll:    3,    // ...by calming the whole sky
   archeryRounds:       3,    // shots each in the archery game
-  patternRounds:       2,    // rounds to win Piano with Pip
+  patternRounds:       2,    // practice rounds to finish Piano with Pip
+  bongoRounds:         2,    // ...and to finish Bongos with Pip
+  practiceBonus:       5,    // points for each EXTRA round he chooses to play
   spellBlanks:         0,    // missing letters (0 = pick by age)
   donationKarmaPer:   30,
   weatherSeconds:     50,
@@ -1600,6 +1649,7 @@ const DEFAULT_TEXT={
   minigame:{
     memoryHint:'Tap two cards. Find the two that match.',
     pianoYourTurn:'Your turn. Follow the note names.',
+    bongoYourTurn:'Your turn. Watch the hand on each drum.',
     listenAgain:'Listen again.',
     drawFirst:'✏️ Draw something first!',
     tttIntro:'Tic tac toe with Pip. You are the crosses. You go first.',
@@ -1615,6 +1665,19 @@ const DEFAULT_TEXT={
     lovely:'Lovely. Keep going, just like that.',
     realBonusToast:'📱 Real tummy breaths! +{amt}'
   },
+  /* practice rounds on the piano and the bongos */
+  practice:{
+    roundLabel:'Practice round {round} of {need}',
+    extraLabel:'🔁 Extra practice {n}',
+    doneTitle:'That is both rounds!',
+    extraTitle:'Played again!',
+    doneSub:'You have practised {name} twice. Play it once more if you would like to, or finish here and take your points.',
+    extraSub:'{n} extra round{s} done, all your own choice. Go again, or finish here.',
+    moreCta:'🔁 Practise it once more',
+    doneCta:'✅ I am done — finish',
+    bonusLine:'and {n} extra practice round{s}, because you chose to'
+  },
+
   /* leaving the destination, and picking the next one */
   arrival:{
     newMissionCta:'Fly a NEW mission 🛫',
@@ -4771,7 +4834,8 @@ const CHALLENGE_TYPES=[
   {id:'mcq',     em:'🧠', label:'Thinking questions', start:()=>showMCQ()},
   {id:'triz',    em:'🔀', label:'Inventor puzzles',   start:()=>showTriz()},
   {id:'memory',  em:'🧠', label:'Memory match',       start:()=>showMemory()},
-  {id:'pattern', em:'🎹', label:'Piano with Pip',     start:()=>showPattern()}
+  {id:'pattern', em:'🎹', label:'Piano with Pip',     start:()=>showPattern()},
+  {id:'bongo',   em:'🥁', label:'Bongos with Pip',    start:()=>showBongo()}
 ];
 
 function startRescue(){
@@ -6390,7 +6454,7 @@ function showPattern(){
   const t=PIANO_TUNES[Math.floor(Math.random()*PIANO_TUNES.length)];
   /* only as many notes as the age band can hold in mind at once */
   const len=(band==='t')?3:(band==='y'?5:t.notes.length);
-  piano={tune:t, notes:t.notes.slice(0,len), input:0, busy:true, round:1, replays:0};
+  piano={tune:t, notes:t.notes.slice(0,len), input:0, busy:true, round:1, extra:0, replays:0};
   renderPiano('"Watch my paws," says Pip. "Then you play it back to me."','pip');
   if(autoRead&&!suppressAutoRead){
     setTimeout(()=>speakPlain(t.tip,()=>pipPlays()),300);
@@ -6433,6 +6497,7 @@ function renderPiano(msg,who){
   const p=piano;
   openModal(`
     <h2>${esc(p.tune.name)} 🎹</h2>
+    <div class="roundchip${p.extra?' extra':''}">${esc(roundLabel(p,cfgNum('patternRounds',2,1)))}</div>
     <div class="pianotip">🦊 ${esc(p.tune.tip)}</div>
     <div class="staff">${staffHTML(who)}</div>
     <div class="pianocase">
@@ -6501,21 +6566,236 @@ function pianoPress(i){
     return;
   }
   piano.busy=true;
-  if(piano.round>=cfgNum('patternRounds',2,1)){
-    const nm=piano.tune.name, tip=piano.tune.tip;
-    piano=null;
-    confettiBurst();
-    challengeComplete(
-      `🎹 You played <b>${esc(nm)}</b>, Captain ${esc(kidName||'Pilot')}!`,
-      `<div class="pianotip">🦊 "You read the notes and found them all," says Pip. "${esc(tip)}"</div>`,
-      0,true);
-    return;
-  }
+  /* the required rounds are done — but he decides whether that is enough */
+  if(piano.extra||piano.round>=cfgNum('patternRounds',2,1)){ pianoRoundsDone(); return; }
   /* another round: a longer stretch of the same tune, so it grows */
   piano.round++;
   const full=piano.tune.notes;
   if(piano.notes.length<full.length)piano.notes=full.slice(0,piano.notes.length+1);
   setTimeout(()=>{ if(piano)pipPlays(); },800);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRACTICE ROUNDS — shared by the piano and the bongos
+   ---------------------------------------------------------------------------
+   Two rounds finish the game and earn the points. After that it is HIS call:
+   the card offers another round for the joy of it, as many times as he likes,
+   and each one adds a few points — because choosing to practise more is the
+   habit worth paying for, not the bare minimum.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function roundLabel(g,need){
+  return g.extra ? TX('practice.extraLabel',{n:g.extra})
+                 : TX('practice.roundLabel',{round:g.round,need});
+}
+function showPracticeChoice(em,title,sub,moreFn,doneFn){
+  openModal(`
+    <div class="bigem">${em}</div>
+    <h2>${esc(title)}</h2>
+    <p class="msub" id="prQ">${esc(sub)}</p>
+    <button class="cta mint" onclick="${moreFn}">${esc(TX('practice.moreCta'))}</button>
+    <button class="cta" onclick="${doneFn}">${esc(TX('practice.doneCta'))}</button>
+  `);
+  autoReadIf('prQ');
+}
+function practiceSub(g,name){
+  return g.extra ? TX('practice.extraSub',{n:g.extra,s:g.extra===1?'':'s'})
+                 : TX('practice.doneSub',{name});
+}
+function pianoRoundsDone(){
+  if(!piano)return;
+  piano.busy=true;
+  showPracticeChoice('🎹',
+    TX(piano.extra?'practice.extraTitle':'practice.doneTitle'),
+    practiceSub(piano,piano.tune.name),
+    'pianoPractise()','pianoFinish()');
+}
+function pianoPractise(){
+  if(!piano)return;
+  piano.extra++;
+  /* an extra round is the WHOLE tune, however far the required rounds got */
+  piano.notes=piano.tune.notes.slice();
+  pipPlays();
+}
+function pianoFinish(){
+  if(!piano)return;
+  const nm=piano.tune.name, tip=piano.tune.tip, extra=piano.extra;
+  piano=null;
+  confettiBurst();
+  challengeComplete(
+    `🎹 You played <b>${esc(nm)}</b>, Captain ${esc(kidName||'Pilot')}!`
+      +(extra?` <br><small>${esc(TX('practice.bonusLine',{n:extra,s:extra===1?'':'s'}))}</small>`:''),
+    `<div class="pianotip">🦊 "You read the notes and found them all," says Pip. "${esc(tip)}"</div>`,
+    extra*cfgNum('practiceBonus',5,0),true);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🥁 BONGOS WITH PIP
+   ---------------------------------------------------------------------------
+   A real pair of bongos: the big drum (low BOOM), the small drum (high TAP),
+   and a SLAP on the rim. What a beginner actually has to learn is not which
+   note comes next but WHICH HAND plays it, so every beat carries an L or an R
+   and the pad shows the hand he needs before he hits it. The patterns are
+   genuine — including the martillo, the first rhythm every bongo player is
+   taught — each one shortened to what a small player can hold in mind.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const BONGO_HITS=[
+  {id:'boom', n:'BOOM', say:'boom', em:'🥁', cls:'big',   where:'the big drum'},
+  {id:'tap',  n:'TAP',  say:'tap',  em:'🥁', cls:'small', where:'the small drum'},
+  {id:'slap', n:'SLAP', say:'slap', em:'✋', cls:'slap',  where:'the edge'}
+];
+const BONGO_BEATS=mergeArr('bongoBeats', [
+  {name:'Boom and Tap',      notes:[0,1,0,1],     hands:'LRLR',
+   tip:'Big drum, small drum, over and over. Left hand booms, right hand taps.'},
+  {name:'The Martillo',      notes:[0,1,1,0,1,1], hands:'LRRLRR',
+   tip:'The first beat every bongo player learns. BOOM tap tap — then again.'},
+  {name:'Heartbeat',         notes:[0,0,1],       hands:'LLR',
+   tip:'Two booms with the SAME hand, then a tap. Boom-boom, tap.'},
+  {name:'Two Taps, One Boom',notes:[1,1,0],       hands:'RRL',
+   tip:'Tap tap up on the small drum, then one big BOOM underneath.'},
+  {name:'Meet the Slap',     notes:[0,1,2],       hands:'LRR',
+   tip:'A SLAP is a sharp hit on the edge. Boom, tap, then slap it.'},
+  {name:'Rain on the Roof',  notes:[1,1,1,1],     hands:'RLRL',
+   tip:'Four soft taps, hands taking turns: right, left, right, left.'},
+  {name:'Cha Cha Cha',       notes:[0,1,1,0,1],   hands:'LRRLR',
+   tip:'Boom, tap-tap, boom, tap. Say it out loud while you play it.'},
+  {name:'The Train',         notes:[0,1,0,1,0,1], hands:'LRLRLR',
+   tip:'Hands taking turns all the way — a train leaving the station.'}
+]);
+let bongo=null;
+function showBongo(){
+  const t=BONGO_BEATS[Math.floor(Math.random()*BONGO_BEATS.length)];
+  /* only as much of the beat as the age band can hold in mind at once */
+  const len=Math.min(t.notes.length,(band==='t')?3:(band==='y'?4:t.notes.length));
+  bongo={beat:t, notes:t.notes.slice(0,len), hands:t.hands.slice(0,len),
+         input:0, busy:true, round:1, extra:0, replays:0};
+  renderBongo('"Listen to my paws," says Pip. "Then play it back to me."','pip');
+  if(autoRead&&!suppressAutoRead)setTimeout(()=>speakPlain(t.tip,()=>pipDrums()),300);
+  else setTimeout(pipDrums,500);
+}
+/* each drum has its own voice: a long low boom, a short high tap, and a slap
+   that is mostly noise — the three sounds a real pair of bongos makes */
+function bongoSound(i){
+  if(i===0){ tone(150,0.30,'sine',0.20,0,64);   noiseBurst(0.09,0.05,320,160); }
+  else if(i===1){ tone(300,0.17,'sine',0.17,0,190); noiseBurst(0.06,0.04,900,500); }
+  else { noiseBurst(0.13,0.10,2600,900); tone(520,0.07,'square',0.06,0,380); }
+}
+function bongoStrike(i){
+  const b=document.getElementById('bd'+i);
+  if(b){ b.classList.add('lit'); setTimeout(()=>b.classList.remove('lit'),160); }
+  bongoSound(i);
+}
+function bongoPadsHTML(who){
+  const on=(who==='you');
+  return BONGO_HITS.map((h,i)=>{
+    const isNext=on&&bongo&&bongo.notes[bongo.input]===i;
+    const hand=isNext?bongo.hands.charAt(bongo.input):'';
+    return `<button class="bdrum ${h.cls}${isNext?' next':''}" id="bd${i}"
+      onclick="bongoPress(${i})"${on?'':' disabled'}>
+      <span class="bem">${h.em}</span>${h.n}
+      ${hand?`<span class="bhand">${hand}</span>`:''}</button>`;
+  }).join('');
+}
+/* the beat written out — which drum, which hand, and where he is up to */
+function bongoStaffHTML(who){
+  return bongo.notes.map((n,i)=>{
+    const h=BONGO_HITS[n];
+    const state=(who==='you')?(i<bongo.input?'done':(i===bongo.input?'now':'')):'';
+    return `<span class="bnote ${h.id} ${state}">${h.n}<small>${bongo.hands.charAt(i)}</small></span>`;
+  }).join('');
+}
+function renderBongo(msg,who){
+  const b=bongo;
+  openModal(`
+    <h2>${esc(b.beat.name)} 🥁</h2>
+    <div class="roundchip${b.extra?' extra':''}">${esc(roundLabel(b,cfgNum('bongoRounds',2,1)))}</div>
+    <div class="pianotip">🦊 ${esc(b.beat.tip)}</div>
+    <div class="staff">${bongoStaffHTML(who)}</div>
+    <div class="bongocase">
+      <div class="bongoset${who==='you'?'':' locked'}">${bongoPadsHTML(who)}</div>
+      <div class="pianonote" id="bnNote">${who==='you'?'YOUR TURN':'PIP IS PLAYING…'}</div>
+    </div>
+    <p class="msub" id="bnQ">${esc(msg)}</p>
+    <button class="cta ghost" onclick="bongoPlayAgain()"${who==='you'?'':' disabled'}>🦊 Pip, play it again 🔁</button>
+  `);
+}
+/* asking to hear the beat once more is what a learner should do — free */
+function bongoPlayAgain(){
+  if(!bongo||bongo.busy)return;
+  bongo.replays++;
+  pipDrums();
+}
+function pipDrums(){
+  if(!bongo)return;
+  bongo.busy=true;bongo.input=0;
+  renderBongo('Watch which drum Pip hits, and listen.','pip');
+  let i=0;
+  const step=()=>{
+    if(!bongo)return;
+    if(i>=bongo.notes.length){
+      bongo.busy=false;
+      renderBongo('Now you play it. Follow the beat above the drums.','you');
+      speakPlain(TX('minigame.bongoYourTurn'));
+      return;
+    }
+    bongoStrike(bongo.notes[i]);
+    const note=document.getElementById('bnNote');
+    if(note)note.textContent='PIP: '+BONGO_HITS[bongo.notes[i]].n;
+    i++;setTimeout(step,520);
+  };
+  setTimeout(step,350);
+}
+function bongoPress(i){
+  if(!bongo||bongo.busy)return;
+  bongoStrike(i);
+  const h=BONGO_HITS[i];
+  const note=document.getElementById('bnNote');
+  if(note)note.textContent='YOU: '+h.n;
+  if(bongo.notes[bongo.input]!==i){
+    /* hitting the wrong drum is how you find the right one — it costs nothing */
+    softMiss(document.getElementById('bd'+i));
+    const want=BONGO_HITS[bongo.notes[bongo.input]];
+    if(note)note.textContent='LOOK FOR '+want.n;
+    speakNotice('That is the '+h.say+'. You want the '+want.say+', on '+want.where+'.');
+    return;
+  }
+  bongo.input++;
+  if(bongo.input<bongo.notes.length){ renderBongo('Keep the beat going!','you'); return; }
+  bongo.busy=true;
+  if(bongo.extra||bongo.round>=cfgNum('bongoRounds',2,1)){ bongoRoundsDone(); return; }
+  /* another round: a longer stretch of the same beat, so it grows */
+  bongo.round++;
+  const full=bongo.beat;
+  if(bongo.notes.length<full.notes.length){
+    const n=bongo.notes.length+1;
+    bongo.notes=full.notes.slice(0,n); bongo.hands=full.hands.slice(0,n);
+  }
+  setTimeout(()=>{ if(bongo)pipDrums(); },800);
+}
+function bongoRoundsDone(){
+  if(!bongo)return;
+  bongo.busy=true;
+  showPracticeChoice('🥁',
+    TX(bongo.extra?'practice.extraTitle':'practice.doneTitle'),
+    practiceSub(bongo,bongo.beat.name),
+    'bongoPractise()','bongoFinish()');
+}
+function bongoPractise(){
+  if(!bongo)return;
+  bongo.extra++;
+  bongo.notes=bongo.beat.notes.slice();
+  bongo.hands=bongo.beat.hands.slice();
+  pipDrums();
+}
+function bongoFinish(){
+  if(!bongo)return;
+  const nm=bongo.beat.name, tip=bongo.beat.tip, extra=bongo.extra;
+  bongo=null;
+  confettiBurst();
+  challengeComplete(
+    `🥁 You played <b>${esc(nm)}</b> on the bongos, Captain ${esc(kidName||'Pilot')}!`
+      +(extra?` <br><small>${esc(TX('practice.bonusLine',{n:extra,s:extra===1?'':'s'}))}</small>`:''),
+    `<div class="pianotip">🦊 "You kept the beat and swapped hands," says Pip. "${esc(tip)}"</div>`,
+    extra*cfgNum('practiceBonus',5,0),true);
 }
 
 /* ═══════════ INVENTOR PUZZLES WITH PIP — four real TRIZ tools, child-sized ═══
@@ -8350,7 +8630,9 @@ const DASH_GROUPS=[
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
     {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
     {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
-    {k:'patternRounds',      t:'Rounds to win Piano with Pip',        min:1, max:10, step:1},
+    {k:'patternRounds',      t:'Practice rounds to finish the piano',  min:1, max:10, step:1},
+    {k:'bongoRounds',        t:'Practice rounds to finish the bongos', min:1, max:10, step:1},
+    {k:'practiceBonus',      t:'Points for each extra practice round',  min:0, max:50, step:1},
     {k:'spellBlanks',        t:'Missing letters (0 = by age)',        min:0, max:5,  step:1}
   ]},
   {id:'plane', em:'✈️', name:'The plane', tab:'Plane', fields:[

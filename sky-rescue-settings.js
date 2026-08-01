@@ -409,6 +409,7 @@ window.SKY_SETTINGS = {
   minigame:{
     memoryHint:'Tap two cards. Find the two that match.',
     pianoYourTurn:'Your turn. Follow the note names.',
+    bongoYourTurn:'Your turn. Watch the hand on each drum.',
     listenAgain:'Listen again.',
     drawFirst:'✏️ Draw something first!',
     tttIntro:'Tic tac toe with Pip. You are the crosses. You go first.',
@@ -424,6 +425,19 @@ window.SKY_SETTINGS = {
     lovely:'Lovely. Keep going, just like that.',
     realBonusToast:'📱 Real tummy breaths! +{amt}'
   },
+  /* practice rounds on the piano and the bongos */
+  practice:{
+    roundLabel:'Practice round {round} of {need}',
+    extraLabel:'🔁 Extra practice {n}',
+    doneTitle:'That is both rounds!',
+    extraTitle:'Played again!',
+    doneSub:'You have practised {name} twice. Play it once more if you would like to, or finish here and take your points.',
+    extraSub:'{n} extra round{s} done, all your own choice. Go again, or finish here.',
+    moreCta:'🔁 Practise it once more',
+    doneCta:'✅ I am done — finish',
+    bonusLine:'and {n} extra practice round{s}, because you chose to'
+  },
+
   /* leaving the destination, and picking the next one */
   arrival:{
     newMissionCta:'Fly a NEW mission 🛫',
@@ -478,18 +492,27 @@ window.SKY_SETTINGS = {
        talkRounds      — turn-taking conversation prompts (3 built in)
 
        pianoTunes      — the piano tunes to learn, each with a teaching tip
-                          (9 built in) — see the game's own PIANO_TUNES for
-                          the exact shape if you want to add one
+                          (9 built in)
+                          { name:'Hot Cross Buns', notes:[4,2,0,4,2,0],
+                            tip:'E D C, twice. Three white keys side by side.' }
+                          notes are positions on the keyboard, 0 = middle C
+                          counting every key, black ones included, up to 12.
+
+       bongoBeats      — the bongo rhythms (8 built in, including the martillo,
+                          the first beat real bongo players are taught)
+                          { name:'Boom and Tap', notes:[0,1,0,1], hands:'LRLR',
+                            tip:'Big drum, small drum, over and over.' }
+                          notes: 0 = BOOM (big drum), 1 = TAP (small drum),
+                          2 = SLAP (the edge). hands is one letter per note,
+                          L or R, and MUST be the same length as notes.
 
        trizPuzzles     — the pattern/thinking puzzles (12 built in)
 
        jigsaws         — the jigsaw pictures (10 built in)
                           { em:'🦁', name:'a lion' }
 
-       mcqTopics       — the thinking-question topics (4 built in: focus, calm,
-                          and two more), each with several right answers and a
-                          pool of wrong ones — see MCQ_TOPICS in the game for
-                          the exact shape
+       mcqTopics       — the thinking-question topics (4 built in), each with
+                          several right answers and a pool of wrong ones
 
        apRules         — the autopilot IF/THEN rules taught before a storm
                           (3 built in)
@@ -498,38 +521,36 @@ window.SKY_SETTINGS = {
                           resolution in the NVC "what will help" step (8 built in)
 
        sayWords        — spelling words, BY AGE BAND (t/y/m/o)
-                          content.sayWords / addContent.sayWords take
-                          { t:[...], y:[...], m:[...], o:[...] } — same shape
-                          as the spellWords setting further down, just under
-                          the new name
 
-       feelingSyns     — extra words for each feeling, BY AGE BAND, used so
-                          the "how do they feel?" choices are not always the
-                          same word — { sad:{ y:['sad','unhappy',...] }, ... }
+       feelingSyns     — extra words for each feeling, BY AGE BAND, so the
+                          "how do they feel?" choices are not always the same
+                          word — { sad:{ y:['sad','unhappy',...] }, ... }
 
        needSyns        — extra words for each need, BY AGE BAND, same shape
-                          as feelingSyns but keyed by need instead of feeling
 
-     Example — add one extra hazard on top of the built-in nine, and replace
-     the jigsaw picture list entirely with your own three:
+     Example — one extra hazard on top of the built-in nine, one extra bongo
+     beat, and the jigsaw pictures replaced entirely with your own three:
 
   , addContent: {
       hazDefs: [
         { id:'blizzard', em:'🌨️', lvl:3, size:60, kind:'push', spd:20,
           nm:'Blizzard the snowstorm', fam:'mixed',
           story:'Blizzard wants to play, but blows too hard for anyone to join in.' }
+      ],
+      bongoBeats: [
+        { name:'Slap Happy', notes:[1,2,1,2], hands:'RLRL',
+          tip:'Tap then slap, tap then slap. Hands taking turns.' }
       ]
     }
   , content: {
-      jigsaws: [ {em:'🐘','name':'an elephant'}, {em:'🚂','name':'a train'}, {em:'🌈','name':'a rainbow'} ]
+      jigsaws: [ {em:'🐘',name:'an elephant'}, {em:'🚂',name:'a train'}, {em:'🌈',name:'a rainbow'} ]
     }
   */
 
   /* ── MORE YOU CAN ADD ───────────────────────────────────────────────────
      Spelling words, your own sums, your own questions, your own situations.
-     (These are an older, simpler way to ADD to three of the lists above —
-     extraSituations only adds, it never replaces; use content/addContent
-     above if you want to replace a list entirely.)
+     (An older, simpler way to ADD to three of the lists above — these only
+     add, never replace; use content/addContent for that.)
 
   , spellWords: { y:[['LION','🦁'],['BOAT','⛵']] }
   , extraMath: { y:[{q:'2 + 3 = ?', ans:5, wrong:[4,6,7]}] }
@@ -546,8 +567,10 @@ window.SKY_SETTINGS = {
   /* ── NUMBERS ────────────────────────────────────────────────────────────
      Any dial from the in-game ⚙️ settings can also be set here, e.g.
 
+  , patternRounds: 2      // practice rounds to finish the piano
+  , bongoRounds: 2        // ...and the bongos
+  , practiceBonus: 5      // points for each EXTRA round he chooses to play
   , vehicleFirstSeconds: 70
   , distanceCallSeconds: 75
-  , groundPropSpacing: 2.6
   */
 };
