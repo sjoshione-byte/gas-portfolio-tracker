@@ -1264,14 +1264,18 @@ const DEFAULT_CONFIG={
   shareAskGap:         4,    // fewest rescues between two share asks
   distanceCallSeconds:75,    // roughly how often "you are this far away" is said
   offCourseSeconds:    9,    // seconds off course before it says so out loud
-  vehicleFirstSeconds:70,    // seconds of flying before the FIRST weather change
-  vehicleEverySeconds:95,    // roughly how often the weather changes after that
-  vehicleLastsSeconds:70,    // how long a stretch in the car or on the skis lasts
+  /* The car and the skis arrive by DISTANCE, not by the clock — a stretch of
+     road belongs to a place on the map, so it lands at the same point of the
+     journey however long he has spent playing games along the way. */
+  vehicleStartPct:   30,     // % of the journey before the first car/ski
+  vehicleLengthPct:  10,     // how much of the journey it lasts
+  vehicleGapPct:     30,     // % of travel between one ending and the next
+  groundSpeedFactor:0.55,    // the car/skier travel slower than the plane
   jumpRise:         150,     // how fast the car/skier leaps when you push up
   jumpFall:         110,     // how fast gravity brings them back down
   jumpHeight:        58,     // the top of a jump
   jumpClears:        30,     // jump above this and you clear a building
-  groundPropSpacing:2.6,     // how much further apart solid scenery sits
+  groundPropSpacing:5.0,     // how much further apart solid scenery sits
   groundAgility:    2.2,     // how much sharper a car/skier steers
   structureWidth:   0.30,    // how wide a solid thing is, for bumping into
   maxHazardsAtOnce:  2,
@@ -2697,33 +2701,37 @@ function distanceGap(){
    Announced first, always, so it is never a surprise that costs him a life:
    the sky is cleared of trouble, the machine changes, and a card explains
    the new controls before anything can hit him. */
-let vehClock=0, vehLeft=0, vehSwaps=0;
-/* NOTE: these clocks only run while the game is actually FLYING — every
-   challenge card, rescue and modal pauses update(), and the swap also has to
-   wait for a genuinely quiet moment. So the FIRST change is deliberately set
-   early: if it is not seen in the first couple of minutes of a short session,
-   as far as the child is concerned it does not exist. Later ones spread out. */
-function vehicleGap(){
-  const base=cfgNum('vehicleEverySeconds',95,20);
-  return base+Math.random()*base*0.5;
+let vehNextPct=30, vehEndPct=0, vehSwaps=0;
+/* ═══════════ WHEN THE ROAD ARRIVES ═══════════
+   Measured in DISTANCE COVERED, not in seconds. A stretch of road belongs to
+   a place on the map, so it turns up at the same point of every journey no
+   matter how long he spent on games and rescues along the way — and "a third
+   of the way there" is something a child can actually see coming on the
+   odometer, which a hidden stopwatch never was.
+     first car at 30% of the way · 10% of the journey on the ground ·
+     then 30% more flying before the skis, and so on.                       */
+function progressPct(){
+  const d=CFG.missionDistance||40;
+  return Math.max(0,miles)/d*100;
 }
-function vehicleFirstGap(){ return cfgNum('vehicleFirstSeconds',35,5); }
+function vehicleFirstGap(){ return cfgNum('vehicleStartPct',30,1); }
 function vehicleTick(dt){
   if(!started||!missionChosen)return;
+  const pct=progressPct();
   if(vehicle!=='plane'){
     /* a stretch on the ground, then back into the air */
-    vehLeft-=dt;
-    if(vehLeft<=0&&canInterrupt())switchVehicle('plane');
+    if(pct>=vehEndPct&&canInterrupt())switchVehicle('plane');
     return;
   }
-  vehClock-=dt;
-  if(vehClock>0)return;
-  /* it is due — now find the first calm gap. Re-checking briskly matters:
-     when the sky is busy the quiet windows are short, and a lazy retry can
-     miss several of them in a row and push the change minutes further out. */
-  if(!canInterrupt()){vehClock=2;return;}
-  if(animal||cargo||hazards.length){vehClock=2;return;}
-  if(milesLeft()<6){vehClock=20;return;}           /* not right at the end */
+  if(pct<vehNextPct)return;
+  /* it is due — now wait for a genuinely quiet moment. Nothing is pushed
+     further down the road by waiting: the trigger is a place, not a clock. */
+  if(!canInterrupt())return;
+  if(animal||cargo||hazards.length)return;
+  if(milesLeft()<6){                                /* not right at the end */
+    vehNextPct=pct+cfgNum('vehicleGapPct',30,1);
+    return;
+  }
   switchVehicle(vehSwaps%2===0?'car':'ski');
 }
 function switchVehicle(to){
@@ -2731,8 +2739,8 @@ function switchVehicle(to){
   const back=(to==='plane');
   vehicle=to;
   const v=VEH();
-  if(!back){vehSwaps++;vehLeft=cfgNum('vehicleLastsSeconds',70,15);}
-  else{vehClock=vehicleGap();}
+  if(!back){vehSwaps++;vehEndPct=progressPct()+cfgNum('vehicleLengthPct',10,1);}
+  else{vehNextPct=progressPct()+cfgNum('vehicleGapPct',30,1);}
   /* nothing may be in the air while the machine changes underneath him */
   hazards=[];animal=null;cargo=null;
   hazClock=Math.max(hazClock,6);animalClock=Math.max(animalClock,5);
@@ -3344,6 +3352,11 @@ function update(dt){
      the joystick teaches it by feel rather than by a rule. On the ground
      there is no thin air to find, so jumping does not make you quicker. */
   if(!VEH().ground)target*=1+cfgNum('altSpeedBonus',0.25,0)*(altFrac()-0.5)*2;
+  /* A car and a pair of skis travel a good deal slower than a plane, and the
+     scenery on the ground is SOLID — at flying speed the buildings arrive
+     faster than a six-year-old can pick a side and steer for it, so the
+     stretch stops being a road to drive and becomes a coin toss. */
+  if(VEH().ground)target*=cfgNum('groundSpeedFactor',0.55,0.1);
   plane.speed=lerp(plane.speed,target,dt*2.5);
   highFlyHint();
   /* ── HONEST MOTION ────────────────────────────────────────────────────────
@@ -4150,78 +4163,77 @@ function drawTapZone(px,py){
    The whole body leans into a swerve and squashes on landing, so a jump has
    real weight to it. */
 function drawCar(time,px,py){
+  /* SEEN FROM BEHIND. He is driving away from you, north, up the screen —
+     so the car is drawn as a back: tail lights, rear window, and a body that
+     narrows towards the far end. Drawn side-on it read as sliding sideways
+     across a route that runs upwards, which is exactly backwards. */
   const s=1.0+(engineSlots-4)*0.05;
   const air=Math.max(0,(plane.alt-6)/52);          /* 0 on the road, 1 at the top */
   ctx.save();
   ctx.translate(px,py);
-  ctx.rotate(plane.bank*0.22);
-  /* squash as it lands, stretch as it leaps */
-  ctx.scale(1+air*0.06,1-air*0.05+(air===0?Math.sin(time*9)*0.012:0));
+  ctx.rotate(plane.bank*0.10);                     /* leans into the turn */
+  ctx.scale(1+air*0.05,1-air*0.04+(air===0?Math.sin(time*9)*0.012:0));
   ctx.strokeStyle='#33305E';ctx.lineWidth=3;ctx.lineJoin='round';
-  /* body */
+  const W1=38*s, W2=46*s;                          /* half-widths: far end, near end */
+
+  /* wheels first, so the body sits over them */
+  const tyre=(x,y,w,h,alive,i)=>{
+    ctx.fillStyle=alive?'#2B2833':'#5A4550';
+    rr(x-w,y-h,w*2,h*2,4*s);ctx.fill();ctx.stroke();
+    if(!alive)drawSmoke(x,y,time+i*0.4,engines<=1);
+  };
+  tyre(-W2-3*s, 22*s,7*s,11*s,engines>0,0);
+  tyre( W2+3*s, 22*s,7*s,11*s,engines>1,1);
+  tyre(-W1-3*s,-6*s, 5*s,8*s, engines>2,2);
+  tyre( W1+3*s,-6*s, 5*s,8*s, engines>3,3);
+
+  /* the body, narrower at the far end so it reads as going away */
   ctx.fillStyle=paint;
-  rr(-52*s,-6*s,104*s,34*s,12*s);ctx.fill();ctx.stroke();
-  /* roof + windows */
-  ctx.fillStyle='#C9D2E0';
   ctx.beginPath();
-  ctx.moveTo(-32*s,-6*s);ctx.lineTo(-22*s,-32*s);ctx.lineTo(26*s,-32*s);ctx.lineTo(36*s,-6*s);
+  ctx.moveTo(-W1,-14*s);ctx.lineTo(W1,-14*s);
+  ctx.lineTo(W2,26*s);ctx.lineTo(-W2,26*s);
   ctx.closePath();ctx.fill();ctx.stroke();
+  /* the cabin, further away still */
+  ctx.beginPath();
+  ctx.moveTo(-26*s,-40*s);ctx.lineTo(26*s,-40*s);
+  ctx.lineTo(W1,-14*s);ctx.lineTo(-W1,-14*s);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  /* the rear window */
   ctx.fillStyle='#7FC4F2';
-  rr(-25*s,-28*s,22*s,19*s,4*s);ctx.fill();ctx.stroke();
-  rr(4*s,-28*s,22*s,19*s,4*s);ctx.fill();ctx.stroke();
-  /* the rescue door — swings open when he is ready to help */
+  ctx.beginPath();
+  ctx.moveTo(-21*s,-36*s);ctx.lineTo(21*s,-36*s);
+  ctx.lineTo(29*s,-18*s);ctx.lineTo(-29*s,-18*s);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  /* tail lights and bumper */
+  ctx.fillStyle='#E8564A';
+  rr(-W2+4*s,6*s,13*s,9*s,3*s);ctx.fill();ctx.stroke();
+  rr( W2-17*s,6*s,13*s,9*s,3*s);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#C9D2E0';
+  rr(-W2+2*s,19*s,(W2-2*s)*2,7*s,3*s);ctx.fill();ctx.stroke();
+
+  /* the rescue door swings OUT to the side when he is ready to help */
   if(plane.wheels){
     ctx.fillStyle='#FFE39A';
     ctx.save();
-    ctx.translate(-6*s,4*s);ctx.rotate(-0.72);
-    rr(0,-16*s,30*s,32*s,5*s);ctx.fill();ctx.stroke();
+    ctx.translate(-W2,2*s);ctx.rotate(-0.55);
+    rr(-30*s,-14*s,30*s,28*s,5*s);ctx.fill();ctx.stroke();
     ctx.restore();
     ctx.font=(15*s)+'px serif';ctx.textAlign='center';
-    ctx.fillText('🐾',-30*s,-34*s);
-  }else{
-    ctx.strokeStyle='#33305E';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(-6*s,-6*s);ctx.lineTo(-6*s,26*s);ctx.stroke();
-    ctx.lineWidth=3;
-  }
-  /* lamps */
-  ctx.fillStyle='#FFF3D6';
-  ctx.beginPath();ctx.ellipse(50*s,8*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-  /* four tyres — burst ones go dark and smoke */
-  const tyrePos=[[-34,30],[34,30],[-14,31],[14,31],[-50,29],[50,29]];
-  for(let i=0;i<Math.min(engineSlots,tyrePos.length);i++){
-    const [tx,ty]=tyrePos[i];
-    const alive=i<engines;
-    /* wheels spin on the road and hang still in the air */
-    const spin=alive?time*(air>0.1?2:9):0;
-    ctx.fillStyle=alive?'#2B2833':'#5A4550';
-    ctx.beginPath();ctx.arc(tx*s,ty*s,10*s,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle=alive?'#8E97AC':'#3A3540';
-    ctx.beginPath();ctx.arc(tx*s,ty*s,4.5*s,0,Math.PI*2);ctx.fill();
-    if(alive){
-      ctx.strokeStyle='#8E97AC';ctx.lineWidth=2;
-      ctx.beginPath();
-      ctx.moveTo(tx*s+Math.cos(spin)*9*s,ty*s+Math.sin(spin)*9*s);
-      ctx.lineTo(tx*s-Math.cos(spin)*9*s,ty*s-Math.sin(spin)*9*s);
-      ctx.stroke();
-      ctx.strokeStyle='#33305E';ctx.lineWidth=3;
-    }else drawSmoke(tx*s,ty*s,time+i*0.4,engines<=1);
+    ctx.fillText('\u{1F43E}',-W2-26*s,-22*s);
   }
   /* stickers ride on the roof */
   if(stickers>0){
-    ctx.font=(11*s)+'px serif';ctx.textAlign='left';
-    for(let i=0;i<Math.min(5,stickers);i++)ctx.fillText('⭐',(-18+i*11)*s,-36*s);
-  }
-  if(input.boost){
-    ctx.fillStyle='rgba(255,200,120,0.5)';
-    ctx.beginPath();ctx.ellipse(-58*s,20*s,9,7+Math.random()*5,0,0,Math.PI*2);ctx.fill();
+    ctx.font=(10*s)+'px serif';ctx.textAlign='left';
+    for(let i=0;i<Math.min(5,stickers);i++)ctx.fillText('\u2B50',(-20+i*10)*s,-43*s);
   }
   ctx.restore();
-  /* dust kicked up while it is actually on the road */
+  /* dust thrown out to BOTH sides and downwards, the way it looks from behind */
   if(air<0.08){
     ctx.globalAlpha=0.25;ctx.fillStyle='#C9B593';
     for(let i=0;i<3;i++){
       const p=((time*1.6)+i/3)%1;
-      ctx.beginPath();ctx.arc(px-46-p*40,py+30*s,4+p*9,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(px-52*s-p*14,py+30*s+p*16,4+p*8,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(px+52*s+p*14,py+30*s+p*16,4+p*8,0,Math.PI*2);ctx.fill();
     }
     ctx.globalAlpha=1;
   }
@@ -4231,76 +4243,66 @@ function drawCar(time,px,py){
    Two skis and two poles are the four parts that break. Resting the poles
    flat is what lets him reach an animal, so the poles swing down and out. */
 function drawSkier(time,px,py){
+  /* SEEN FROM BEHIND too: the back of a jacket, a woolly hat, and two skis
+     running away up the slope. Two skis and two poles are the four parts that
+     break. Resting the poles flat is what lets him reach an animal. */
   const s=1.0+(engineSlots-4)*0.04;
   const air=Math.max(0,(plane.alt-6)/52);
-  const lean=plane.bank*0.30;
+  const lean=plane.bank*0.16;
   const crouch=(air>0.1?-4:Math.sin(time*7)*1.2);
   ctx.save();
   ctx.translate(px,py);
   ctx.rotate(lean);
   ctx.strokeStyle='#33305E';ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';
-  /* parts 0,1 are the skis; parts 2,3 are the poles */
   const skiOK=[engines>0,engines>1], poleOK=[engines>2,engines>3];
-  /* skis */
-  [[-17,1],[17,-1]].forEach(([sx,tilt],i)=>{
+  /* the skis, pointing away from you and splayed a little */
+  [[-15,-0.08],[15,0.08]].forEach(([sx,tilt],i)=>{
     ctx.fillStyle=skiOK[i]?'#E8564A':'#5A4550';
     ctx.save();
-    ctx.translate(sx*s,34*s+crouch);ctx.rotate(tilt*0.05+air*0.12);
-    rr(-30*s,-4*s,60*s,8*s,4*s);ctx.fill();ctx.stroke();
-    /* turned-up tip */
-    ctx.beginPath();ctx.moveTo(28*s,-3*s);ctx.quadraticCurveTo(38*s,-6*s,36*s,-11*s);ctx.stroke();
+    ctx.translate(sx*s,30*s+crouch);ctx.rotate(tilt);
+    rr(-6*s,-34*s,12*s,60*s,5*s);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-5*s,-32*s);ctx.quadraticCurveTo(0,-42*s,5*s,-32*s);ctx.stroke();
     ctx.restore();
-    if(!skiOK[i])drawSmoke(sx*s,34*s,time+i*0.5,engines<=1);
+    if(!skiOK[i])drawSmoke(sx*s,26*s,time+i*0.5,engines<=1);
   });
   /* legs */
-  ctx.strokeStyle='#3D6BB3';ctx.lineWidth=8*s;
+  ctx.strokeStyle='#3D6BB3';ctx.lineWidth=9*s;
   ctx.beginPath();
-  ctx.moveTo(-9*s,6*s);ctx.lineTo(-15*s,30*s+crouch);
-  ctx.moveTo(9*s,6*s);ctx.lineTo(15*s,30*s+crouch);
+  ctx.moveTo(-8*s,2*s);ctx.lineTo(-15*s,26*s+crouch);
+  ctx.moveTo(8*s,2*s);ctx.lineTo(15*s,26*s+crouch);
   ctx.stroke();
   ctx.strokeStyle='#33305E';ctx.lineWidth=3;
-  /* body, leaning forward like a real skier */
+  /* the back of the jacket */
   ctx.fillStyle=paint;
-  ctx.save();ctx.translate(0,-6*s);ctx.rotate(0.12);
-  rr(-16*s,-18*s,32*s,30*s,9*s);ctx.fill();ctx.stroke();
-  ctx.restore();
-  /* head, hat and goggles */
-  ctx.fillStyle='#FFD9B8';
-  ctx.beginPath();ctx.arc(2*s,-32*s,13*s,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#33305E';
-  rr(-8*s,-36*s,20*s,7*s,3*s);ctx.fill();
-  ctx.fillStyle='#E8564A';
-  ctx.beginPath();ctx.arc(2*s,-42*s,10*s,Math.PI,0);ctx.fill();ctx.stroke();
-  ctx.beginPath();ctx.arc(11*s,-50*s,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();
-  /* the two poles: tucked while racing, planted flat when helping */
-  [[-30,0],[30,1]].forEach(([hx],i)=>{
-    if(!poleOK[i]){drawSmoke(hx*s,10*s,time+i*0.7,engines<=1);return;}
-    ctx.strokeStyle='#8E97AC';ctx.lineWidth=4*s;
-    ctx.save();
-    ctx.translate(hx*s,-4*s);
-    ctx.rotate(plane.wheels?(i?1.25:-1.25):(i?0.45:-0.45));
-    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,34*s);ctx.stroke();
-    /* the basket near the tip */
-    ctx.strokeStyle='#33305E';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.arc(0,28*s,5*s,0,Math.PI*2);ctx.stroke();
-    ctx.restore();
+  rr(-19*s,-30*s+crouch*0.3,38*s,38*s,11*s);ctx.fill();ctx.stroke();
+  /* arms out, and a pole in each hand */
+  [[-1,0],[1,1]].forEach(([d,pi])=>{
+    ctx.strokeStyle=paint;ctx.lineWidth=8*s;
+    ctx.beginPath();ctx.moveTo(d*16*s,-20*s);ctx.lineTo(d*30*s,-4*s);ctx.stroke();
     ctx.strokeStyle='#33305E';ctx.lineWidth=3;
+    if(poleOK[pi]){
+      ctx.strokeStyle='#8E97AC';ctx.lineWidth=3.5*s;
+      ctx.beginPath();
+      if(plane.wheels){ ctx.moveTo(d*30*s,-2*s);ctx.lineTo(d*46*s,16*s); }
+      else{ ctx.moveTo(d*30*s,-2*s);ctx.lineTo(d*34*s,34*s); }
+      ctx.stroke();
+      ctx.strokeStyle='#33305E';ctx.lineWidth=3;
+    }else drawSmoke(d*30*s,-2*s,time+pi*0.6,engines<=1);
   });
-  if(plane.wheels){
-    ctx.font=(15*s)+'px serif';ctx.textAlign='center';
-    ctx.fillText('🐾',0,-58*s);
-  }
-  if(stickers>0){
-    ctx.font=(10*s)+'px serif';ctx.textAlign='left';
-    for(let i=0;i<Math.min(5,stickers);i++)ctx.fillText('⭐',(-14+i*10)*s,-14*s);
-  }
+  /* the back of the head, and a woolly hat with a bobble */
+  ctx.fillStyle='#FFD9B8';
+  ctx.beginPath();ctx.arc(0,-44*s+crouch*0.3,13*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#E8564A';
+  ctx.beginPath();ctx.arc(0,-46*s+crouch*0.3,13*s,Math.PI,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.arc(0,-60*s+crouch*0.3,4*s,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.restore();
-  /* snow spray while the skis are actually on the snow */
+  /* snow sprayed out to both sides while he is actually on the piste */
   if(air<0.08){
-    ctx.globalAlpha=0.5;ctx.fillStyle='#FFFFFF';
-    for(let i=0;i<4;i++){
-      const p=((time*2.1)+i/4)%1;
-      ctx.beginPath();ctx.arc(px-34-p*46,py+34*s-p*14,3+p*8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=0.3;ctx.fillStyle='#FFFFFF';
+    for(let i=0;i<3;i++){
+      const p=((time*1.7)+i/3)%1;
+      ctx.beginPath();ctx.arc(px-24*s-p*16,py+34*s+p*14,3+p*7,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(px+24*s+p*16,py+34*s+p*14,3+p*7,0,Math.PI*2);ctx.fill();
     }
     ctx.globalAlpha=1;
   }
@@ -4485,6 +4487,10 @@ function updateHUD(){
     bw.classList.toggle('down',plane.wheels);
     bw.textContent=`${VEH().actEm} ${VEH().actLabel}`;
   }
+  /* the big left-hand button changes job with the machine: boost in the air,
+     jump on the ground — so the jump always has an icon he can see */
+  const bb=document.getElementById('btnBoost');
+  if(bb)bb.textContent=VEH().ground?'🤸 jump':'🚀 boost';
   updateDrawer();
 }
 function sayGps(){
@@ -4720,6 +4726,14 @@ window.addEventListener('mouseup',()=>{if(dialMouse){dialMouse=false;dialRelease
 /* boost — locked while landing gear is down */
 function tryBoost(on){
   const btn=document.getElementById('btnBoost');
+  /* ON THE GROUND this same big button is the JUMP — there is nowhere to
+     boost to on a road, and a jump with no button of its own was a control
+     he had no way of discovering. */
+  if(VEH().ground){
+    input.up=on;
+    if(btn)btn.classList.toggle('locked',false);
+    return;
+  }
   if(on&&plane.wheels){
     input.boost=false;
     if(btn)btn.classList.add('locked');
@@ -5059,7 +5073,7 @@ function restartAfterCrash(){
   shownLevel=1;
   animalClock=5;hazClock=16;cargo=null;cargoClock=95;
   distClock=distanceGap();lastDistSaid=null;highFlySaid=false;lastShareAskAt=-99;
-  vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
+  vehicle='plane';vehNextPct=vehicleFirstGap();vehEndPct=0;vehSwaps=0;
   updateHUD();closeModal();
   banner(esc(TX('crash.freshBanner')),2400);
 }
@@ -8366,7 +8380,7 @@ function beginNextMission(){
   miles=0;latMiles=0;playMinutes=0;lastInterestMin=0;missionDone=false;
   plane.heading=0;
   distClock=distanceGap();lastDistSaid=null;
-  vehicle='plane';vehClock=vehicleFirstGap();vehLeft=0;vehSwaps=0;
+  vehicle='plane';vehNextPct=vehicleFirstGap();vehEndPct=0;vehSwaps=0;
   closeModal();
   updateGps();updateHUD();
   banner(TX('mission.newMissionBanner',{miles:CFG.missionDistance}),2600);
@@ -8547,7 +8561,7 @@ function orientationDone(){
   stopSpeak();
   started=true;          /* BUGFIX: must be true BEFORE closeModal, or the
                             game stays paused and the plane never flies */
-  vehClock=vehicleFirstGap();   /* the first weather change comes early */
+  vehNextPct=vehicleFirstGap();  /* the first road arrives a third of the way */
   closeModal();
   paused=false;
   updateHUD();
@@ -8666,9 +8680,10 @@ const DASH_GROUPS=[
     {k:'quietGap',           t:'Calm seconds between ANY two events', min:0, max:60, step:1},
     {k:'distanceCallSeconds',t:'Seconds between distance call-outs',  min:10,max:300,step:5},
     {k:'offCourseSeconds',   t:'Seconds off course before a warning',  min:2, max:120,step:1},
-    {k:'vehicleFirstSeconds',t:'Seconds to the FIRST weather change', min:5, max:300,step:5},
-    {k:'vehicleEverySeconds',t:'Seconds between weather changes',     min:20,max:600,step:5},
-    {k:'vehicleLastsSeconds',t:'Seconds in the car / on the skis',    min:15,max:300,step:5},
+    {k:'vehicleStartPct',   t:'% of the way before the first car/ski', min:0, max:90, step:1},
+    {k:'vehicleLengthPct',  t:'% of the journey in the car / on skis', min:2, max:50, step:1},
+    {k:'vehicleGapPct',     t:'% of flying between one and the next',  min:5, max:90, step:1},
+    {k:'groundSpeedFactor', t:'How much slower the car/skier travel',  min:0.2,max:1.2,step:0.05},
     {k:'weatherSeconds',     t:'Seconds per weather phase',           min:5, max:300,step:5},
     {k:'zoneSpacing',        t:'Miles per patch of landscape',        min:1, max:40, step:0.5},
     {k:'archeryRounds',      t:'Shots each at archery',               min:1, max:10, step:1},
